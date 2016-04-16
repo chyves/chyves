@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Add the following lines to /etc/rc.conf to enable chyves:
+#
+# chyves_enable="YES"
+# chyves_flags="pool=zroot kmod=1 net=em0"
+#
+# PROVIDE: chyves
+# REQUIRE: LOGIN sshd
+#
+
+. /etc/rc.subr
+
+name="chyves"
+rcvar=chyves_enable
+
+# read configuration and set defaults
+load_rc_config "$name"
+: ${chyves_enable="NO"}
+: ${chyves_flags=""}
+
+start_cmd="chyves_start"
+stop_cmd="chyves_stop"
+
+chyves_start()
+{
+	echo "Starting chyves guests..."
+	/usr/local/sbin/chyves setup ${chyves_flags}
+	guestlist="$(zfs list -H -t volume -o name | grep chyves | grep disk0 | cut -d'/' -f3)"
+	for i in $guestlist ; do
+		pool="$(zfs list -H -t volume -o name | grep chyves | grep $i | grep disk0 | cut -d'/' -f1-3)"
+		bootprop="$(zfs get -H -o value chyves:boot $pool)"
+		if [ $bootprop = "1" ]; then
+			/usr/local/sbin/chyves start $i
+		fi
+	done
+}
+
+chyves_stop()
+{
+	echo "Stopping all chyves guests..."
+	/usr/local/sbin/chyves scram
+}
+
+run_rc_command "$1"

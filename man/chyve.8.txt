@@ -1,139 +1,139 @@
 NAME
-iohyve(8) - bhyve manager/launcher v0.7.5 "Tennessee Cherry Moonshine Edition"
+chyves(8) - bhyve front end manager v0.0.0
 
 SYNOPSIS
-iohyve version
-iohyve setup pool=[poolname] kmod=[0/1] net=[interface]
-iohyve list
-iohyve info [-d]
-iohyve isolist
-iohyve fwlist
-iohyve fetchiso [URL]
-iohyve cpiso [path]
-iohyve renameiso [ISO] [newname]
-iohyve rmiso [ISO]
-iohyve fetchfw [URL]
-iohyve cpfw [path]
-iohyve renamefw [firmware] [newname]
-iohyve rmfw [firmware]
-iohyve create [name] [size] [[pool]]
-iohyve install [name] [ISO]
-iohyve load [name]
-iohyve boot [name] [ISO]
-iohyve start [name] [-a | -s]
-iohyve stop [name]
-iohyve forcekill [name]
-iohyve scram
-iohyve destroy [name]
-iohyve rename [name] [newname]
-iohyve delete [-f] [name]
-iohyve set [name] [prop1=value] [prop2=value]...
-iohyve get [name] [prop]
-iohyve rmpci [-f] [name] [pcidev:N]
-iohyve getall [name]
-iohyve add [name] [size] [[pool]]
-iohyve remove [-f] [name] [diskN]
-iohyve resize [name] [diskN] [size]
-iohyve disks [name]
-iohyve snap [name]@[snapshotname]
-iohyve roll [name]@[snapshotname]
-iohyve clone [-c | -r] [name] [clonename]
-iohyve export [name]
-iohyve snaplist
-iohyve taplist
-iohyve activetaps
-iohyve conlist
-iohyve console [name]
-iohyve conreset
-iohyve help
-iohyve man
+chyves version
+chyves setup pool=[poolname] kmod=[0/1] net=[interface]
+chyves list
+chyves info [-d]
+chyves isolist
+chyves fwlist
+chyves fetchiso [URL]
+chyves cpiso [path]
+chyves renameiso [ISO] [newname]
+chyves rmiso [ISO]
+chyves fetchfw [URL]
+chyves cpfw [path]
+chyves renamefw [firmware] [newname]
+chyves rmfw [firmware]
+chyves create [name] [size] [[pool]]
+chyves install [name] [ISO]
+chyves load [name]
+chyves boot [name] [ISO]
+chyves start [name] [-a | -s]
+chyves stop [name]
+chyves forcekill [name]
+chyves scram
+chyves destroy [name]
+chyves rename [name] [newname]
+chyves delete [-f] [name]
+chyves set [name] [prop1=value] [prop2=value]...
+chyves get [name] [prop]
+chyves rmpci [-f] [name] [pcidev:N]
+chyves getall [name]
+chyves add [name] [size] [[pool]]
+chyves remove [-f] [name] [diskN]
+chyves resize [name] [diskN] [size]
+chyves disks [name]
+chyves snap [name]@[snapshotname]
+chyves roll [name]@[snapshotname]
+chyves clone [-c | -r] [name] [clonename]
+chyves export [name]
+chyves snaplist
+chyves taplist
+chyves activetaps
+chyves conlist
+chyves console [name]
+chyves conreset
+chyves help
+chyves man
 
 DESCRIPTION
-The iohyve(8) shell script utilizes the FreeBSD hypervisor bhyve(8),
+The chyves(8) shell script utilizes the FreeBSD hypervisor bhyve(8),
 zfs(8), and nmdm(4) to make virtualization on FreeBSD easy and simple.
 The basic idea is to store bhyve settings in zfs user properties of zfs
 datasets that house important guest files like block devices and grub
-configurations. iohyve(8) uses the virtio drivers built into the GENERIC
+configurations. chyves(8) uses the virtio drivers built into the GENERIC
 kernel for virtualization.
 
 
 OPTIONS
-version		Prints the current running version of iohyve
+version		Prints the current running version of chyves
 
-setup		Installs required zfs datasets and kernel modules for iohyve.
-		Usage: 'iohyve setup pool=poolname kmod=0/1 net=[iface]' 
-		where [poolname] is the pool you want to install iohyve on,
-		kmod=[0/1] is if you want iohyve to load or unload the
-		kernel modules required by iohyve. 1 is load. net=[iface]
-		will set up the network bridge to the specified interface. 
+setup		Installs required zfs datasets and kernel modules for chyves.
+		Usage: 'chyves setup pool=poolname kmod=0/1 net=[iface]'
+		where [poolname] is the pool you want to install chyves on,
+		kmod=[0/1] is if you want chyves to load or unload the
+		kernel modules required by chyves. 1 is load. net=[iface]
+		will set up the network bridge to the specified interface.
 		Multiple pools are supported, additional pools get mounted
-		in /iohyve/poolname
+		in /chyves/poolname
 
-list		Lists the zfs dataset directorys for iohyve.
+list		Lists the zfs dataset directorys for chyves.
 
 info		Lists all the guests along with their RAM, CPU, Size,
 		OS, Loader, and Description (if -d is passed)
 
-isolist		List Lists the installed ISOs in the /iohyve/ISO directory.
+isolist		List Lists the installed ISOs in the /chyves/ISO directory.
 
-fwlist		Lists the firmwares in the /iohyve/Firmware directory.
+fwlist		Lists the firmwares in the /chyves/Firmware directory.
 
 fetchiso		Fetches installation ISO or install image and creates a
 		dataset for it.
-		Usage: 'iohyve fetchiso [URL]' where [URL] is the HTTP or FTP URL to
+		Usage: 'chyves fetchiso [URL]' where [URL] is the HTTP or FTP URL to
 		fetchiso from the internet.
 
 cpiso		Copies installation ISO or install image from your host and
 		creates a dataset for it.
-		Usage: 'iohyve cpiso [path]' where [path] is the full path to
+		Usage: 'chyves cpiso [path]' where [path] is the full path to
 		ISO file on the host machine.
 
 renameiso	Renames an ISO
-		Usage: 'iohyve renameiso [ISO] [newname]' where [ISO] is the
+		Usage: 'chyves renameiso [ISO] [newname]' where [ISO] is the
 		name of the ISO you would like to rename. [newname]
 		is a new name.
 
-rmiso		Removes installed ISO from /iohyve/ISO
-		Usage: 'iohyve rmiso [ISO]' where [ISO] is the name of the ISO
+rmiso		Removes installed ISO from /chyves/ISO
+		Usage: 'chyves rmiso [ISO]' where [ISO] is the name of the ISO
 		you would like to delete.
 
 fetchfw		Fetches firmware and creates a dataset for it.
-		Usage: 'iohyve fetchfw [URL]' where [URL] is the HTTP or FTP URL to
+		Usage: 'chyves fetchfw [URL]' where [URL] is the HTTP or FTP URL to
 		fetch from the internet.
 
 cpfw		Copies firmware from your host and creates a dataset for it.
-		Usage: 'iohyve cpfw [path]' where [path] is the full path to
+		Usage: 'chyves cpfw [path]' where [path] is the full path to
 		firmware file on the host machine.
 
 renamefw	Renames a Firmware
-		Usage: 'iohyve renamefw [firmware] [newname]' where [firmware]
+		Usage: 'chyves renamefw [firmware] [newname]' where [firmware]
 		is the name of the firmware you would like to rename.
 		[newname] is a new name.
 
-rmfw		Removes installed firmware from /iohyve/Firmware
-		Usage: 'iohyve rmfw [firmware]' where [firmware] is the name of
+rmfw		Removes installed firmware from /chyves/Firmware
+		Usage: 'chyves rmfw [firmware]' where [firmware] is the name of
 		the firmware you would like to delete.
 
 create		Creates new guest operating system.
-		Usage: 'iohyve create [name] [size] [[pool]]' where [name] is
+		Usage: 'chyves create [name] [size] [[pool]]' where [name] is
 		the name you would like to use, [size] is the size of the
 		virtual block device in '16G' format where the capital G
 		signifies gigabytes. If you specify the pool, the first disk
 		gets added on that pool.
 
 install		Loads and boots into ISO for guest installation.
-		Usage: 'iohyve install [name] [ISO]' where [name] is the name
+		Usage: 'chyves install [name] [ISO]' where [name] is the name
 		of the guest, and [ISO] is the name of the ISO you would
 		like to boot from in the form of: 'instal.iso'
 
 load		Loads the guest operating system bootloader and resources.
-		Usage: 'iohyve load [name] [ISO]'
+		Usage: 'chyves load [name] [ISO]'
 		where [name]is the name of the guest operating system.
 		[bootimg] is the path to the boot medium
 
-boot		Boots the guest into the operating system. 'iohyve run' needs
+boot		Boots the guest into the operating system. 'chyves run' needs
 		to be run before this is done.
-		Usage: 'iohyve boot [name] [runmode] [pci]'
+		Usage: 'chyves boot [name] [runmode] [pci]'
 		where [name]is the name of the guest operating system.
 		[runmode] describes how to start the guest:
 		0 = start only once
@@ -149,38 +149,38 @@ boot		Boots the guest into the operating system. 'iohyve run' needs
 		added
 
 start		Starts the guest operating system. (Combines load & boot)
-		Usage: 'iohyve start [name] [-s | -a]'
+		Usage: 'chyves start [name] [-s | -a]'
 		where [name] is the name of the guest operating system.
 		[-s] will cause the guest to be started once
 		[-a] will cause the guest to always restart
 
 stop		Gracefully stops guest operating system.
-		Usage: 'iohyve stop [name]' where [name] is the name
+		Usage: 'chyves stop [name]' where [name] is the name
 		of the guest operating system.
 
 forcekill	Forces the guest to stop. Runs kill -9 and destroys the guest
 		in VMM. USE WITH EXTREME CAUTION AND AS A LAST RESORT. Can be
-		used to kill guests stuck at the GRUB console that you 
+		used to kill guests stuck at the GRUB console that you
 		do not have access to.
 
 scram		Gracefully stop all bhyve guests. Does not destroy resources.
 
 destroy		Destroys guest resources.
-		Usage: 'iohyve destroy [name]' where [name] is the name
+		Usage: 'chyves destroy [name]' where [name] is the name
 		of the guest operating system. Destroying a guest does
 		not [delete] a guest from the host, it destroys the guest in VMM.
 
 rename		Renames the guest
-		Usage: 'iohyve rename [name] [newname]' where [name] is the
+		Usage: 'chyves rename [name] [newname]' where [name] is the
 		name of the guest and [newname] is the new name.
 
 delete		Deletes all data for the guest.
-		Usage: 'iohyve delete [name]' where [name] is the name
+		Usage: 'chyves delete [name]' where [name] is the name
 		of the guest operating system. If [-f] is supplied before the
 		[name], there is no prompt to delete.
 
 set		Sets ZFS properties for guests one at a time
-		Usage: 'iohyve set [name] [prop1=value] [prop2=value]...' where
+		Usage: 'chyves set [name] [prop1=value] [prop2=value]...' where
 		[name] is the name of the guest operating system.
 		Properties:
 		ram=512M or ram=2G (M for megabytes, G for gigabtyes)
@@ -189,13 +189,13 @@ set		Sets ZFS properties for guests one at a time
 		tap=tap[n](,tap[n]) (tap device for virtio-net)
 			[n] is a generic number to specify the tap interface to use
 			Specify a list o tap separated by comma for multiple tap
-			Single tap: iohyve set [name] tap=tap0
-			Multiple tap : iohyve set [name] tap=tap0,tap1,tap2,tap3
+			Single tap: chyves set [name] tap=tap0
+			Multiple tap : chyves set [name] tap=tap0,tap1,tap2,tap3
 		size=size of block device
 		mac_tap[n]=[MAC Address]
 			[n] is a generic number to specify the tap interface to use
-			Forces a specific MAC address to be attached to the 
-			network adapter in the guest OS. iohyve does not check
+			Forces a specific MAC address to be attached to the
+			network adapter in the guest OS. chyves does not check
 			for a valid MAC address, so double check the property.
 		pcidev:[n]=[spec]
 			Generic way to add devices to the guest.
@@ -203,99 +203,99 @@ set		Sets ZFS properties for guests one at a time
 			[spec] defines a virtual device added to the guest
 			by using a bhyve -s argument without the pcislot
 			or function argument. PCI slot numbers are assigned
-			automatically by iohyve.
+			automatically by chyves.
 				Examples: "pcidev:1=passthru,2/0/0"
 				"pcidev:2=ahci-hd,/some/place/disk.img"
 
 get		Gets ZFS properties for guests one at a time
-		Usage: 'iohyve get [name] [prop]' where [name] is the name
+		Usage: 'chyves get [name] [prop]' where [name] is the name
 		of the guest operating system. [prop] is the
-		property you want to view. (See 'iohyve set' info)
+		property you want to view. (See 'chyves set' info)
 
 rmpci		Removes a pcidev from the guest
-		Usage: 'iohyve rmpci [name] [pcidev:N]' where [name] is the name
+		Usage: 'chyves rmpci [name] [pcidev:N]' where [name] is the name
 		of the guest operating system. [pcidev:N] is the PCI
-		device you want removed. Ex: 'pcidev:3' If [-f] is supplied 
+		device you want removed. Ex: 'pcidev:3' If [-f] is supplied
 		before the [name], there is no prompt to remove.
 
 getall		Gets all the ZFS properties for a guest
-		Usage: 'iohyve getall [name]' where [name] is the name
+		Usage: 'chyves getall [name]' where [name] is the name
 		of the guest operating system.
 
 add		Adds a new disk to the guest.
-		Usage: 'iohyve add [name] [size] [[pool]]' where [name] is
+		Usage: 'chyves add [name] [size] [[pool]]' where [name] is
 		the name of the guest, [size] is the size of the
 		virtual block device in '16G' format where the capital G
 		signifies gigabytes. If pool is specified, the disk gets
 		added on that pool
 
 remove		Removes a disk from the guest. Cannot be disk0.
-		Usage: 'iohyve remove [name] [diskN]' where [name] is
+		Usage: 'chyves remove [name] [diskN]' where [name] is
 		the name of the guest, [diskN] is the disk you would
-		like to remove from the guest. See 'iohyve disks' for
+		like to remove from the guest. See 'chyves disks' for
 		a list of disks for a guest. If [-f] is supplied before the
 		[name], there is no prompt to remove.
 
 resize		Resizes a disk. THIS CAN BREAK THINGS ON THE GUEST.
-		Usage: 'iohyve resize [name] [diskN] [size]' where [name] is
+		Usage: 'chyves resize [name] [diskN] [size]' where [name] is
 		the name of the guest, [diskN] is the disk you would
 		like to remove from the guest, and [size] is the size
 		of the virtual block device in '16G' format where the
 		capital G signifies gigabytes.
-		See 'iohyve disks' for a list of disks for a guest
+		See 'chyves disks' for a list of disks for a guest
 
 disks		Lists the disks attached to a guest.
-		Usage: 'iohyve disks [name]' where [name] is the name
+		Usage: 'chyves disks [name]' where [name] is the name
 		of the guest operating system.
 
 snap		Take a snapshot of a guest.
-		Usage: 'iohyve snap [name]@[snapshot]' where [name] is the
+		Usage: 'chyves snap [name]@[snapshot]' where [name] is the
 		name of the guest and [snapshot] is what you would
 		like to name the snapshot.
 
 roll		Rollback guest to a snapshot.
-		Usage: 'iohyve roll [name]@[snapshot]' where [name] is the
+		Usage: 'chyves roll [name]@[snapshot]' where [name] is the
 		name of the guest and [snapshot] is what you would
 		like to name the snapshot.
 
 clone		Clone a guest. Note that this will clone all of the properties.
 		If you want to use the clone and the original guest at the
 		same time you will need to change the tap and nmdm properties
-		or use the -r option to have iohyve do this for you
-		Usage: 'iohyve clone [-c | -r] [name] [clonename]' where [name]
+		or use the -r option to have chyves do this for you
+		Usage: 'chyves clone [-c | -r] [name] [clonename]' where [name]
 		is the name of the guest and [clonename] is what you would
 		like to name the new clone.
 
-export		Export a guest with all of it's properties and disks to a 
-		GZip'd tarball. Property file is in a ucl-type format. 
+export		Export a guest with all of it's properties and disks to a
+		GZip'd tarball. Property file is in a ucl-type format.
 		Disks output to a raw file, allowing for other managers using
 		ahci-hd emulation to use them. Tarball is put in the guest
-		dataset ex: /iohyve/guestname/guestname.tar.gz
-		Usage: 'iohyve export [name]' where [name] is the name of the 
-		guest. 
+		dataset ex: /chyves/guestname/guestname.tar.gz
+		Usage: 'chyves export [name]' where [name] is the name of the
+		guest.
 
 snaplist	List all of the snapshots for all the guests. Does not show
 		snapshots of disks (they are there, though).
 
-taplist		Lists all of the network taps taken by iohyve guests
+taplist		Lists all of the network taps taken by chyves guests
 		This will list taps that are not active as well.
 
 activetaps	Lists all active taps in use
 
-conlist		Lists all of the nullmodem consoles taken by iohyve guests.
+conlist		Lists all of the nullmodem consoles taken by chyves guests.
 		This will list taps that are not active as well.
 
 console		Consoles into a guest operating system. Utilizes nmdm(4) and
 		cu(1) to open a console on a guest operating system. Since
 		bhyve(8) does not emulate video, so we need to administer
-		the guests via a serial communication device. Since iohyve
+		the guests via a serial communication device. Since chyves
 		uses cu(1), you will need to press the tilde (~) twice
 		then period (.) to exit the console.
 		(Think typing ~~. real fast to exit console)
 		If that fails to work, try pressing tilde (~) then press
-		Control + D (^D). Note that on some machines, you cannot 
+		Control + D (^D). Note that on some machines, you cannot
 		escape the console. See conreset below to escape all consoles.
-		Usage: 'iohyve console [name]' where [name] is the name
+		Usage: 'chyves console [name]' where [name] is the name
 		of the guest operating system.
 
 conreset	Ends all console sessions for when things get weird.
@@ -304,89 +304,90 @@ help		General usage help.
 
 EXAMPLES
 
-Setup iohyve zpool named tank:
+Setup chyves zpool named tank:
 
-iohyve setup pool=tank
+chyves setup pool=tank
 
 Fetch FreeBSD install ISO for later:
 
-iohyve fetchiso ftp://ftp.freebsd.org/.../10.2/FreeBSD....iso
+chyves fetchiso ftp://ftp.freebsd.org/.../10.2/FreeBSD....iso
 
 Create a new FreeBSD guest named bsdguest on console nmdm0 with an 8Gigabyte virtual HDD:
 
-iohyve create bsdguest 8G
+chyves create bsdguest 8G
 
 List ISO's:
 
-iohyve isolist
+chyves isolist
 
 Install the FreeBSD guest bsdguest:
 
-iohyve install bsdguest FreeBSD-10.2-RELEASE-amd64-bootonly.iso
+chyves install bsdguest FreeBSD-10.2-RELEASE-amd64-bootonly.iso
 
 Console into the intallation:
 
-iohyve console bsdguest
+chyves console bsdguest
 
 Once installation is done, exit console (~~.) and destroy guest:
 
-iohyve destroy bsdguest
+chyves destroy bsdguest
 
 Now that the guest is installed, it can be started like usual:
 
-iohyve start bsdguest
+chyves start bsdguest
 
 Some guest os's can be gracefully stopped:
 
-iohyve stop bsdguest
+chyves stop bsdguest
 
 List all guests created with:
 
-iohyve list
+chyves list
 
 List all guests that have resources allocated using:
 
-iohyve vmmlist
+chyves vmmlist
 
-List all runnng guests using:
+List all running guests using:
 
 iohvye running
 
 You can change guest properties by using set:
 
-iohyve set bsdguest ram=512M
-iohyve set bsdguest cpu=1
-iohyve set bsdguest tap=tap0
-iohyve set bsdguest con=nmdm0
+chyves set bsdguest ram=512M
+chyves set bsdguest cpu=1
+chyves set bsdguest tap=tap0
+chyves set bsdguest con=nmdm0
 
 Get a spcific guest property:
 
-iohyve get bsdguest ram
+chyves get bsdguest ram
 
 Get all guest properties:
 
-iohyve getall bsdguest
+chyves getall bsdguest
 
 Install and run a Debian guest:
 
-iohyve create debianvm 8G
-iohyve set debianvm loader=grub-bhyve
-iohyve install debianvm deb8.1-net.iso
-iohyve start debianvm
+chyves create debianvm 8G
+chyves set debianvm loader=grub-bhyve
+chyves install debianvm deb8.1-net.iso
+chyves start debianvm
 
 Take a snapshot of a guest:
 
-iohyve snap bsdguest@beforeupdate
-iohyve snaplist
-iohyve roll bsdguest@beforeupdate
+chyves snap bsdguest@beforeupdate
+chyves snaplist
+chyves roll bsdguest@beforeupdate
 
 Make an independent clone of a guest:
 
-iohyve clone bsdguest dolly
+chyves clone bsdguest dolly
 
 AUTHOR
-Trent -- @pr1ntf
+Justin D Holcomb -- @EpiJunkie
+Original author Trent -- @pr1ntf
 
 SEE ALSO
-bhyve(8), bhyveload(8), zfs(8), nmdm(4), 
+bhyve(8), bhyveload(8), zfs(8), nmdm(4),
 cu(1), if_bridge(4), grub2-bhyve(8)
