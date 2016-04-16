@@ -69,7 +69,7 @@ setup		Installs required zfs datasets and kernel modules for chyves.
 		Multiple pools are supported, additional pools get mounted
 		in /chyves/poolname
 
-list		Lists the zfs dataset directorys for chyves.
+list		Lists the zfs dataset directories for chyves.
 
 info		Lists all the guests along with their RAM, CPU, Size,
 		OS, Loader, and Description (if -d is passed)
@@ -304,15 +304,15 @@ help		General usage help.
 
 EXAMPLES
 
-Setup chyves zpool named tank:
+Setup chyves on zpool named zroot:
 
-chyves setup pool=tank
+chyves setup pool=zroot
 
 Fetch FreeBSD install ISO for later:
 
 chyves fetchiso ftp://ftp.freebsd.org/.../10.2/FreeBSD....iso
 
-Create a new FreeBSD guest named bsdguest on console nmdm0 with an 8Gigabyte virtual HDD:
+Create a new FreeBSD guest named bsdguest with an 8 Gigabyte virtual HDD:
 
 chyves create bsdguest 8G
 
@@ -324,7 +324,7 @@ Install the FreeBSD guest bsdguest:
 
 chyves install bsdguest FreeBSD-10.2-RELEASE-amd64-bootonly.iso
 
-Console into the intallation:
+Console into the installation:
 
 chyves console bsdguest
 
@@ -348,10 +348,6 @@ List all guests that have resources allocated using:
 
 chyves vmmlist
 
-List all running guests using:
-
-iohvye running
-
 You can change guest properties by using set:
 
 chyves set bsdguest ram=512M
@@ -359,7 +355,7 @@ chyves set bsdguest cpu=1
 chyves set bsdguest tap=tap0
 chyves set bsdguest con=nmdm0
 
-Get a spcific guest property:
+Get a specific guest property:
 
 chyves get bsdguest ram
 
