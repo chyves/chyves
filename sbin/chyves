@@ -242,6 +242,9 @@ __setup() {
 					echo "Loading kernel modules..."
 					kldload vmm
 					kldload nmdm
+          kldload if_tap
+          kldload if_bridge
+          kldload bridgestp
 				elif [ $val = "0" ]; then
 					echo "Unloading kernel modules..."
 					kldunload vmm
