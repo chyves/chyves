@@ -5,7 +5,7 @@ SYNOPSIS
 chyves version
 chyves setup pool=[poolname] kmod=[0/1] net=[interface]
 chyves list
-chyves info [-d]
+chyves info [-vsdl]
 chyves isolist
 chyves fwlist
 chyves fetchiso [URL]
@@ -69,7 +69,11 @@ setup		Installs required zfs datasets and kernel modules for chyves.
 		Multiple pools are supported, additional pools get mounted
 		in /chyves/poolname
 
-list		Lists the zfs dataset directories for chyves.
+list		Lists properties about the guests and their disks using flags
+ 		OS, Loader, and Description in a per pool table.
+		to control level of output. Fields include CPU count, RAM, Disk
+ 		Size, Pool, OS, Loader, Tap, Console, VMM status, Running status,
+ 		rcboot flag, and the description. Use -l to pipe to less.
 
 info		Lists all the guests along with their RAM, CPU, Size,
 		OS, Loader, and Description (if -d is passed)
