@@ -13,6 +13,7 @@ The goal of this project is to provide a bhyve front end tool that is easy to us
 `chyves` is primary tested on FreeBSD 10.3, however some resources go into testing FreeNAS 9.10 as well.
 
 See the following documents for their respective purpose:
+````
 BUG-REPORTS.md        How to report issues and get them resolved
 CHANGELOG.md          See a summarized list of changes to this project
 CONTRIBUTING.md       Ways to contribute to this project
@@ -21,3 +22,4 @@ LICENSE               BSD License
 README.md             This document.
 UPGRADING.md          Indicates needed changes version to version
 USAGE.md              How to use chyves
+````
