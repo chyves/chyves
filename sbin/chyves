@@ -181,6 +181,7 @@ __setup() {
 				if [ -z $poolexist ]; then
 					echo "Setting up chyves pool..."
 					zfs create $pool/chyves
+          zfs create $pool/chyves/guests
 					# chyves is already setup on a pool
 					if [ -d /chyves/ISO ]; then
 						echo "Secondary pool set up..."
@@ -288,7 +289,7 @@ __list() {
 	(
 	printf "%s^%s^%s^%s^%s\n" "Guest" "VMM?" "Running" "rcboot?" "Description"
 	for pool in $pools; do
-	local guests="$(zfs list -H | grep -i ^$pool/chyves | grep -Ev "disk|ISO|Firmware" | cut -f1 | cut -d'/' -f3 | sed 1d | uniq)"
+	local guests="$(zfs list -H | grep -i ^$pool/chyves/guests | cut -f1 | cut -d'/' -f3 | sed 1d | uniq)"
 		for g in $guests; do
 			local vmm="/dev/vmm/chy-$g"
 			if [ -e $vmm ]; then
@@ -302,13 +303,13 @@ __list() {
 			else
 				running="YES"
 			fi
-			local boot="$(zfs get -H -o value chyves:boot $pool/chyves/$g)"
+			local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
 			if [ $boot = '1' ]; then
 				boot="YES"
 			else
 				boot="NO"
 			fi
-		local description="$(zfs get -H -o value chyves:description $pool/chyves/$g)"
+		local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
 		printf "%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$description"
 		done
 	done
@@ -451,20 +452,20 @@ __create() {
 		local con="$(expr $conlast + 1)"
 	fi
 	echo "Creating $name..."
-	zfs create $pool/chyves/$name
-	zfs create -V $size -o volmode=dev $pool/chyves/$name/disk0
-	zfs set chyves:name=$name $pool/chyves/$name
-	zfs set chyves:size=$size $pool/chyves/$name
-	zfs set chyves:ram=256M $pool/chyves/$name
-	zfs set chyves:cpu=1 $pool/chyves/$name
-	zfs set chyves:tap=tap$tap $pool/chyves/$name
-	zfs set chyves:con=nmdm$con $pool/chyves/$name
-	zfs set chyves:persist=1 $pool/chyves/$name
-	zfs set chyves:boot=0 $pool/chyves/$name
-	zfs set chyves:loader=bhyveload $pool/chyves/$name
-	zfs set chyves:os=default $pool/chyves/$name
-	zfs set "chyves:description=$description" $pool/chyves/$name
-	zfs set chyves:bargs=-A_-H_-P $pool/chyves/$name
+	zfs create $pool/chyves/guests/$name
+	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
+	zfs set chyves:name=$name $pool/chyves/guests/$name
+	zfs set chyves:size=$size $pool/chyves/guests/$name
+	zfs set chyves:ram=256M $pool/chyves/guests/$name
+	zfs set chyves:cpu=1 $pool/chyves/guests/$name
+	zfs set chyves:tap=tap$tap $pool/chyves/guests/$name
+	zfs set chyves:con=nmdm$con $pool/chyves/guests/$name
+	zfs set chyves:persist=1 $pool/chyves/guests/$name
+	zfs set chyves:boot=0 $pool/chyves/guests/$name
+	zfs set chyves:loader=bhyveload $pool/chyves/guests/$name
+	zfs set chyves:os=default $pool/chyves/guests/$name
+	zfs set "chyves:description=$description" $pool/chyves/guests/$name
+	zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/$name
 }
 
 # Install guest
@@ -474,7 +475,7 @@ __install() {
 	local pool="$(zfs list -H -t volume -o name | grep chyves/guests/$name | grep disk0 | cut -d '/' -f1)"
 	local dataset="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1-3 | head -n1)"
 	# Check if guest exists
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
@@ -485,7 +486,7 @@ __install() {
 			local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
 			echo "Installing $name..."
 			# Set install prop
-			zfs set chyves:install=yes $pool/chyves/$name
+			zfs set chyves:install=yes $pool/chyves/guests/$name
 			# Load from CD
 			__load "$name" "/chyves/ISO/$iso/$iso"
 			# Prepare and start guest
@@ -523,93 +524,93 @@ __load() {
 	if [ $loader = "grub-bhyve" ]; then
 		if [ $install = "yes" ]; then
 			if [ $os = "openbsd59" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory-m /chyves/$name/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory-m /chyves/guests/$name/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ] || [ $os = "centos7" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "arch" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			else
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			fi
 		elif [ $install = "no" ]; then
 			if [ $os = "openbsd59" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > /chyves/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > /chyves/guests/$name/grub.cfg
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos7" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r host -d /chyves/$name -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
 			else
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
+				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
+				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			fi
 		fi
 	else
@@ -714,7 +715,7 @@ __start() {
 		__uefi "$name" "null.iso"
 	fi
 	# Check if guest exists
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
@@ -768,7 +769,7 @@ __uefi() {
 		echo "EX: chyves uefi winguest null.iso"
 	fi
 	# Check if guest exists
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
@@ -796,7 +797,7 @@ __stop() {
 	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
 	local pid=$(pgrep -fx "bhyve: chy-$name")
 	echo "Stopping $name..."
-#	zfs set chyves:persist=0 $pool/chyves/$name
+#	zfs set chyves:persist=0 $pool/chyves/guests/$name
 	kill $pid
 #	sleep 20
 #	bhyvectl --destroy --vm=chy-$name
@@ -828,7 +829,7 @@ __destroy() {
 	local name="$2"
 	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
 	echo "Destroying $name..."
-#	zfs set chyves:persist=0 $pool/chyves/$name
+#	zfs set chyves:persist=0 $pool/chyves/guests/$name
 	bhyvectl --force-poweroff --vm=chy-$name
 	bhyvectl --destroy --vm=chy-$name
 }
@@ -839,8 +840,8 @@ __rename() {
 	local newname="$3"
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name" | cut -d '/' -f 1 | head -n1)"
 	echo "Renaming $name to $newname..."
-	zfs rename -f $pool/chyves/$name $pool/chyves/$newname
-	zfs set chyves:name=$newname $pool/chyves/$newname
+	zfs rename -f $pool/chyves/guests/$name $pool/chyves/guests/$newname
+	zfs set chyves:name=$newname $pool/chyves/guests/$newname
 }
 
 # Delete guest
@@ -881,14 +882,14 @@ __set() {
 		if [ $prop = "bargs" ]; then
 			local sval="$(echo $val | cut -d '"' -f2 | sed -e 's/ /_/g')"
 			echo "Setting $name $prop=$val..."
-			zfs set chyves:$prop=$sval $pool/chyves/$name
+			zfs set chyves:$prop=$sval $pool/chyves/guests/$name
 		elif [ $prop = "description" ]; then
 			local sval="$(echo $val | cut -d '"' -f2)"
 			echo "Setting $name $prop=$val..."
-			zfs set "chyves:$prop=$sval" $pool/chyves/$name
+			zfs set "chyves:$prop=$sval" $pool/chyves/guests/$name
 		else
 			echo "Setting $name $prop=$val..."
-			zfs set chyves:$prop=$val $pool/chyves/$name
+			zfs set chyves:$prop=$val $pool/chyves/guests/$name
 		fi
 	done
 }
@@ -899,7 +900,7 @@ __get() {
 	local prop="$3"
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
 	echo "Getting $name prop $prop..."
-	zfs get -H -o value chyves:$prop $pool/chyves/$name
+	zfs get -H -o value chyves:$prop $pool/chyves/guests/$name
 }
 
 # Remove a PCIDEV property
@@ -915,7 +916,7 @@ __rmpci() {
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
 		else
-			zfs inherit  -r chyves:$flagthree $pool/chyves/$flagtwo
+			zfs inherit  -r chyves:$flagthree $pool/chyves/guests/$flagtwo
 		fi
 	else
 		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
@@ -926,7 +927,7 @@ __rmpci() {
 		else
 			read -p "Are you sure you want to remove $flagtwo [Y/N]? " an </dev/tty
 			case "$an" in
-				y|Y) zfs inherit  -r chyves:$flagtwo $pool/chyves/$flagone
+				y|Y) zfs inherit  -r chyves:$flagtwo $pool/chyves/guests/$flagone
 				;;
 				*) echo "Not removed..."
 				;;
@@ -940,7 +941,7 @@ __getall() {
 	local name="$2"
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
 	echo "Getting $name chyves properties..."
-	zfs get -o property,value all $pool/chyves/$name | grep chyves: | sort | sed -e 's/chyves://g'
+	zfs get -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | sed -e 's/chyves://g'
 }
 
 # Add a new disk to guest
@@ -955,8 +956,8 @@ __add() {
 		sort -V | cut -c5- | tail -n1)"
 	local newdisk="$(expr $lastdisk + 1)"
 	echo "Creating new zvol for $name..."
-	zfs create $newpool/chyves/$name 2> /dev/null
-	zfs create -V $size -o volmode=dev $newpool/chyves/$name/disk$newdisk
+	zfs create $newpool/chyves/guests/$name 2> /dev/null
+	zfs create -V $size -o volmode=dev $newpool/chyves/guests/$name/disk$newdisk
 	# Find the last pcidev and increment by one
 	local lastpci="$(zfs get -H all | grep chyves/guests/$name | grep pcidev | cut -f2 | \
 		cut -d ':' -f3 | sort -V | tail -n1)"
@@ -965,7 +966,7 @@ __add() {
 	else
 		local newpci="$(expr $lastpci + 1)"
 	fi
-	zfs set chyves:pcidev:$newpci=ahci-hd,/dev/zvol/$newpool/chyves/$name/disk$newdisk $pool/chyves/$name
+	zfs set chyves:pcidev:$newpci=ahci-hd,/dev/zvol/$newpool/chyves/guests/$name/disk$newdisk $pool/chyves/guests/$name
 }
 
 # Remove disk from guest
@@ -976,25 +977,25 @@ __remove() {
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pool="$(zfs list -H -o name | grep $flagtwo | grep $flagthree | cut -d '/' -f 1)"
-		local pciprop="$(zfs get -H all $pool/chyves/$flagtwo | grep pcidev | grep $flagthree | cut -f2 )"
+		local pciprop="$(zfs get -H all $pool/chyves/guests/$flagtwo | grep pcidev | grep $flagthree | cut -f2 )"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
 		else
-			zfs inherit  -r $pciprop $pool/chyves/$flagtwo
-			zfs destroy $pool/chyves/$flagtwo/$flagthree
+			zfs inherit  -r $pciprop $pool/chyves/guests/$flagtwo
+			zfs destroy $pool/chyves/guests/$flagtwo/$flagthree
 		fi
 	else
 		local pool="$(zfs list -H -o name | grep $flagone | grep $flagtwo | cut -d '/' -f 1)"
-		local pciprop="$(zfs get -H all $pool/chyves/$flagone | grep pcidev | grep $flagtwo | cut -f2 )"
+		local pciprop="$(zfs get -H all $pool/chyves/guests/$flagone | grep pcidev | grep $flagtwo | cut -f2 )"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
 		else
 			read -p "Are you sure you want to remove $flagtwo from $flagone [Y/N]? " an </dev/tty
 			case "$an" in
-				y|Y)	zfs inherit  -r $pciprop $pool/chyves/$flagone
-					zfs destroy $pool/chyves/$flagone/$flagtwo
+				y|Y)	zfs inherit  -r $pciprop $pool/chyves/guests/$flagone
+					zfs destroy $pool/chyves/guests/$flagone/$flagtwo
 				;;
 				*) echo "Not removed..."
 				;;
@@ -1011,12 +1012,12 @@ __resize(){
 	local pool="$(zfs list -H -o name | grep chyves/guests/$name | grep $disk | cut -d '/' -f 1)"
 	# Check if guest exists
 	echo "Resizing $disk to $size"
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
-			zfs set volsize=$size $pool/chyves/$name/$disk
-			zfs set chyves:size=$size $pool/chyves/$name
+			zfs set volsize=$size $pool/chyves/guests/$name/$disk
+			zfs set chyves:size=$size $pool/chyves/guests/$name
 		else
 			echo "Please stop the guest first"
 		fi
@@ -1031,7 +1032,7 @@ __disks() {
 	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
 	if [ -z $name ]; then
 		echo "You must enter a guest name."
-	elif [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	elif [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		(
 		echo "Listing disks for $name..."
 		printf "diskN\tSize\n"
@@ -1050,8 +1051,8 @@ __snapguest() {
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
 	echo "Taking snapshot $fullsnap"
 	# Check if guest exists
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
-		zfs snap -r $pool/chyves/$fullsnap
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
+		zfs snap -r $pool/chyves/guests/$fullsnap
 	else
 		echo "Not a valid guest name"
 	fi
@@ -1067,13 +1068,13 @@ __rollguest() {
 				cut -f1 | cut -d '/' -f4-)"
 	# Check if guest exists
 	echo "Rolling back to $fullsnap"
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
-			zfs rollback -rR $pool/chyves/$fullsnap
+			zfs rollback -rR $pool/chyves/guests/$fullsnap
 			for disk in $disklist ; do
-				zfs rollback -rR $pool/chyves/$name/$disk@$snap
+				zfs rollback -rR $pool/chyves/guests/$name/$disk@$snap
 			done
 		else
 			echo "Please stop the guest first"
@@ -1092,18 +1093,18 @@ __cloneguest() {
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name/disk0" | cut -d '/' -f 1 | head -n1)"
 	# Check if guest exists
 	echo "Cloning $name to $cname"
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 			# Take snapshot
-			zfs snap -r $pool/chyves/$name@$cname
+			zfs snap -r $pool/chyves/guests/$name@$cname
 			# zfs send that snap and desendants then receive to cname
-			zfs send -R $pool/chyves/$name@$cname | \
-			zfs recv $pool/chyves/$cname
+			zfs send -R $pool/chyves/guests/$name@$cname | \
+			zfs recv $pool/chyves/guests/$cname
 			# clean up
-			zfs destroy -rR $pool/chyves/$name@$cname
-			zfs destroy -rR $pool/chyves/$cname@$cname
+			zfs destroy -rR $pool/chyves/guests/$name@$cname
+			zfs destroy -rR $pool/chyves/guests/$cname@$cname
 			# rename the guest
-			zfs set chyves:name=$cname $pool/chyves/$cname
-			zfs set chyves:description=$description $pool/chyves/$cname
+			zfs set chyves:name=$cname $pool/chyves/guests/$cname
+			zfs set chyves:description=$description $pool/chyves/guests/$cname
 			# change con and tap properties to next available if -r is specified
 			if [ "$flag" == "-r" ]; then
 				local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-3)"
@@ -1132,8 +1133,8 @@ __cloneguest() {
 					local con="$(expr $conlast + 1)"
 				fi
 
-				zfs set chyves:tap=tap$tap $pool/chyves/$cname
-				zfs set chyves:con=nmdm$con $pool/chyves/$cname
+				zfs set chyves:tap=tap$tap $pool/chyves/guests/$cname
+				zfs set chyves:con=nmdm$con $pool/chyves/guests/$cname
 			fi
 
 	else
@@ -1149,25 +1150,25 @@ __exportguest() {
 				cut -f1 | cut -d '/' -f4-)"
 	# Check if guest exists
 	echo "Exporting $name. Note this may take some time depending on the size."
-	if [ -d /chyves/$pool/$name ] || [ -d /chyves/$name ]; then
+	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
-			# Create /tmp/chyves/$name
+			# Create /tmp/chyves/guests/$name
 			echo "Creating temp directory..."
-			mkdir -p /tmp/chyves/$name
+			mkdir -p /tmp/chyves/guests/$name
 			# Export Properties to file
 			echo "Exporting properties..."
-			zfs get -H -o property,value all $pool/chyves/$name | grep chyves: | sort | \
-				sed -e 's/chyves://g' | sed -e 's/	/=/g' > /tmp/chyves/$name/properties.ucl
+			zfs get -H -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | \
+				sed -e 's/chyves://g' | sed -e 's/	/=/g' > /tmp/chyves/guests/$name/properties.ucl
 			# Write disks to file
 			echo "Exporting disks..."
 			for disk in $disklist ; do
-				dd if=/dev/zvol/$pool/chyves/$name/$disk of=/tmp/chyves/$name/${disk}.img bs=1M
+				dd if=/dev/zvol/$pool/chyves/guests/$name/$disk of=/tmp/chyves/guests/$name/${disk}.img bs=1M
 			done
 			# Compress and add to archive
 			echo "Compressing to archive..."
-			tar -czf /chyves/$name/$name.tar.gz -C /tmp/chyves/$name/ .
+			tar -czf /chyves/guests/$name/$name.tar.gz -C /tmp/chyves/guests/$name/ .
 			# Remove /tmp/chyves/
 			echo "Removing temp directory..."
 			rm -fr /tmp/chyves
@@ -1203,11 +1204,11 @@ __activetaps() {
 # List consoles in use
 __conlist() {
 	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
-	local guestlist="$(zfs list -H | grep chyves | grep -v ISO | grep -v disk | grep -v Firmware | sed 1d | cut -f1 | cut -d '/' -f3)"
+	local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f3)"
 	(
 	printf 'Guest\tConsole\n'
 	for guest in $guestlist; do
-		local con="$(zfs get -H -o value chyves:con $pool/chyves/$guest)"
+		local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$guest)"
 		printf $guest'\t'$con'\n'
 	done
 	) | column -t

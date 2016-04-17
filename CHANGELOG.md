@@ -9,3 +9,7 @@ Changed command from `iohyve` to `chyves`. It rhymes with the original project a
 Created new document structure and folder. Root folder contains documents about the project. The installed files are now in their respective places `sbin/`, `etc/rc.d/`, and `man/man8`
 
 Changes other internal references to `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
+
+Fixed various typos in man page.
+
+Created a new dataset to house all the guests under `$pool/chyves/guests/$guest`
