@@ -20,6 +20,7 @@ CONTRIBUTING.md       Ways to contribute to this project
 CREDITS.md            See who has contributed to this project
 LICENSE               BSD License
 README.md             This document.
+TODO.md               Project goals
 UPGRADING.md          Indicates needed changes version to version
 USAGE.md              How to use chyves
 ````
