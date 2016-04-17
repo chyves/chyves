@@ -104,9 +104,6 @@ __parse_cmd () {
       getall)   __getall "$@"
                 exit
       ;;
-      fix-bargs) __fixbargs "$@"
-            		exit
-      ;;
       add)	__add "$@"
             		exit
       ;;
