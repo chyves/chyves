@@ -524,6 +524,7 @@ __create() {
 	local name="$2"
 	local pool="${4-$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)}"
 	local size="$3"
+  local uuid="$(/bin/uuidgen)"
 	local description="$(date)"
   # Gets primary pool
   local prim_pool="$(zfs get -r mountpoint | grep "/chyves " | cut -d'/' -f1')"
@@ -581,6 +582,7 @@ __create() {
 	zfs set chyves:os=$def_os $pool/chyves/guests/$name
 	zfs set "chyves:description=$description" $pool/chyves/guests/$name
 	zfs set chyves:bargs=$def_bargs $pool/chyves/guests/$name
+  zfs set chyves:uuid=$uuid $pool/chyves/guests/$name
 }
 
 # Install guest
@@ -597,6 +599,7 @@ __install() {
 			local ram="$(zfs get -H -o value chyves:ram $dataset)"
 			local con="$(zfs get -H -o value chyves:con $dataset)"
 			local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
+      local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 			local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 			local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
 			echo "Installing $name..."
@@ -607,7 +610,7 @@ __install() {
 			# Prepare and start guest
 			pci="$(__prepare_guest $name) ahci-cd,/chyves/ISO/$iso/$iso"
 			local pci_args=$(__get_bhyve_cmd "$pci" )
-			bhyve -c $cpu $bargs -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
+			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
 		else
 			echo "Guest is already running."
 		fi
@@ -746,6 +749,7 @@ __boot() {
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
+  local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 	local persist="$(zfs get -H -o value chyves:persist $dataset)"
 	local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 	local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
@@ -760,7 +764,7 @@ __boot() {
 		while [ $runstate = "1" ]
 		do
 			__load "$name" "/dev/zvol/$dataset/disk0"
-			bhyve -c $cpu $bargs -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
+			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
 			local vmpid=$!
 			wait $vmpid
 			vmrc=$?
@@ -865,6 +869,7 @@ __uefi() {
 	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
 	local fw="$(zfs get -H -o value chyves:fw $dataset)"
 	local tap="$(zfs get -H -o value chyves:tap $dataset)"
+  local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 	local bargs="$(zfs get -H -o value chyves:bargs $dataset | sed -e 's/_/ /g')"
 	local pool="$(zfs list -H -t volume -o name | grep chyves/guests/$name | cut -d '/' -f1)"
 	# Create tap if needed
@@ -897,6 +902,7 @@ __uefi() {
 			        -s 31,lpc \
 			        -l com1,/dev/${con}A \
 			        -l bootrom,/chyves/Firmware/$fw/$fw \
+              -U $uuid \
 			        chy-$name &
 		else
 			echo "Guest is already running."
