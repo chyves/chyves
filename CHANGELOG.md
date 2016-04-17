@@ -13,3 +13,5 @@ Changes other internal references to `iohyve` to `chyves`. For example, the VMM 
 Fixed various typos in man page.
 
 Created a new dataset to house all the guests under `$pool/chyves/guests/$guest`
+
+Created a dataset, `$pool/chyves/.defaults`, which is referenced to build new guests instead of hard references. Might use for other uses besides guest creation.

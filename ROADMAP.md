@@ -1,8 +1,6 @@
 This early in the project a map is not defined. However many goals are planned:
 
 
-Created a dataset, `$pool/chyves/.defaults`, which is referenced to build new guests instead of hard references.
-
 Changed the output of `info` to be more verbose with command line flags.
 
 Added comments throughout the code to indicate what is going on.
