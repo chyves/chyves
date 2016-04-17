@@ -1,9 +1,9 @@
-These individuals have contributed to chyves:
+#### These individuals have contributed to chyves:
 
 Justin H. @EpiJunkie
 
 
-These individuals contributed to iohyve before the fork:
+#### These individuals contributed to iohyve before the fork:
 
 _(Pulled from CREDITS and GitHub contributors report.)_
 
