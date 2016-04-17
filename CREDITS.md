@@ -2,6 +2,8 @@
 
 Justin H. @EpiJunkie
 
+Matt C. @churchers
+
 
 #### These individuals contributed to iohyve before the fork:
 
