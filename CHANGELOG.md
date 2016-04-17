@@ -16,4 +16,4 @@ Created a new dataset to house all the guests under `$pool/chyves/guests/$guest`
 
 Created a dataset, `$pool/chyves/.defaults`, which is referenced to build new guests instead of hard references. Might use for other uses besides guest creation.
 
-Rewrote chves info() to use flags for verbosity. See man page for available flags to use.
+Rewrote chyves info() to use flags for verbosity. See man page for available flags to use.
