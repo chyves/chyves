@@ -667,7 +667,7 @@ __load() {
 			elif [ $os = "debian" ]; then
 				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
 				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory-m /chyves/guests/$name/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
 				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
 				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
