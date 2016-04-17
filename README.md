@@ -8,7 +8,7 @@ chyves utilizes FreeBSD’s bhyve to start and manage type 2 virtualized guests.
 
 The goal of this project is to provide a bhyve front end tool that is easy to use, develop, and debug. This project has a different structure and some differing goals than `iohyve`. For the time being, best effort is given to provide upstream bug fixes to their project as a gratitude for the leg up on this project's start.
 
-`chyves` has also developed a series of tools at `chyves/chyves-utils` to import virtual guests from other platforms. This currently includes `iohyve` and snapshotless ESXi guests. Converting from other platforms should be possible if interest is expressed. `chyves-utils` is developed as a separate project as it requires dependancies with VirtualBox for the conversion of disk images.
+`chyves` has also developed a series of tools at `chyves/chyves-utils` to import supported virtual guests from other platforms. This currently includes `iohyve` and snapshotless ESXi guests. Converting from other platforms should be possible if interest is expressed. `chyves-utils` is developed as a separate project as it requires dependancies with VirtualBox for the conversion of disk images.
 
 `chyves` is primary tested on FreeBSD 10.3, however some resources go into testing FreeNAS 9.10 as well.
 
