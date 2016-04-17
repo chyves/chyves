@@ -16,4 +16,8 @@ Created a new dataset to house all the guests under `$pool/chyves/guests/$guest`
 
 Created a dataset, `$pool/chyves/.defaults`, which is referenced to build new guests instead of hard references. Might use for other uses besides guest creation.
 
-Rewrote chyves info() to use flags for verbosity. See man page for available flags to use.
+Rewrote `chyves info()` to use flags for verbosity. See man page for available flags to use.
+
+Added ability to specify UUID for guest. This is mostly helpful for Windows guests in regards to their licensing activation, however other use cases exist. UUID is generated on creation by /bin/uuidgen.
+
+Additional kernel modules loaded with `chyves setup kmod=1` for networking taps and bridges. Creation of bridges and taps would fail without these modules.
