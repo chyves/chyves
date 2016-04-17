@@ -4,10 +4,8 @@ chyves(8) - bhyve front end manager v0.0.0
 SYNOPSIS
 chyves version
 chyves setup pool=[poolname] kmod=[0/1] net=[interface]
-chyves list
+chyves list [$null|trad|iso|firmware|snapshots|tap|con] [active]
 chyves info [-vsdl]
-chyves isolist
-chyves fwlist
 chyves fetchiso [URL]
 chyves cpiso [path]
 chyves renameiso [ISO] [newname]
@@ -39,10 +37,6 @@ chyves snap [name]@[snapshotname]
 chyves roll [name]@[snapshotname]
 chyves clone [-c | -r] [name] [clonename]
 chyves export [name]
-chyves snaplist
-chyves taplist
-chyves activetaps
-chyves conlist
 chyves console [name]
 chyves conreset
 chyves help
@@ -69,18 +63,33 @@ setup		Installs required zfs datasets and kernel modules for chyves.
 		Multiple pools are supported, additional pools get mounted
 		in /chyves/poolname
 
-list		Lists properties about the guests and their disks using flags
- 		OS, Loader, and Description in a per pool table.
-		to control level of output. Fields include CPU count, RAM, Disk
- 		Size, Pool, OS, Loader, Tap, Console, VMM status, Running status,
- 		rcboot flag, and the description. Use -l to pipe to less.
+list		Takes argument to display information about on general guest info
+		with the no argument or "trad", "iso" will display ISOs resources,
+		"snapshots" will display snapshots for all guests, "tap" will display
+		all taps including inactive taps, "tap active" will list only active
+		taps, and "con" will display configured consoles.
+
+		$null or trad		Lists properties about the guests and their disks
+				using flags OS, Loader, and Description in a per pool table.
+				to control level of output. Fields include CPU count, RAM, Disk
+		 		Size, Pool, OS, Loader, Tap, Console, VMM status, Running status,
+		 		rcboot flag, and the description.
+
+		iso		List Lists the installed ISOs in the /chyves/ISO directory.
+		firmware		Lists the firmwares in the /chyves/Firmware directory.
+
+		snapshots		List all of the snapshots for all the guests. Does not show
+				snapshots of disks (they are there, though).
+
+		tap		Lists all of the network taps taken by chyves guests
+				This will list taps that are not active as well. Using the argument
+				chyves list tap active displays only active taps.
+
+		con		Lists all of the nullmodem consoles taken by chyves guests.
+				This will list taps that are not active as well.
 
 info		Lists all the guests along with their RAM, CPU, Size,
 		OS, Loader, and Description (if -d is passed)
-
-isolist		List Lists the installed ISOs in the /chyves/ISO directory.
-
-fwlist		Lists the firmwares in the /chyves/Firmware directory.
 
 fetchiso		Fetches installation ISO or install image and creates a
 		dataset for it.
@@ -280,17 +289,6 @@ export		Export a guest with all of it's properties and disks to a
 		dataset ex: /chyves/guestname/guestname.tar.gz
 		Usage: 'chyves export [name]' where [name] is the name of the
 		guest.
-
-snaplist	List all of the snapshots for all the guests. Does not show
-		snapshots of disks (they are there, though).
-
-taplist		Lists all of the network taps taken by chyves guests
-		This will list taps that are not active as well.
-
-activetaps	Lists all active taps in use
-
-conlist		Lists all of the nullmodem consoles taken by chyves guests.
-		This will list taps that are not active as well.
 
 console		Consoles into a guest operating system. Utilizes nmdm(4) and
 		cu(1) to open a console on a guest operating system. Since

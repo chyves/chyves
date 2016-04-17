@@ -26,17 +26,11 @@ __parse_cmd () {
       setup)    __setup "$@"
                 exit
       ;;
-      list)     __list
+      list)     __list "$2" "$3"
                 exit
       ;;
       info)	__info "$2"
             		exit
-      ;;
-      isolist)  __isolist
-                exit
-      ;;
-      fwlist)	__fwlist
-                exit
       ;;
       fetchiso|fetch)    __fetchiso "$@"
                 exit
@@ -136,18 +130,6 @@ __parse_cmd () {
       ;;
       export)	__exportguest "$@"
             		exit
-      ;;
-      snaplist)	__snaplist
-            		exit
-      ;;
-      taplist)  __taplist
-                exit
-      ;;
-      activetaps) __activetaps
-                exit
-      ;;
-      conlist)  __conlist
-                exit
       ;;
       console)  __console "$@"
                 exit
@@ -301,35 +283,114 @@ __get_zfs_pcidev_conf() {
 
 # List Guests
 __list() {
-	local pools="$(zfs list -H | grep chyves | cut -d '/' -f 1 | uniq )"
-	(
-	printf "%s^%s^%s^%s^%s\n" "Guest" "VMM?" "Running" "rcboot?" "Description"
-	for pool in $pools; do
-	local guests="$(zfs list -H | grep -i ^$pool/chyves/guests | cut -f1 | cut -d'/' -f3 | sed 1d | uniq)"
-		for g in $guests; do
-			local vmm="/dev/vmm/chy-$g"
-			if [ -e $vmm ]; then
-				vmm="YES"
-			else
-				vmm="NO"
-			fi
-			local running=$(pgrep -fx "bhyve: chy-$g")
-			if [ -z $running ]; then
-				running="NO"
-			else
-				running="YES"
-			fi
-			local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
-			if [ $boot = '1' ]; then
-				boot="YES"
-			else
-				boot="NO"
-			fi
-		local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
-		printf "%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$description"
-		done
-	done
-	) | column -ts^
+  local output_type="$2"
+  local active_taps="$3" # Only used for tap
+
+  if [ -z $2 ]; then
+    # Traditional `chyves list` true when null
+    local output_type="trad"
+  fi
+
+  case "$type” in
+    trad)     __ls_trad
+              exit
+    ;;
+    iso)      __ls_iso
+              exit
+    ;;
+    firm|firmware|fw)    __ls_firmware
+              exit
+    ;;
+    snap|snapshots)    __ls_snapshots
+              exit
+    ;;
+    tap)      __ls_tap "$active_taps"
+              exit
+    ;;
+    con)      __ls_con
+              exit
+    ;;
+  esac
+
+  __ls_trad() {
+    local pools="$(zfs list -H | grep chyves | cut -d '/' -f 1 | uniq )"
+    (
+    printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
+    for pool in $pools; do
+      local guests="$(zfs list -H | grep -i ^$pool/chyves/guests | cut -f1 | cut -d'/' -f3 | sed 1d | uniq)"
+      for g in $guests; do
+        local vmm="/dev/vmm/chy-$g"
+        if [ -e $vmm ]; then
+          vmm="YES"
+        else
+          vmm="NO"
+        fi
+        local running=$(pgrep -fx "bhyve: chy-$g")
+        if [ -z $running ]; then
+          running="NO"
+        else
+          running="YES"
+        fi
+        local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
+        if [ $boot = '1' ]; then
+          boot="YES"
+        else
+          boot="NO"
+        fi
+        local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
+        printf "%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
+      done
+    done
+    ) | column -ts^
+  }
+
+  # List iso's
+  __ls_iso() {
+  	echo "Listing ISO\'s..."
+  	zfs list -H | grep chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
+  }
+
+  # List Firmware
+  __ls_firmware {
+    echo "Listing Firmware..."
+    zfs list -H | grep chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
+  }
+
+  # List all the snapshots
+  __ls_snapshots() {
+    zfs list -H -t snap | grep chyves | grep -v disk | cut -f1 | cut -d '/' -f3
+  }
+
+  # List taps in use
+  __ls_tap() {
+    $active_taps = $1
+    if [ -z $active_taps]; then
+      local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-3)"
+      echo "Listing all network taps:"
+      for i in $guestlist ; do
+        conprop="$(zfs get -H -o value chyves:tap $i)"
+        printf $i'......'$conprop'\n'
+      done
+    elif [ $active_taps = "active" ]; then
+      echo "Listing active network taps..."
+      ls /dev | grep tap
+    else
+      echo "$active_taps is an unknown argument."
+    fi
+  }
+
+  # List consoles in use
+  __ls_con() {
+    local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
+    local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f3)"
+    (
+    printf 'Guest\tConsole\n'
+    for guest in $guestlist; do
+      local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$guest)"
+      printf $guest'\t'$con'\n'
+    done
+    ) | column -t
+  }
 }
 
 # Display info about all guests.
@@ -432,18 +493,6 @@ __info() {
 			cat
 		fi
 	)
-}
-
-# List iso's
-__isolist() {
-	echo "Listing ISO's..."
-	zfs list -H | grep chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
-}
-
-# List Firmware
-__fwlist() {
-	echo "Listing Firmware..."
-	zfs list -H | grep chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
 }
 
 # Fetch ISO
@@ -1307,40 +1356,6 @@ __exportguest() {
 	fi
 }
 
-# List all the snapshots
-__snaplist() {
-	zfs list -H -t snap | grep chyves | grep -v disk | cut -f1 | cut -d '/' -f3
-}
-
-# List taps in use
-__taplist() {
-	local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-3)"
-	echo "Listing all network taps:"
-	for i in $guestlist ; do
-		conprop="$(zfs get -H -o value chyves:tap $i)"
-		printf $i'......'$conprop'\n'
-	done
-}
-
-# List active taps in use
-__activetaps() {
-  echo "Listing active network taps..."
-	ls /dev | grep tap
-}
-
-# List consoles in use
-__conlist() {
-	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
-	local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f3)"
-	(
-	printf 'Guest\tConsole\n'
-	for guest in $guestlist; do
-		local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$guest)"
-		printf $guest'\t'$con'\n'
-	done
-	) | column -t
-}
-
 # Run console
 __console() {
 	local name="$2"
@@ -1361,10 +1376,8 @@ __help() {
 cat << 'EOT'
 chyves  version
 	setup pool=[poolname] kmod=[0/1] net=[interface]
-	list
+	list [$null|trad|iso|firmware|snapshots|tap|con] [active]
 	info [-vsdl]
-	isolist
-	fwlist
 	fetchiso [URL]
 	cpiso [path]
 	renameiso [ISO] [newname]
@@ -1396,10 +1409,6 @@ chyves  version
 	roll [name]@[snapshotname]
 	clone [-c | -r] [name] [clonename]
 	export [name]
-	snaplist
-	taplist
-	activetaps
-	conlist
 	console [name]
 	conreset
 	help
