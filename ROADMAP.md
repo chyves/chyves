@@ -7,4 +7,4 @@ Added comments throughout the code to indicate what is going on.
 
 Added more output to indicate to the end user what is happening in the script
 
-Restructured command layout to have less sub-commands. For example: `list`, `fwlist`, `isolist`, `snaplist`, `taplist` all are combined under `list`. The `list` still displays output for the status of guests, `list iso` displays what `isolist` used to, and so forth.
+Restructured command layout to have less sub-commands.
