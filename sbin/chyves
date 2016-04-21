@@ -1,8 +1,9 @@
 #!/bin/sh
 
-# chyves v0.0.0 2016/04/00
-
-# Set proper path thanks to iocage
+_VERSION=0.0.0
+_VERSION_LONG="v0.0.0 2016/04/00"
+_VERSION_INT="000"
+_OLD_VERSION_DATASETS="$(zfs list -H -o chyves:dataset_version | grep chyves/.info | grep -v "${_VERSION}" )"
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # See whether given command is readonly
@@ -144,7 +145,7 @@ __parse_cmd () {
 
 # Show version
 __version() {
-	echo "chyves v0.0.0 2016/04/00"
+	echo "chyves ${_VERSION_LONG}"
 }
 
 # Setup chyves
@@ -161,28 +162,31 @@ __setup() {
 					echo "Setting up chyves pool..."
 					zfs create $pool/chyves
           zfs create $pool/chyves/guests
-					# chyves is already setup on a pool
+          zfs create $pool/chyves/.info
+          zfs set chyves:dataset_version=${_VERSION} $pool/chyves/.info
+					# a chyves pool is already setup, setup secondary pool.
 					if [ -d /chyves/ISO ]; then
 						echo "Secondary pool set up..."
 						zfs set mountpoint="/chyves/$pool" $pool/chyves
-				  # chyves is not set up yet
+            zfs set chyves:dataset_role=secondary $pool/chyves/.info
+				  # chyves is not set up yet, setup primary pool.
 					else
 						zfs set mountpoint="/chyves" $pool/chyves
-						zfs create $pool/chyves/ISO
+            zfs create $pool/chyves/ISO
 						zfs create $pool/chyves/Firmware
             zfs create $pool/chyves/guests
-            echo "Setting up .defaults properties on primary pool..."
-            # Using $pool/chyves/.defaults rather than $pool/chyves/guests/.defaults
-            #  for future expansion of this dataset.
-            zfs create $pool/chyves/.defaults
-            zfs set chyves:size=8G $pool/chyves/.defaults
-            zfs set chyves:cpu=1 $pool/chyves/.defaults
-            zfs set chyves:ram=256M $pool/chyves/.defaults
-            zfs set chyves:persist=1 $pool/chyves/.defaults
-            zfs set chyves:boot=0 $pool/chyves/.defaults
-            zfs set chyves:loader=bhyveload $pool/chyves/.defaults
-            zfs set chyves:os=default $pool/chyves/.defaults
-            zfs set chyves:bargs=-A_-H_-P $pool/chyves/.defaults
+            echo "Setting up .defaults dataset and properties on primary pool..."
+            zfs create $pool/chyves/guests/.defaults
+            zfs set chyves:size=8G $pool/chyves/guests/.defaults
+            zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
+            zfs set chyves:ram=256M $pool/chyves/guests/.defaults
+            zfs set chyves:persist=1 $pool/chyves/guests/.defaults
+            zfs set chyves:boot=0 $pool/chyves/guests/.defaults
+            zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
+            zfs set chyves:os=default $pool/chyves/guests/.defaults
+            zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
+            echo "Setting up .info properties on primary pool..."
+            zfs set chyves:dataset_role=primary $pool/chyves/.info
 					fi
 				else
 					echo "chyves already exists on $pool"
@@ -578,14 +582,14 @@ __create() {
   # Gets primary pool
   local prim_pool="$(zfs get -r mountpoint | grep "/chyves " | cut -d'/' -f1')"
   # Get default values as set by .defaults on primary pool
-  local def_size="$(zfs get -H -o value chyves:size $prim_pool/.defaults)"
-  local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/.defaults)"
-  local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/.defaults)"
-  local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/.defaults)"
-  local def_boot="$(zfs get -H -o value chyves:boot $prim_pool/chyves/.defaults)"
-  local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/.defaults)"
-  local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/.defaults)"
-  local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/.defaults)"
+  local def_size="$(zfs get -H -o value chyves:size $prim_pool/guests/.defaults)"
+  local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/guests/.defaults)"
+  local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/guests/.defaults)"
+  local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/guests/.defaults)"
+  local def_boot="$(zfs get -H -o value chyves:boot $prim_pool/chyves/guests/.defaults)"
+  local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
+  local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
+  local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
   # If size not declared in command line, use .default's
   if [ -z $size ]; then
     local size="$def_size"
@@ -1411,6 +1415,14 @@ chyves  version
 	help
 EOT
 }
+
+# Check for out of date datasets when not running setup.
+if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; the
+  echo "Out of date chyves\' dataset(s) version found."
+  echo "Please install sysutils/chyves-utils and then run:"
+  echo "chyves-upgrade"
+  exit 1
+fi
 
 if [ -z "$1" ] ; then
 	__help
