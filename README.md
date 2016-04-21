@@ -19,6 +19,7 @@ CHANGELOG.md          See a summarized list of changes to this project.
 CONTRIBUTING.md       Ways to contribute to this project.
 CREDITS.md            See who has contributed to this project.
 LICENSE               BSD 2-Clause License notice.
+Makefile              Used to install chyves from GitHub clone.
 man/chyves.8.txt      man page in text format.
 README.md             This document.
 TODO.md               Project goals.
