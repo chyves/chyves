@@ -14,13 +14,14 @@ The goal of this project is to provide a bhyve front end tool that is easy to us
 
 See the following documents for their respective purpose:
 ````
-BUG-REPORTS.md        How to report issues and get them resolved
-CHANGELOG.md          See a summarized list of changes to this project
-CONTRIBUTING.md       Ways to contribute to this project
-CREDITS.md            See who has contributed to this project
-LICENSE               BSD License
+BUG-REPORTS.md        How to report issues and get them resolved.
+CHANGELOG.md          See a summarized list of changes to this project.
+CONTRIBUTING.md       Ways to contribute to this project.
+CREDITS.md            See who has contributed to this project.
+LICENSE               BSD 2-Clause License notice.
+man/chyves.8.txt      man page in text format.
 README.md             This document.
-TODO.md               Project goals
-UPGRADING.md          Indicates needed changes version to version
-USAGE.md              How to use chyves
+TODO.md               Project goals.
+UPGRADING.md          Reference for needed changes from version to version
+USAGE.md              How to use chyves.
 ````
