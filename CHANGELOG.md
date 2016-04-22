@@ -8,7 +8,7 @@ Internal development.
 
 - Changed command from `iohyve` to `chyves`. `chyves` is the puralized big endian alphabetic increment of `bhyve`? Basically `chyves` is similar enough in spelling to `bhyve` but much different imagery. A memorable logo is in the works.
 
-- Changes other internal references to `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
+- Changes other internal references from `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
 
 ##### General enchancement and bug fixes:
 
@@ -22,7 +22,7 @@ Internal development.
 
 - Created the dataset `$pool/chyves/.config` with two ZFS user properties, `chyves:pool_version` and `chyves:dataset_role` as explained below.
 
- - The `chyves:pool_version` ZFS property within `$pool/chyves/.config` contains the chyves version the dataset is compatible with. This will be set upon dataset creation and then updated via chyves-utils using the `chyves-upgrade` command, non-contiguous updates are possible. This will be the automated process of ensuring the dataset contains the necessary properties to run correctly. This will also make future dataset changes easier to implement. This feature will make the file `UPGRADING.md` a matter of reference. There is also a check ran before anything else to ensure the dataset is upgraded, even if the only change made to the dataset structure is an increment in the version. Setup is still able to run if multiple datasets exist. This setup use-case is if you want to migrate guests from one pool to another pool that is not currently setup, limited but possible.
+ - The `chyves:pool_version` ZFS property within `$pool/chyves/.config` contains the chyves version the dataset is compatible with. This will be set upon dataset creation and then updated via [chyves-utils](https://github.com/chyves/chyves-utils) using the `chyves-upgrade` command, non-contiguous updates are possible. This will be the automated process of ensuring the dataset contains the necessary properties to run correctly. This will also make future dataset changes easier to implement. This feature will make the file `UPGRADING.md` a matter of reference. There is also a check ran before anything else to ensure the dataset is upgraded, even if the only change made to the dataset structure is an increment in the version. Setup is still able to run if multiple datasets exist. This setup use-case is if you want to migrate guests from one pool to another pool that is not currently setup, limited but possible.
 
  - The `chyves:dataset_role` ZFS property within `$pool/chyves/.config` contains which role the dataset is used for. The valid values are `primary`, `secondary`, and possibly `offline` in the future. The primary pool will always host the ISO and Firmware resources. The primary pool will also own the `mountpoint` "`/chyves`". All pool that are active and not the primary are considered `secondary`.
 
@@ -32,15 +32,13 @@ Internal development.
 
 - Additional kernel modules are loaded with `chyves setup kmod=1` for networking taps and bridges. Creation of bridges and taps would fail without these modules.
 
-- Consolidated `list`, `isolist`, `fwlist`, `snaplist`, `taplist`, `activetaps`, and `conlist` into one function/command `chyves list` with the use of arguments. For example `chyves isolist` is replaced by `chyves list iso` and so forth. Not to worry, `chyves list` still displays the traditional output and `chyves list trad` is available for the compulsive.
+- Consolidated `list`, `isolist`, `fwlist`, `snaplist`, `taplist`, `activetaps`, and `conlist` into one function/command: `chyves list` with the use of arguments. For example `chyves isolist` is replaced by `chyves list iso` and so forth. Not to worry, `chyves list` still displays the traditional output and `chyves list trad` is available for the compulsive.
 
 - Changed `get` command syntax to `chyves get [property] [name]`. This follows the syntax of `iocage`.
 
 - Deprecated `chyves getall [name]` in favor of `chyves get all [name]`.
 
 - Added version information to `help` output.
-
-
 
 ##### Developer enchancements:
 
