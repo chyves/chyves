@@ -1,5 +1,14 @@
-This early in the project a map is not defined. However many goals are planned:
+This early in the project, a map is not defined. However many goals are planned:
 
+Add bridge property and handling.
+
+Deprecate chyves:name property
+
+Checks for more than one .default, ISO, and Firmware dataset on system.
+
+Check and test to see if secondary pools store the device.map and grub.cfg files with the correct dataset.
+
+Get redundant code into functions. Use a standard nomenclature to denote internal use functions. See vm-bhyve for help.
 
 Changed the output of `info` to be more verbose with command line flags.
 

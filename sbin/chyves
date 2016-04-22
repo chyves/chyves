@@ -3,7 +3,7 @@
 _VERSION=0.0.0
 _VERSION_LONG="v0.0.0 2016/04/00"
 _VERSION_INT="000"
-_OLD_VERSION_DATASETS="$(zfs list -H -o chyves:dataset_version | grep chyves/.info | grep -v "${_VERSION}" )"
+_OLD_VERSION_DATASETS="$(zfs list -H -o chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # See whether given command is readonly
@@ -162,13 +162,13 @@ __setup() {
 					echo "Setting up chyves pool..."
 					zfs create $pool/chyves
           zfs create $pool/chyves/guests
-          zfs create $pool/chyves/.info
-          zfs set chyves:dataset_version=${_VERSION} $pool/chyves/.info
+          zfs create $pool/chyves/.config
+          zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
 					# a chyves pool is already setup, setup secondary pool.
 					if [ -d /chyves/ISO ]; then
 						echo "Secondary pool set up..."
 						zfs set mountpoint="/chyves/$pool" $pool/chyves
-            zfs set chyves:dataset_role=secondary $pool/chyves/.info
+            zfs set chyves:dataset_role=secondary $pool/chyves/.config
 				  # chyves is not set up yet, setup primary pool.
 					else
 						zfs set mountpoint="/chyves" $pool/chyves
@@ -185,8 +185,8 @@ __setup() {
             zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
             zfs set chyves:os=default $pool/chyves/guests/.defaults
             zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
-            echo "Setting up .info properties on primary pool..."
-            zfs set chyves:dataset_role=primary $pool/chyves/.info
+            echo "Setting up .config properties on primary pool..."
+            zfs set chyves:dataset_role=primary $pool/chyves/.config
 					fi
 				else
 					echo "chyves already exists on $pool"
@@ -1374,6 +1374,7 @@ __conreset() {
 
 # Print help page
 __help() {
+__version
 cat << 'EOT'
 chyves  version
 	setup pool=[poolname] kmod=[0/1] net=[interface]
@@ -1398,10 +1399,10 @@ chyves  version
 	destroy [name]
 	rename [name] [newname]
 	delete [-f] [name]
-	set [name] [prop1=value] [prop2=value]...
+	set [name|.defaults] [prop1=value] [prop2=value]...
 	get [name] [prop]
+  get all [name]
 	rmpci [-f] [name] [pcidev:N]
-	getall [name]
 	add [name] [size] [[pool]]
 	remove [-f] [name] [diskN]
 	resize [name] [diskN] [size]
