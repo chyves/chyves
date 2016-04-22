@@ -31,9 +31,8 @@
 \fBchyves\fP \fIrename\fP [\fIname\fP] [\fInewname\fP]
 \fBchyves\fP \fIdelete\fP [\fB-f\fP] [\fIname\fP]
 \fBchyves\fP \fIset\fP [\fIname\fP|.defaults] [\fIprop1=value\fP] [prop2=value]\.\.\.
-\fBchyves\fP \fIget\fP [\fIname\fP] [\fIprop\fP]
+\fBchyves\fP \fIget\fP [[property]|all] [\fIname\fP]
 \fBchyves\fP \fIrmpci\fP [\fB-f\fP] [\fIname\fP] [\fIpcidev:N\fP]
-\fBchyves\fP \fIgetall\fP [\fIname\fP]
 \fBchyves\fP \fIadd\fP [\fIname\fP] [\fIsize\fP] [[\fIpool\fP]]
 \fBchyves\fP \fIremove\fP [\fB-f\fP] [\fIname\fP] [\fIdiskN\fP]
 \fBchyves\fP \fIresize\fP [\fIname\fP] [\fIdiskN\fP] [\fIsize\fP]
@@ -408,8 +407,8 @@ reboot otherwise. This is the default.
 .B
 \fIget\fP
 Gets ZFS properties for guests
-Usage: '\fBchyves\fP \fIget\fP [\fIname\fP] [\fIprop\fP]' where [\fIname\fP] is the \fIname\fP of the guest.
-[\fIprop\fP] is the property you want to view.
+Usage: '\fBchyves\fP \fIget\fP [\fIname\fP] [prop]' where [\fIname\fP] is the \fIname\fP of the guest.
+[prop] is the property you want to view.
 Usage: '\fBchyves\fP \fIget\fP all [\fIname\fP]' where [\fIname\fP] is the guest \fIname\fP. All
 properties are displayed.
 .TP

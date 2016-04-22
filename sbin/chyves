@@ -96,14 +96,11 @@ __parse_cmd () {
       set)      __set "$@"
                 exit
       ;;
-      get)      __get "$@"
+      get)      __get "$2" "$3"
                 exit
       ;;
       rmpci)	__rmpci "$@"
             		exit
-      ;;
-      getall)   __getall "$@"
-                exit
       ;;
       add)	__add "$@"
             		exit
@@ -1071,11 +1068,17 @@ __set() {
 
 # Get ZFS props
 __get() {
+	local prop="$1"
 	local name="$2"
-	local prop="$3"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
-	echo "Getting $name prop $prop..."
-	zfs get -H -o value chyves:$prop $pool/chyves/guests/$name
+	local pool="$(zfs list -H | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
+	
+	if [ "$prop" = "all" ]; then
+		echo "Getting all $name chyves properties..."
+		zfs get -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | sed -e 's/chyves://g'
+	else
+		echo "Getting $name property \"$prop\"..."
+		zfs get -H -o value chyves:$prop $pool/chyves/guests/$name
+	fi
 }
 
 # Remove a PCIDEV property
@@ -1109,14 +1112,6 @@ __rmpci() {
 			esac
 		fi
 	fi
-}
-
-# Get all ZFS props
-__getall() {
-	local name="$2"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
-	echo "Getting $name chyves properties..."
-	zfs get -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | sed -e 's/chyves://g'
 }
 
 # Add a new disk to guest
@@ -1398,8 +1393,7 @@ chyves  version
 	rename [name] [newname]
 	delete [-f] [name]
 	set [name|.defaults] [prop1=value] [prop2=value]...
-	get [name] [prop]
-  get all [name]
+	get [[property]|all] [name]
 	rmpci [-f] [name] [pcidev:N]
 	add [name] [size] [[pool]]
 	remove [-f] [name] [diskN]
