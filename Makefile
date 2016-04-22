@@ -9,13 +9,17 @@ BINDIR=$(PREFIX)/sbin
 RCDIR=$(PREFIX)/etc/rc.d
 MANDIR=$(PREFIX)/man/man8
 MKDIR=mkdir
+RM=rm
 
 SCRIPTS=chyves
 SCRIPTSDIR=${PREFIX}/BINDIR
-MAN=	$(SCRIPTS).8
+MAN=	man/$(SCRIPTS).8
 
 ${SCRIPTS}:
 	@echo Nothing needs to be done for chyves.
+
+clean:
+	$(RM) -f ${.OBJDIR}/chyves.8.gz
 
 install:: all
 	$(MKDIR) -p $(BINDIR)
@@ -24,6 +28,6 @@ install:: all
 	$(INSTALL) -c -m $(BINMODE) ${.OBJDIR}/sbin/$(SCRIPTS) $(BINDIR)/
 #	$(INSTALL) -c ${.OBJDIR}/lib/* $(FILESDIR)/
 	$(INSTALL) -c ${.OBJDIR}/rc.d/* $(RCDIR)/
-	$(INSTALL) -c man/$(MAN).gz $(MANDIR)/
+	$(INSTALL) -c ${.OBJDIR}/$(SCRIPTS).8.gz $(MANDIR)/
 
 .include <bsd.prog.mk>

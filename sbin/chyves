@@ -152,41 +152,40 @@ __version() {
 __setup() {
 	local args="$@"
 	for arg in $args; do
-		if [ $arg != "setup" ]; then
+		if [ "${arg}" != "setup" ]; then
 			local prop="$(echo $arg | cut -d '=' -f1)"
 			local val="$(echo $arg | cut -d '=' -f2)"
-			if [ $prop = "pool" ]; then
+			if [ "${prop}" = "pool" ]; then
 				local pool="$val"
 				local poolexist="$(zfs list -H | grep ${pool}/chyves | head -n1 | cut -c1)"
-				if [ -z $poolexist ]; then
+				if [ -z "${poolexist}" ]; then
 					echo "Setting up chyves pool..."
 					zfs create $pool/chyves
-          zfs create $pool/chyves/guests
-          zfs create $pool/chyves/.config
-          zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
+					zfs create $pool/chyves/guests
+					zfs create $pool/chyves/.config
+					zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
 					# a chyves pool is already setup, setup secondary pool.
 					if [ -d /chyves/ISO ]; then
 						echo "Secondary pool set up..."
 						zfs set mountpoint="/chyves/$pool" $pool/chyves
-            zfs set chyves:dataset_role=secondary $pool/chyves/.config
-				  # chyves is not set up yet, setup primary pool.
+						zfs set chyves:dataset_role=secondary $pool/chyves/.config
+					# chyves is not set up yet, setup primary pool.
 					else
 						zfs set mountpoint="/chyves" $pool/chyves
-            zfs create $pool/chyves/ISO
+						zfs create $pool/chyves/ISO
 						zfs create $pool/chyves/Firmware
-            zfs create $pool/chyves/guests
-            echo "Setting up .defaults dataset and properties on primary pool..."
-            zfs create $pool/chyves/guests/.defaults
-            zfs set chyves:size=8G $pool/chyves/guests/.defaults
-            zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
-            zfs set chyves:ram=256M $pool/chyves/guests/.defaults
-            zfs set chyves:persist=1 $pool/chyves/guests/.defaults
-            zfs set chyves:boot=0 $pool/chyves/guests/.defaults
-            zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
-            zfs set chyves:os=default $pool/chyves/guests/.defaults
-            zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
-            echo "Setting up .config properties on primary pool..."
-            zfs set chyves:dataset_role=primary $pool/chyves/.config
+						echo "Setting up .defaults dataset and properties on primary pool..."
+						zfs create $pool/chyves/guests/.defaults
+						zfs set chyves:size=8G $pool/chyves/guests/.defaults
+						zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
+						zfs set chyves:ram=256M $pool/chyves/guests/.defaults
+						zfs set chyves:persist=1 $pool/chyves/guests/.defaults
+						zfs set chyves:boot=0 $pool/chyves/guests/.defaults
+						zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
+						zfs set chyves:os=default $pool/chyves/guests/.defaults
+						zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
+						echo "Setting up .config properties on primary pool..."
+						zfs set chyves:dataset_role=primary $pool/chyves/.config
 					fi
 				else
 					echo "chyves already exists on $pool"
@@ -220,15 +219,15 @@ __setup() {
 						fi
 					fi
 				fi
-			elif [ $prop = "kmod" ]; then
-				if [ $val = "1" ]; then
+			elif [ "${prop}" = "kmod" ]; then
+				if [ "${val}" = "1" ]; then
 					echo "Loading kernel modules..."
 					kldload vmm
 					kldload nmdm
-          kldload if_tap
-          kldload if_bridge
-          kldload bridgestp
-				elif [ $val = "0" ]; then
+					kldload if_tap
+					kldload bridgestp
+					kldload if_bridge
+				elif [ "${val}" = "0" ]; then
 					echo "Unloading kernel modules..."
 					kldunload vmm
 					kldunload nmdm
@@ -237,9 +236,9 @@ __setup() {
 					echo "kmod=1 to load modules"
 					echo "kmod=0 to unload modules"
 				fi
-			elif [ $prop = "net" ]; then
+			elif [ "${prop}" = "net" ]; then
 				local bridgeif="$('ifconfig' -l | grep -F "bridge0 " | cut -c1)"
-				if [ -z $bridgeif ]; then
+				if [ -z "${bridgeif}" ]; then
 					echo "Seting up bridge0 on $val..."
 					sysctl net.link.tap.up_on_open=1
 					ifconfig bridge0 create descr "chyves-bridge"
@@ -248,7 +247,7 @@ __setup() {
 				else
 					echo "bridge0 is already enabled on this machine..."
 					local sysctlexist="$(sysctl net.link.tap.up_on_open | grep 1 | cut -c1)"
-					if [ -z $sysctlexist ]; then
+					if [ -z "${sysctlexist}" ]; then
 						echo "Setting up correct sysctl value..."
 						sysctl net.link.tap.up_on_open=1
 					else
@@ -284,41 +283,21 @@ __get_zfs_pcidev_conf() {
 
 # List Guests
 __list() {
-  local output_type="$2"
-  local active_taps="$3" # Only used for tap
+  local output_type="$1"
+  local active_taps="$2" # Only used for tap
 
-  if [ -z $2 ]; then
+  if [ -z $1 ]; then
     # Traditional `chyves list` true when null
     local output_type="trad"
   fi
 
-  case "$type” in
-    trad)     __ls_trad
-              exit
-    ;;
-    iso)      __ls_iso
-              exit
-    ;;
-    firm|firmware|fw)    __ls_firmware
-              exit
-    ;;
-    snap|snapshots)    __ls_snapshots
-              exit
-    ;;
-    tap)      __ls_tap "$active_taps"
-              exit
-    ;;
-    con)      __ls_con
-              exit
-    ;;
-  esac
-
+ # Traditional output of list
   __ls_trad() {
     local pools="$(zfs list -H | grep chyves | cut -d '/' -f 1 | uniq )"
     (
     printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
     for pool in $pools; do
-      local guests="$(zfs list -H | grep -i ^$pool/chyves/guests | cut -f1 | cut -d'/' -f3 | sed 1d | uniq)"
+      local guests="$(zfs list -H -o name | grep -i ^$pool/chyves/guests | grep -v .defaults | cut -d'/' -f4 | sed 1d | uniq)"
       for g in $guests; do
         local vmm="/dev/vmm/chy-$g"
         if [ -e $vmm ]; then
@@ -339,40 +318,40 @@ __list() {
           boot="NO"
         fi
         local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
-        printf "%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
+        printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
       done
     done
     ) | column -ts^
   }
 
-  # List iso's
+  # List iso
   __ls_iso() {
-  	echo "Listing ISO\'s..."
-  	zfs list -H | grep chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
+  	echo "Listing ISOs..."
+  	zfs list -H | grep chyves/ISO | cut -f 1 | cut -d '/' -f 5 | sed 1d
   }
 
   # List Firmware
-  __ls_firmware {
+  __ls_firmware() {
     echo "Listing Firmware..."
-    zfs list -H | grep chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
+    zfs list -H | grep chyves/Firmware | cut -f1 | cut -d '/' -f 5 | sed 1d
   }
 
   # List all the snapshots
   __ls_snapshots() {
-    zfs list -H -t snap | grep chyves | grep -v disk | cut -f1 | cut -d '/' -f3
+    zfs list -H -t snapshot | grep chyves | grep -v disk | cut -f1 | cut -d '/' -f4
   }
 
   # List taps in use
   __ls_tap() {
-    $active_taps = $1
-    if [ -z $active_taps]; then
-      local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-3)"
+    local active_taps="$1"
+    if [ -z "${active_taps}" ]; then
+      local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-4)"
       echo "Listing all network taps:"
       for i in $guestlist ; do
         conprop="$(zfs get -H -o value chyves:tap $i)"
         printf $i'......'$conprop'\n'
       done
-    elif [ $active_taps = "active" ]; then
+    elif [ "${active_taps}" = "active" ]; then
       echo "Listing active network taps..."
       ls /dev | grep tap
     else
@@ -383,7 +362,7 @@ __list() {
   # List consoles in use
   __ls_con() {
     local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
-    local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f3)"
+    local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f4 | uniq)"
     (
     printf 'Guest\tConsole\n'
     for guest in $guestlist; do
@@ -392,6 +371,28 @@ __list() {
     done
     ) | column -t
   }
+
+  case "$output_type" in
+    trad)     __ls_trad
+              exit
+    ;;
+    iso)      __ls_iso
+              exit
+    ;;
+    firm|firmware|fw)    __ls_firmware
+              exit
+    ;;
+    snap|snapshots)    __ls_snapshots
+              exit
+    ;;
+    tap)      __ls_tap "$2"
+              exit
+    ;;
+    con)      __ls_con
+              exit
+    ;;
+  esac
+
 }
 
 # Display info about all guests.
@@ -399,7 +400,7 @@ __info() {
   local flags="$1"
 
 	# Poll to see what pools have active guests
-	local pools="$(zfs list -H | grep chyves | cut -d '/' -f 1 | uniq )"
+	local pools="$(zfs list -H -o name | grep chyves | cut -d '/' -f 1 | uniq )"
 
 	( # Begining of very large table of output.
 	# Print common header
@@ -426,8 +427,8 @@ __info() {
 	# Spider through pools
 	for pool in $pools; do
 	    # Poll to see which guests are on $pool
-            local guests="$(zfs list -H -o name | grep $pool/chyves/guests | cut -d '/' -f3- | sed 1d )"
-            # Spider through guests
+	    local guests="$(zfs list -H -o name | grep -i ^$pool/chyves/guests | grep -v .defaults | cut -d'/' -f4- | sed 1d | uniq)"         
+ 	    # Spider through guests
             for g in $guests; do
 
 		# Poll variables for common section
@@ -575,51 +576,48 @@ __deletefw() {
 # Create guest
 __create() {
 	local name="$2"
-	local pool="${4-$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)}"
 	local size="$3"
-  local uuid="$(/bin/uuidgen)"
+	local pool="$4"
+	local uuid="$(/bin/uuidgen)"
 	local description="$(date)"
-  # Gets primary pool
-  local prim_pool="$(zfs get -r mountpoint | grep "/chyves " | cut -d'/' -f1')"
-  # Get default values as set by .defaults on primary pool
-  local def_size="$(zfs get -H -o value chyves:size $prim_pool/guests/.defaults)"
-  local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/guests/.defaults)"
-  local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/guests/.defaults)"
-  local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/guests/.defaults)"
-  local def_boot="$(zfs get -H -o value chyves:boot $prim_pool/chyves/guests/.defaults)"
-  local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
-  local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
-  local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
-  # If size not declared in command line, use .default's
-  if [ -z $size ]; then
-    local size="$def_size"
-  fi
+	# Gets primary pool
+	local prim_pool="$(zfs get -r chyves:dataset_role | grep "primary" | cut -d'/' -f1)"
+
+	# If [pool] not set use primary pool
+	if [ -z "${pool}" ]; then
+		local pool="${prim_pool}"
+	fi
+
+	# Get default values as set by .defaults on primary pool
+	local def_size="$(zfs get -H -o value chyves:size $prim_pool/chyves/guests/.defaults)"
+	local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/guests/.defaults)"
+	local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/guests/.defaults)"
+	local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/guests/.defaults)"
+	local def_boot="$(zfs get -H -o value chyves:boot $prim_pool/chyves/guests/.defaults)"
+	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
+	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
+	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
+	# If size not declared in command line, use .default's
+	if [ -z $size ]; then
+	  local size="$def_size"
+	fi
+	# Get list of guests to help set con and tap number
+
+# Set chyves specific parameters
   # Get list of guests to help set con and tap number
-  local guestlist="$(zfs list -H -o name -t volume | grep chyves/guests | cut -d'/' -f1-3)"
-	listtaps(){
-		for i in $guestlist ; do
-			local tapprop="$(zfs get -H -o value chyves:tap $i)"
-			printf $tapprop'\n'
-		done
-	}
-	local taplast="$(listtaps | sort -V | cut -c4- | tail -n1)"
-	if [ -z $taplast ]; then
-		local tap='0'
-	else
-		local tap="$(expr $taplast + 1)"
-	fi
-	listcons(){
-		for i in $guestlist ; do
-			local conprop="$(zfs get -H -o value chyves:con $i)"
-			printf $conprop'\n'
-		done
-	}
-	local conlast="$(listcons | sort -V | cut -c5- | tail -n1)"
-	if [ -z $conlast ]; then
-		local con='0'
-	else
-		local con="$(expr $conlast + 1)"
-	fi
+  local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
+  if [ -z $taplast ]; then
+    local tap='0'
+  else
+    local tap="$(expr $taplast + 1)"
+  fi
+  local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
+  if [ -z $conlast ]; then
+    local con='0'
+  else
+    local con="$(expr $conlast + 1)"
+  fi
+
 	echo "Creating $name..."
 	zfs create $pool/chyves/guests/$name
 	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
@@ -633,9 +631,9 @@ __create() {
 	zfs set chyves:boot=$def_boot $pool/chyves/guests/$name
 	zfs set chyves:loader=$def_loader $pool/chyves/guests/$name
 	zfs set chyves:os=$def_os $pool/chyves/guests/$name
-	zfs set "chyves:description=$description" $pool/chyves/guests/$name
+	zfs set chyves:description="$description" $pool/chyves/guests/$name
 	zfs set chyves:bargs=$def_bargs $pool/chyves/guests/$name
-  zfs set chyves:uuid=$uuid $pool/chyves/guests/$name
+	zfs set chyves:uuid=$uuid $pool/chyves/guests/$name
 }
 
 # Install guest
@@ -1418,11 +1416,16 @@ EOT
 }
 
 # Check for out of date datasets when not running setup.
-if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; the
+if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
   echo "Out of date chyves\' dataset(s) version found."
   echo "Please install sysutils/chyves-utils and then run:"
   echo "chyves-upgrade"
   exit 1
+fi
+
+if [ "$(zfs get -r chyves:dataset_role | grep -v @ | grep "primary" | wc -l )" -gt "1" ]; then
+	echo "More than one primary pool set, fix it!"
+	exit
 fi
 
 if [ -z "$1" ] ; then
