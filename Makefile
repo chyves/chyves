@@ -8,6 +8,8 @@ BINDIR=$(PREFIX)/sbin
 #FILESDIR=$(PREFIX)/lib/chyves
 RCDIR=$(PREFIX)/etc/rc.d
 MANDIR=$(PREFIX)/man/man8
+
+# Commands
 MKDIR=mkdir
 RM=rm
 
@@ -20,6 +22,10 @@ ${SCRIPTS}:
 
 clean:
 	$(RM) -f ${.OBJDIR}/chyves.8.gz
+
+# Internal use:
+buildman:
+	cat $(MAN).txt | txt2man -t $(SCRIPTS) -s 8 -v "FreeBSD System Manager's Manual" > $(MAN)
 
 install:: all
 	$(MKDIR) -p $(BINDIR)
