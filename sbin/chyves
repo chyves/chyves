@@ -1007,9 +1007,10 @@ __destroy() {
 __rename() {
 	local name="$2"
 	local newname="$3"
-  if [ "$name" = "$newname" ]; then
-    echo "Can not rename guest to itself ($name)"
-  fi
+	if [ "$name" = "$newname" ]; then
+		echo "Can not rename guest to itself ($name). Exitting."
+		exit
+	fi
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name" | cut -d '/' -f 1 | head -n1)"
 	echo "Renaming $name to $newname..."
 	zfs rename -f $pool/chyves/guests/$name $pool/chyves/guests/$newname
