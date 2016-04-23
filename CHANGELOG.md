@@ -40,6 +40,9 @@ Internal development.
 
 - Added version information to `help` output.
 
+- Added `make deinstall` and `make rcremove` directives to Makefile for source installations.
+
 ##### Developer enchancements:
 
-- Added `buildman` and `clean` directives to Makefile.
+- Added `make buildman` and `make clean` directives to Makefile.
+
