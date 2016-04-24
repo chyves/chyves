@@ -1132,7 +1132,9 @@ __start() {
 __uefi() {
 	local name="$2"
 	local media="$3"
-	local dataset="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1-3 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
