@@ -1186,19 +1186,19 @@ __uefi() {
 # Gracefully stop a guest
 __stop() {
 	local name="$2"
-	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
 	local pid=$(pgrep -fx "bhyve: chy-$name")
 	echo "Stopping $name..."
-#	zfs set chyves:persist=0 $pool/chyves/guests/$name
 	kill $pid
-#	sleep 20
-#	bhyvectl --destroy --vm=chy-$name
 }
 
 # Force kill -9 everyting matching $name and destroy
 # THIS WILL KILL EVERYTHING MATCHING $NAME
 __forcekill() {
 	local name="$2"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
 	local pids="$(pgrep -f $name)"
 	for apid in "$pids"; do
 		kill -9 $apid
@@ -1219,9 +1219,9 @@ __scram() {
 # Destroy guest
 __destroy() {
 	local name="$2"
-	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
 	echo "Destroying $name..."
-#	zfs set chyves:persist=0 $pool/chyves/guests/$name
 	bhyvectl --force-poweroff --vm=chy-$name
 	bhyvectl --destroy --vm=chy-$name
 }
