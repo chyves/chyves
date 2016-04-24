@@ -126,6 +126,13 @@ __get_pool_for_guest() {
   echo "$_pool"
 }
 
+# Get primary pool name
+__get_primary_pool_name() {
+  local _var="$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
+  __verify_valid_pool "$_var" "-p"
+  echo "${_var}"
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
