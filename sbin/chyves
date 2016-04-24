@@ -947,6 +947,10 @@ __load() {
         __create_device_map "$_path" "$disk" "$media"
 				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > $_path/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
+      elif [ $os = "gentoo" ]; then
+        __create_device_map "$_path" "$disk" "$media"
+        printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
+        grub-bhyve $wire_memory -m $_path/device.map -r host -d $_path -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			else
