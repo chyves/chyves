@@ -56,21 +56,31 @@ __verify_valid_pool() {
   # $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
   # -p      [primary] Validates the supplied pool has the primary role set
   # -c      [chyves] Validates the supplied pool is setup for chyves
+  # -e      [escape] Escape from a normal fatal exit. Good for __setup().
 
   if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
     # When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
 
     # Check to see if the pool is in the primary dataset_role
     if [ -n "$(echo $_flags | grep 'p')" ] && [ "$(zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
-      __fault_detected_exit "${_name_to_check} is not a primary pool."
+      if [ -n "$(echo $_flags | grep 'e')" ]; then
+      else
+        __fault_detected_exit "${_name_to_check} is not a primary pool."
+      fi
     fi
 
     # Check to see if the pool has been setup for chyves
     if [ -n "$(echo $_flags | grep 'c')" ] && [ -z "$(zfs list -H $_name_to_check/chyves | grep -v "dataset does not exist" )" ]; then
-      __fault_detected_exit "${_name_to_check} has not been setup with chyves."
+      if [ -n "$(echo $_flags | grep 'e')" ]; then
+      else
+        __fault_detected_exit "${_name_to_check} has not been setup with chyves."
+      fi
     fi
   else
-    __fault_detected_exit "Invalid pool name supplied."
+    if [ -n "$(echo $_flags | grep 'e')" ]; then
+    else
+      __fault_detected_exit "Invalid pool name supplied."
+    fi
   fi
 }
 
@@ -325,38 +335,34 @@ __setup() {
 			local val="$(echo $arg | cut -d '=' -f2)"
 			if [ "${prop}" = "pool" ]; then
 				local pool="$val"
-				local poolexist="$(zfs list -H | grep ${pool}/chyves | head -n1 | cut -c1)"
-				if [ -z "${poolexist}" ]; then
-					echo "Setting up chyves pool..."
-					zfs create $pool/chyves
-					zfs create $pool/chyves/guests
-					zfs create $pool/chyves/.config
-					zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
-					# a chyves pool is already setup, setup secondary pool.
-					if [ -d /chyves/ISO ]; then
-						echo "Secondary pool set up..."
-						zfs set mountpoint="/chyves/$pool" $pool/chyves
-						zfs set chyves:dataset_role=secondary $pool/chyves/.config
-					# chyves is not set up yet, setup primary pool.
-					else
-						zfs set mountpoint="/chyves" $pool/chyves
-						zfs create $pool/chyves/ISO
-						zfs create $pool/chyves/Firmware
-						echo "Setting up .defaults dataset and properties on primary pool..."
-						zfs create $pool/chyves/guests/.defaults
-						zfs set chyves:size=8G $pool/chyves/guests/.defaults
-						zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
-						zfs set chyves:ram=256M $pool/chyves/guests/.defaults
-						zfs set chyves:persist=1 $pool/chyves/guests/.defaults
-						zfs set chyves:boot=0 $pool/chyves/guests/.defaults
-						zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
-						zfs set chyves:os=default $pool/chyves/guests/.defaults
-						zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
-						echo "Setting up .config properties on primary pool..."
-						zfs set chyves:dataset_role=primary $pool/chyves/.config
-					fi
+        __verify_valid_pool -ce "$val"
+				echo "Setting up chyves pool..."
+				zfs create $pool/chyves
+				zfs create $pool/chyves/guests
+				zfs create $pool/chyves/.config
+				zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
+				# a chyves pool is already setup, setup secondary pool.
+				if [ -d /chyves/ISO ]; then
+					echo "Secondary pool set up..."
+					zfs set mountpoint="/chyves/$pool" $pool/chyves
+					zfs set chyves:dataset_role=secondary $pool/chyves/.config
+				# chyves is not set up yet, setup primary pool.
 				else
-					echo "chyves already exists on $pool"
+					zfs set mountpoint="/chyves" $pool/chyves
+					zfs create $pool/chyves/ISO
+					zfs create $pool/chyves/Firmware
+					echo "Setting up .defaults dataset and properties on primary pool..."
+					zfs create $pool/chyves/guests/.defaults
+					zfs set chyves:size=8G $pool/chyves/guests/.defaults
+					zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
+					zfs set chyves:ram=256M $pool/chyves/guests/.defaults
+					zfs set chyves:persist=1 $pool/chyves/guests/.defaults
+					zfs set chyves:boot=0 $pool/chyves/guests/.defaults
+					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
+					zfs set chyves:os=default $pool/chyves/guests/.defaults
+					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
+					echo "Setting up .config properties on primary pool..."
+					zfs set chyves:dataset_role=primary $pool/chyves/.config
 				fi
 				# Checks to see if on FreeNAS
 				# The web UI references this file to display the version
