@@ -101,6 +101,22 @@ __verify_valid_guest() {
   fi
 }
 
+# Gets pool names from ZFS with flag options for active/inactive
+__get_pool_names() {
+  local _flags="$1"
+  # Valid flags are:
+  # -a [all] for  primary|secondary|offline pools
+  # -i [inactive] only display offline pools
+
+  if [ -n "$(echo "$_flags" | grep 'a')" ]; then
+		echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq )"
+  elif [ -n "$(echo "$_flags" | grep 'i')" ]; then
+	   echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E "$_OFFLINE_POOLS_GREP_STRING" )"
+	else
+    echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" )"
+  fi
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
