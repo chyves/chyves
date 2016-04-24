@@ -797,18 +797,13 @@ __deletefw() {
 
 # Create guest
 __create() {
-	local name="$2"
-	local size="$3"
-	local pool="$4"
-	local uuid="$(/bin/uuidgen)"
+	local name="$1"
+	local size="$2"
+	local pool="$3"
+  __verify_valid_pool "$pool" -c
 	local description="$(date)"
 	# Gets primary pool
-	local prim_pool="$(zfs get -r chyves:dataset_role | grep "primary" | cut -d'/' -f1)"
-
-	# If [pool] not set use primary pool
-	if [ -z "${pool}" ]; then
-		local pool="${prim_pool}"
-	fi
+	local prim_pool="$( __get_primary_pool_name )"
 
 	# Get default values as set by .defaults on primary pool
 	local def_size="$(zfs get -H -o value chyves:size $prim_pool/chyves/guests/.defaults)"
@@ -819,13 +814,17 @@ __create() {
 	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
+
 	# If size not declared in command line, use .default's
 	if [ -z $size ]; then
 	  local size="$def_size"
 	fi
-	# Get list of guests to help set con and tap number
 
-# Set chyves specific parameters
+  # If [pool] not set use primary pool
+	if [ -z "${pool}" ]; then
+		local pool="${prim_pool}"
+	fi
+
   # Get list of guests to help set con and tap number
   local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
   if [ -z $taplast ]; then
@@ -844,7 +843,6 @@ __create() {
 	zfs create $pool/chyves/guests/$name
 	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
 	zfs set chyves:name=$name $pool/chyves/guests/$name
-	zfs set chyves:size=$size $pool/chyves/guests/$name
 	zfs set chyves:ram=$def_ram $pool/chyves/guests/$name
 	zfs set chyves:cpu=$def_cpu $pool/chyves/guests/$name
 	zfs set chyves:tap=tap$tap $pool/chyves/guests/$name
@@ -855,7 +853,7 @@ __create() {
 	zfs set chyves:os=$def_os $pool/chyves/guests/$name
 	zfs set chyves:description="$description" $pool/chyves/guests/$name
 	zfs set chyves:bargs=$def_bargs $pool/chyves/guests/$name
-	zfs set chyves:uuid=$uuid $pool/chyves/guests/$name
+	zfs set chyves:uuid=$_UUID_GENERAL_USE $pool/chyves/guests/$name
 }
 
 # Install guest
