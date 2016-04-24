@@ -138,6 +138,42 @@ __get_property_list() {
   echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
 }
 
+# Get a list of guests on system
+__get_guests_list() {
+  local _flags="$1"
+  local _pool="$2"
+  # $null      Get a list of active guests
+  # -d      [disks] Get a list of guests and their disks.
+  # -a      [all] Get a list of all guests regardless if dataset_role is offline or if guest_roll is set to template
+  # -f      [full] List as a full dataset name.
+
+  if [ -z "$_pool" ]; then
+    if [ -n "$(echo "$_flags" | grep 'a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep chyves/guests/ | grep -v .defaults | cut -f1 )"
+    elif [ -n "$(echo "$_flags" | grep 'd')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests/ | grep -v .defaults | cut f1 | sed '/^$/d' )"
+    elif [ "$_flags" = "-d" ]; then
+      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+    elif [ "$_flags" = "-a" ]; then
+        echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
+    elif [ "$_flags" = "-f" ]; then
+      echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+    else
+      echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
+    fi
+  else
+    if [ -n "$(echo "$_flags" | grep -E 'd|a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+    elif [ "$_flags" = "-d" ] || [ "$_flags" = "-a" ]; then
+      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+    elif [ "$_flags" = "-f" ]; then
+      echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+    else
+      echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+    fi
+  fi
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
