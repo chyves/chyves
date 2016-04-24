@@ -1090,14 +1090,17 @@ __prepare_guest() {
 __start() {
 	local name="$2"
 	local flag="$3"
-	local pci=""
+  local pool=$( __get_pool_for_guest "$name" )
+  __verify_valid_pool "$pool"
+  __verify_valid_guest "$name" "$pool" -s
+  local dataset="$pool/chyves/guests/$name"
+  local pci=""
 	local runmode="1"
-	local pool="$(zfs list -H -t volume -o name | grep chyves/guests/$name| grep disk0 | cut -d '/' -f1)"
-	local dataset="$(zfs list -H -t volume -o name | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1-3 | head -n1)"
 	local loader="$(zfs get -H -o value chyves:loader $dataset)"
 	# Check if loader is UEFI
 	if [ $loader = "uefi" ]; then
 		__uefi "$name" "null.iso"
+    exit
 	fi
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
