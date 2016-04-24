@@ -3,8 +3,12 @@
 _VERSION=0.0.0
 _VERSION_LONG="v0.0.0 2016/04/00"
 _VERSION_INT="000"
-_OLD_VERSION_DATASETS="$(zfs list -H -o chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
+_UUID_GENERAL_USE="$(/bin/uuidgen)"
+_OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
+_OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
+_TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
+
 
 # See whether given command is readonly
 # and therefore doesn't need root credentials
@@ -424,7 +428,7 @@ __info() {
 	# Spider through pools
 	for pool in $pools; do
 	    # Poll to see which guests are on $pool
-	    local guests="$(zfs list -H -o name | grep -i ^$pool/chyves/guests | grep -v .defaults | cut -d'/' -f4- | sed 1d | uniq)"         
+	    local guests="$(zfs list -H -o name | grep -i ^$pool/chyves/guests | grep -v .defaults | cut -d'/' -f4- | sed 1d | uniq)"
  	    # Spider through guests
             for g in $guests; do
 
@@ -1072,7 +1076,7 @@ __get() {
 	local prop="$1"
 	local name="$2"
 	local pool="$(zfs list -H | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
-	
+
 	if [ "$prop" = "all" ]; then
 		echo "Getting all $name chyves properties..."
 		zfs get -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | sed -e 's/chyves://g'
