@@ -174,6 +174,14 @@ __get_guests_list() {
   fi
 }
 
+# Get path for dataset
+__get_path_for_guest_dataset() {
+  local _guest_name="$1"
+  local _pool="$2"
+  local _path="$( zfs list -r -H -t filesystem -o mountpoint $_pool/chyves/guests/$_guest_name )"
+  echo "$_path"
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
