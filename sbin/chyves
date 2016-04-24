@@ -895,8 +895,12 @@ __install() {
 __load() {
 	local name="$1"
 	local media="$2"
-	local disk="${3-$(zfs list -H -t volume -o name | grep chyves/guests/$name | grep disk0 | head -n1)}"
-	local dataset="$(zfs list -H -t volume -o name | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1-3 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local _path="$( __get_path_for_guest_dataset "$name" "$pool" )"
+  echo "Path is: $_path"
+  local dataset="${pool}/chyves/guests/${name}"
+	local disk="${pool}/chyves/guests/${name}/disk0"
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	local loader="$(zfs get -H -o value chyves:loader $dataset)"
@@ -914,93 +918,75 @@ __load() {
 	if [ $loader = "grub-bhyve" ]; then
 		if [ $install = "yes" ]; then
 			if [ $os = "openbsd59" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+				__create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ] || [ $os = "centos7" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "arch" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > $_path/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			else
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			fi
 		elif [ $install = "no" ]; then
 			if [ $os = "openbsd59" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > /chyves/guests/$name/grub.cfg
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos7" ]; then
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r host -d /chyves/guests/$name -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			else
-				printf '\(hd0\)\ /dev/zvol/'$disk'\n' > /chyves/guests/$name/device.map
-				printf '\(cd0\)\ '$media'\n' >> /chyves/guests/$name/device.map
-				grub-bhyve $wire_memory -m /chyves/guests/$name/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
+        __create_device_map "$_path" "$disk" "$media"
+				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			fi
 		fi
 	else
