@@ -9,6 +9,13 @@ _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:da
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
+# Function used to exit with a message.
+__fault_detected_exit(){
+  local message="$1"
+  echo "Critical error detected. Exiting for following reason:"
+  echo "${message}"
+  exit 1
+}
 
 # See whether given command is readonly
 # and therefore doesn't need root credentials
