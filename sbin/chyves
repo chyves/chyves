@@ -32,6 +32,11 @@ if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
   __fault_detected_exit "Out of date chyves\' dataset(s) version found. \nPlease install sysutils/chyves-utils and then run: \nchyves-upgrade"
 fi
 
+# Check to see if more than one pool has the primary role set.
+if [ "$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | wc -l )" -gt "1" ]; then
+	__fault_detected_exit "More than one primary pool set, fix it!"
+fi
+
 # See whether given command is readonly
 # and therefore doesn't need root credentials
 __readonly_cmd () {
