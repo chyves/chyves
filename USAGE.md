@@ -232,6 +232,13 @@ chyves set centosguest os=centos7
 chyves install centosguest CentOS-7-x86_64-Everything-1511.iso
 chyves console centosguest
 ````
+Try out Gentoo:
+ ````
+ chyves set loader=grub-bhyve gentooguest
+ chyves set os=gentoo gentooguest
+ chyves install gentooguest install-amd64-minimal-20160414.iso
+ chyves console gentooguest
+ ````
 #####Use your own custom `grub.cfg` and `device.map` files
 
 If you don't want chyves to take care of the `grub.cfg` and `device.map` files, you can now "roll your own" and place them in the guests dataset (`/chyves/guestname/`).
