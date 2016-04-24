@@ -17,6 +17,16 @@ __fault_detected_exit(){
   exit 1
 }
 
+# Grep needs an arguement and a UUID stastically should not have a collision...
+#  ...if there are no pools in an offline role
+if [ -z "${_OFFLINE_POOLS_GREP_STRING}" ]; then
+  _OFFLINE_POOLS_GREP_STRING=${_UUID_GENERAL_USE}
+fi
+#  ...if there are no guests in an template role
+if [ -z "${_TEMPLATE_GUESTS_GREP_STRING}" ]; then
+  _TEMPLATE_GUESTS_GREP_STRING=${_UUID_GENERAL_USE}
+fi
+
 # See whether given command is readonly
 # and therefore doesn't need root credentials
 __readonly_cmd () {
