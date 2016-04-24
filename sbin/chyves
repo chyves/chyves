@@ -1615,8 +1615,9 @@ __version
 cat << 'EOT'
 chyves  version
 	setup pool=[poolname] kmod=[0/1] net=[interface]
-	list [$null|trad|iso|firmware|snapshots|tap|con] [active]
-	info [-vsdl]
+	list [$null|iso|firmware|snapshots|tap|con|<property-name>]
+  list tap [active]
+	info [-rvstdgaikhl]
 	fetchiso [URL]
 	cpiso [path]
 	renameiso [ISO] [newname]
