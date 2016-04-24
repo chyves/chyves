@@ -182,6 +182,15 @@ __get_path_for_guest_dataset() {
   echo "$_path"
 }
 
+# Builds the device map file
+__create_device_map() {
+  local _path="$1"
+  local _disk="$2"
+  local _iso="$3"
+  printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
+  printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
