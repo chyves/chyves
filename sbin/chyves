@@ -1229,6 +1229,9 @@ __destroy() {
 # Rename the guest
 __rename() {
 	local name="$2"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	local newname="$3"
 	if [ "$name" = "$newname" ]; then
 		echo "Can not rename guest to itself ($name). Exitting."
@@ -1236,7 +1239,7 @@ __rename() {
 	fi
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name" | cut -d '/' -f 1 | head -n1)"
 	echo "Renaming $name to $newname..."
-	zfs rename -f $pool/chyves/guests/$name $pool/chyves/guests/$newname
+	zfs rename -f $dataset $pool/chyves/guests/$newname
 	zfs set chyves:name=$newname $pool/chyves/guests/$newname
 }
 
@@ -1270,7 +1273,9 @@ __delete() {
 # Set ZFS properties
 __set() {
 	local name="$2"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	shift 2
 	for arg in "$@"; do
 		local prop="$(echo $arg | cut -d '=' -f1)"
@@ -1278,14 +1283,14 @@ __set() {
 		if [ $prop = "bargs" ]; then
 			local sval="$(echo $val | cut -d '"' -f2 | sed -e 's/ /_/g')"
 			echo "Setting $name $prop=$val..."
-			zfs set chyves:$prop=$sval $pool/chyves/guests/$name
+			zfs set chyves:$prop=$sval $dataset
 		elif [ $prop = "description" ]; then
 			local sval="$(echo $val | cut -d '"' -f2)"
 			echo "Setting $name $prop=$val..."
-			zfs set "chyves:$prop=$sval" $pool/chyves/guests/$name
+			zfs set "chyves:$prop=$sval" $dataset
 		else
 			echo "Setting $name $prop=$val..."
-			zfs set chyves:$prop=$val $pool/chyves/guests/$name
+			zfs set chyves:$prop=$val $dataset
 		fi
 	done
 }
@@ -1294,14 +1299,16 @@ __set() {
 __get() {
 	local prop="$1"
 	local name="$2"
-	local pool="$(zfs list -H | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 
 	if [ "$prop" = "all" ]; then
 		echo "Getting all $name chyves properties..."
-		zfs get -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | sed -e 's/chyves://g'
+		zfs get -o property,value all $dataset | grep chyves: | sort | sed -e 's/chyves://g'
 	else
 		echo "Getting $name property \"$prop\"..."
-		zfs get -H -o value chyves:$prop $pool/chyves/guests/$name
+		zfs get -H -o value chyves:$prop $dataset
 	fi
 }
 
@@ -1313,23 +1320,27 @@ __rmpci() {
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pciprop="$(echo "$flagthree" | grep pcidev:)"
-		local pool="$(zfs list -H -t volume | grep $flagtwo | cut -d '/' -f 1 | head -n1)"
+    local pool="$( __get_pool_for_guest "$name" )"
+    __verify_valid_guest "$flagtwo" "$pool"
+    local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
 		else
-			zfs inherit  -r chyves:$flagthree $pool/chyves/guests/$flagtwo
+			zfs inherit  -r chyves:$flagthree $dataset
 		fi
 	else
 		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
-		local pool="$(zfs list -H -t volume | grep $flagone | cut -d '/' -f 1 | head -n1)"
+    local pool="$( __get_pool_for_guest "$flagone" )"
+    __verify_valid_guest "$flagone" "$pool"
+    local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
 		else
 			read -p "Are you sure you want to remove $flagtwo [Y/N]? " an </dev/tty
 			case "$an" in
-				y|Y) zfs inherit  -r chyves:$flagtwo $pool/chyves/guests/$flagone
+				y|Y) zfs inherit  -r chyves:$flagtwo $dataset
 				;;
 				*) echo "Not removed..."
 				;;
@@ -1342,7 +1353,9 @@ __rmpci() {
 __add() {
 	local name="$2"
 	local size="$3"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	# optionally allow the pool for the new disk to be specified. If not set, its set to $pool
 	local newpool="${4-$pool}"
 	# Find the last disk number and increment one
@@ -1360,7 +1373,7 @@ __add() {
 	else
 		local newpci="$(expr $lastpci + 1)"
 	fi
-	zfs set chyves:pcidev:$newpci=ahci-hd,/dev/zvol/$newpool/chyves/guests/$name/disk$newdisk $pool/chyves/guests/$name
+	zfs set chyves:pcidev:$newpci=ahci-hd,/dev/zvol/$newpool/chyves/guests/$name/disk$newdisk $dataset
 }
 
 # Remove disk from guest
@@ -1403,7 +1416,9 @@ __resize(){
 	local name="$2"
 	local disk="$3"
 	local size="$4"
-	local pool="$(zfs list -H -o name | grep chyves/guests/$name | grep $disk | cut -d '/' -f 1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	# Check if guest exists
 	echo "Resizing $disk to $size"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1411,7 +1426,6 @@ __resize(){
 		local running=$(pgrep -fx "bhyve: chy-$name")
 		if [ -z $running ]; then
 			zfs set volsize=$size $pool/chyves/guests/$name/$disk
-			zfs set chyves:size=$size $pool/chyves/guests/$name
 		else
 			echo "Please stop the guest first"
 		fi
@@ -1423,7 +1437,9 @@ __resize(){
 # List disks for a guest
 __disks() {
 	local name="$2"
-	local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
 	if [ -z $name ]; then
 		echo "You must enter a guest name."
 	elif [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1456,7 +1472,8 @@ __snapguest() {
 __rollguest() {
 	local fullsnap="$2"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
 	local snap="$(echo $fullsnap | cut -d '@' -f2)"
 	local disklist="$(zfs list -H | grep chyves/guests/$name | grep disk | \
 				cut -f1 | cut -d '/' -f4-)"
@@ -1577,11 +1594,14 @@ __exportguest() {
 # Run console
 __console() {
 	local name="$2"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1-3 | head -n1)"
-	local con="$(zfs get -H -o value chyves:con $pool)"
+  local pool="$( __get_pool_for_guest "$name" )"
+  __verify_valid_guest "$name" "$pool"
+  local dataset="${pool}/chyves/guests/${name}"
+	local con="$(zfs get -H -o value chyves:con $dataset)"
 	echo "Starting console on $name..."
 	echo "~~. to escape console [uses cu(1) for console]"
 	cu -l /dev/${con}B -s 9600
+
 }
 
 # Reset all consoles. This kills the cu(1)
