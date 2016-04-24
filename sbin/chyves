@@ -48,6 +48,59 @@ __readonly_cmd () {
     esac
 }
 
+# Validates if a given pool name exists.
+__verify_valid_pool() {
+  local _name_to_check="$1"
+  local _flags="$2"
+  # Valid _flags are:
+  # $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
+  # -p      [primary] Validates the supplied pool has the primary role set
+  # -c      [chyves] Validates the supplied pool is setup for chyves
+
+  if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
+    # When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
+
+    # Check to see if the pool is in the primary dataset_role
+    if [ -n "$(echo $_flags | grep 'p')" ] && [ "$(zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
+      __fault_detected_exit "${_name_to_check} is not a primary pool."
+    fi
+
+    # Check to see if the pool has been setup for chyves
+    if [ -n "$(echo $_flags | grep 'c')" ] && [ -z "$(zfs list -H $_name_to_check/chyves | grep -v "dataset does not exist" )" ]; then
+      __fault_detected_exit "${_name_to_check} has not been setup with chyves."
+    fi
+  else
+    __fault_detected_exit "Invalid pool name supplied."
+  fi
+}
+
+# Validates if a given guest name on a given pool exists.
+__verify_valid_guest() {
+  local _guest_to_check="$1"
+  local _pool="$2"
+  local _flags="$3"
+  # Valid _flags are:
+  # $null   [no flag used] Validates the supplied pool is in fact on the supplied ZFS pool
+  # -s      [start] Exits if guest is a template or on an offline pool
+
+  # Check to see if pool has chyves setup on it.
+  __verify_valid_pool $_pool -c
+
+  # Check to see if guest name used more than once
+  if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
+    __fault_detected_exit "More than one $_guest_to_check exists on system within active pools and guests, fix it!"
+  fi
+
+  if [ ! -n "$(zfs list -H $_pool/chyves/guests/$_guest_to_check | grep -v "dataset does not exist" | grep -v "No such file or directory" )" ]; then
+    __fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
+  fi
+
+  # Check to see if a template or offline pool.
+  if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
+    __fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
+  fi
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
