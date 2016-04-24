@@ -117,6 +117,15 @@ __get_pool_names() {
   fi
 }
 
+# Get pool name for guest
+__get_pool_for_guest() {
+  local _guest_name="$1"
+  local _pool="$(zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests/$_guest_name | cut -d '/' -f 1 )"
+  __verify_valid_pool "$_pool"
+  __verify_valid_guest "$_guest_name" "$_pool"
+  echo "$_pool"
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
