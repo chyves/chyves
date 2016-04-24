@@ -133,6 +133,11 @@ __get_primary_pool_name() {
   echo "${_var}"
 }
 
+#  Get all chyves properties that are set on the system
+__get_property_list() {
+  echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
+}
+
 # Process command line
 __parse_cmd () {
   while [ $# -gt 0 ] ; do
