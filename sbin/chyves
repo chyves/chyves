@@ -460,18 +460,13 @@ __list() {
   local output_type="$1"
   local active_taps="$2" # Only used for tap
 
-  if [ -z $1 ]; then
+  if [ -z "${output_type}" ]; then
     # Traditional `chyves list` true when null
-    local output_type="trad"
-  fi
-
- # Traditional output of list
-  __ls_trad() {
-    local pools="$(zfs list -H | grep chyves | cut -d '/' -f 1 | uniq )"
+    local pools=$(__get_pool_names -a)
     (
     printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
     for pool in $pools; do
-      local guests="$(zfs list -H -o name | grep -i ^$pool/chyves/guests | grep -v .defaults | cut -d'/' -f4 | sed 1d | uniq)"
+      local guests="$( __get_guests_list )"
       for g in $guests; do
         local vmm="/dev/vmm/chy-$g"
         if [ -e $vmm ]; then
@@ -496,34 +491,28 @@ __list() {
       done
     done
     ) | column -ts^
-  }
-
-  # List iso
-  __ls_iso() {
+  elif [ "${output_type}" = "properties" ]; then
+    echo "Use the following syntax to display of list of the guests on the system and a property."
+    echo "These are the available properties: "
+    __get_property_list
+    echo "Run \'chyves list <property>\' to see what that property is for each guest."
+  elif [ "${output_type}" = "iso" ]; then
+    local pool=$( __get_primary_pool_name )
   	echo "Listing ISOs..."
-  	zfs list -H | grep chyves/ISO | cut -f 1 | cut -d '/' -f 5 | sed 1d
-  }
-
-  # List Firmware
-  __ls_firmware() {
+  	zfs list -H -r $pool/chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
+  elif [ "${output_type}" = "firmwares" ]; then
     echo "Listing Firmware..."
-    zfs list -H | grep chyves/Firmware | cut -f1 | cut -d '/' -f 5 | sed 1d
-  }
-
-  # List all the snapshots
-  __ls_snapshots() {
-    zfs list -H -t snapshot | grep chyves | grep -v disk | cut -f1 | cut -d '/' -f4
-  }
-
-  # List taps in use
-  __ls_tap() {
-    local active_taps="$1"
+    zfs list -H -r $pool/chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
+  elif [ "${output_type}" = "snapshots" ]; then
+    echo "Listing snapshots..."
+    zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
+  elif [ "${output_type}" = "tap" ]; then
     if [ -z "${active_taps}" ]; then
-      local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-4)"
+      local guestlist="$( __get_guests_list -af )"
       echo "Listing all network taps:"
-      for i in $guestlist ; do
-        conprop="$(zfs get -H -o value chyves:tap $i)"
-        printf $i'......'$conprop'\n'
+      for guest in $guestlist ; do
+        conprop="$(zfs get -H -o value chyves:tap $guest)"
+        printf $guest'......'$conprop'\n'
       done
     elif [ "${active_taps}" = "active" ]; then
       echo "Listing active network taps..."
@@ -531,42 +520,20 @@ __list() {
     else
       echo "$active_taps is an unknown argument."
     fi
-  }
-
-  # List consoles in use
-  __ls_con() {
-    local pool="$(zfs list -H | grep chyves | cut -d '/' -f 1 | head -n1)"
-    local guestlist="$(zfs list -H | grep chyves/guests | sed 1d | cut -f1 | cut -d '/' -f4 | uniq)"
+  # Displays a list for a property for all active guests. See chyves list properties for options
+  elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
     (
-    printf 'Guest\tConsole\n'
-    for guest in $guestlist; do
-      local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$guest)"
-      printf $guest'\t'$con'\n'
+    printf 'Guest\t'$output_type'\n'
+    local poollist=$( __get_pool_names -a )
+    for pool in $poollist; do
+      local guestlist=$(__get_guests_list - $pool)
+      for guest in $guestlist; do
+        local property="$(zfs get -H -o value chyves:${output_type} $pool/chyves/guests/$guest)"
+        printf $guest'\t'$property'\n'
+      done
     done
     ) | column -t
-  }
-
-  case "$output_type" in
-    trad)     __ls_trad
-              exit
-    ;;
-    iso)      __ls_iso
-              exit
-    ;;
-    firm|firmware|fw)    __ls_firmware
-              exit
-    ;;
-    snap|snapshots)    __ls_snapshots
-              exit
-    ;;
-    tap)      __ls_tap "$2"
-              exit
-    ;;
-    con)      __ls_con
-              exit
-    ;;
-  esac
-
+  fi
 }
 
 # Display info about all guests.
