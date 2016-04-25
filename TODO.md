@@ -4,6 +4,12 @@ Check for loaded kernel modules
 - Check using kldstat and grep
 - Make a user settable property in .config called "kmod_load"? to override not checking for the modules.
   - Useful when the modules are built into the kernel.
+
+Add `chyves list processes`
+
+Show list of processes to kill for `chyves killall`
+
+Add __verify_console_unused function
   
 Add bridge property and handling.
 
