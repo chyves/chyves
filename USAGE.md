@@ -4,21 +4,43 @@ This document provides a quick start guide for setting up guests and zpools. How
 
 Via pkg:
 ````
-root@bguest:~ # pkg update
-root@bguest:~ # pkg install chyves
+root@bhost:~ # pkg update
+root@bhost:~ # pkg install chyves
 ````
 Via ports:
 ````
-user@bguest:~ $ portsnap fetch update
-user@bguest:~ $ cd /usr/ports/sysutils/chyves                    # chyves-devel is also available
-root@bguest:/usr/ports/sysutils/chyves # make install            # No options to configure
+user@bhost:~ $ portsnap fetch update
+user@bhost:~ $ cd /usr/ports/sysutils/chyves                    # chyves-devel is also available
+root@bhost:/usr/ports/sysutils/chyves # make install            # No options to configure
 ````
 Via git clone:
 ````
-user@bguest:~ $ git clone https://github.com/chyves/chyves.git
-user@bguest:~/chyves $ cd chyves
-root@bguest:/home/user/chyves # make install
+user@bhost:~ $ git clone https://github.com/chyves/chyves.git
+user@bhost:~ $ cd chyves
+root@bhost:/home/user/chyves # make install
 ````
+Via source install
+````
+user@bhost:~ $ fetch https://github.com/chyves/chyves/archive/master.zip
+user@bhost:~ $ unzip master.zip
+user@bhost:~ $ cd chyves-master
+root@bhost:/home/user/chyves-master # make install
+````
+
+### Dependencies
+`bhyve` and `chyves` will run on a base installation, however kernel modules are required that are not loaded by default. There are also certain applications that enchance their capabilities. `chyves` checks for these components and exits if not detected.
+
+Kernel Modules
+- `vmm` (Required to run the guests as this allocates the resources)
+- `nmdm` (Required for serial console access to the guests)
+- `if_tap` (Required for network access to the guests)
+- `if_bridge` (Required for network access to the guests)
+ - `bridgestp` (Required by `if_bridge`)
+
+Applications
+- grub2-bhyve (Required for non-FreeBSD guests)
+- cu (Install in base - provide serial console access)
+- tmux (Required only when using the -t flag in `chyves console bguest -t`)
 
 ### Finer details
 ````
@@ -27,7 +49,9 @@ man chyves
 
 ### Setup
 
-This tool does require at least one ZFS pool and multiple pools are supported. The primary pool is configured with the firmware and ISO resources. The primary pool is set with `chyves set primarypool=zroot default`
+This tool does require at least one ZFS pool. Multiple pools are supported, the first pool is assigned the primary pool role but can be changed afterwards. The primary pool is also the only pool containing with the firmware resources, ISO resources, and .default values. The primary pool can be changed with `chyves set primarypool=zroot`.
+
+To setup a pool for `chyves` use run:
 ````
 chyves setup pool=zroot
 ````
@@ -37,9 +61,9 @@ chyves setup kmod=1
 ````
 To automatically setup the necessary networking run the follow:
 ````
-chyves setup net=em0		# 'em0' is the interface I want bridge0 attached to.
+chyves setup net=em0
 ````
- Where `em0` is the name of your network interface. This creates a `bridge0` interface and a `tap#` interface.
+Where `em0` is the name of your network interface. This creates a `bridge0` interface and attaches `tap#` interfaces for each guest. The `tap` interfaces are process locked, meaning only one guest can be assigned per `tap` interface.
 
 All three can be use together like so:
 ````
@@ -118,15 +142,13 @@ You can change guest properties by using set:
 
 You can also set more than one property at once:
 ```
-chyves set bsdguest tap=tap0 con=nmdm0		#set tap0 and nmdm0
+chyves set bsdguest tap=tap0 con=nmdm0
 ```
-You can also set a description that can be a double quoted (") string with no equals sign (=).
-All spaces are turned into underscores (_). At guest creation, the description is the output of `date`
+You can also set a description that contain spaces will need to be double quoted (")
 ````
-chyves set bsdguest description="This is my string"
+chyves set bguest description="A chyves guest."
 ````
-It's always prudent to `destroy` a guest before changing settings that may affect a running guest.
-It's also a good idea to `destroy` a guest after your installation phase has completed.
+It is always prudent to `stop` (and then `destroy` in some cases) a guest before changing settings. `chyves` runs off the current state of the properties and not the settings the guest started with.
 Destroying a guest does not `delete` a guest from the host, it `destroys` the guest in `VMM`.
 ```
 chyves destroy bsdguest
