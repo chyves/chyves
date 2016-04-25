@@ -1,5 +1,10 @@
 This early in the project, a map is not defined. However many goals are planned:
 
+Check for loaded kernel modules
+- Check using kldstat and grep
+- Make a user settable property in .config called "kmod_load"? to override not checking for the modules.
+  - Useful when the modules are built into the kernel.
+  
 Add bridge property and handling.
 
 Deprecate chyves:name property
@@ -17,7 +22,6 @@ Added comments throughout the code to indicate what is going on.
 Added more output to indicate to the end user what is happening in the script
 
 Restructured command layout to have less sub-commands.
-- `get` for `get` `getall`
 - `iso` for `fetchiso` `cpiso` `renameiso` and `rmiso`
 - `firmware` for `fetchfw` `cpfw` `renamefw` and `rmfw`
 - `remove` for `remove` `rmiso` `rmfw` `rmpci`
