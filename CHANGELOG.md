@@ -4,7 +4,7 @@ Internal development.
 
 ##### Changes necessary to fork from `iohyve`:
 
-- Forked from `iohyve` at 0.7.5 "Tennessee Cherry Moonshine Edition" release at commit [2ff5b50](https://github.com/pr1ntf/iohyve/commit/2ff5b50d8cda61a8364bd79319152142ac1b4c33).
+- Forked from `iohyve` at 0.7.5 "Tennessee Cherry Moonshine Edition" release at commit [2ff5b50](https://github.com/pr1ntf/iohyve/tree/2ff5b50d8cda61a8364bd79319152142ac1b4c33).
 
 - Changed command from `iohyve` to `chyves`. `chyves` is the puralized big endian alphabetic increment of `bhyve`? Basically `chyves` is similar enough in spelling to `bhyve` but much different imagery. A memorable logo is in the works.
 
