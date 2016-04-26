@@ -865,6 +865,8 @@ __create() {
 	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
+  local tap="$( __get_next_tap )"
+  local con="$( __get_next_console )"
 
 	# If size not declared in command line, use .default's
 	if [ -z $size ]; then
@@ -875,20 +877,6 @@ __create() {
 	if [ -z "${pool}" ]; then
 		local pool="${prim_pool}"
 	fi
-
-  # Get list of guests to help set con and tap number
-  local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
-  if [ -z $taplast ]; then
-    local tap='0'
-  else
-    local tap="$(expr $taplast + 1)"
-  fi
-  local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
-  if [ -z $conlast ]; then
-    local con='0'
-  else
-    local con="$(expr $conlast + 1)"
-  fi
 
 	echo "Creating $name..."
 	zfs create $pool/chyves/guests/$name
@@ -1569,32 +1557,8 @@ __cloneguest() {
 			zfs set chyves:description=$description $pool/chyves/guests/$cname
 			# change con and tap properties to next available if -r is specified
 			if [ "$flag" == "-r" ]; then
-				local guestlist="$(zfs list -H -o name -t volume | grep chyves | cut -d'/' -f1-3)"
-					listtaps(){
-						for i in $guestlist ; do
-							local tapprop="$(zfs get -H -o value chyves:tap $i)"
-							printf $tapprop'\n'
-						done
-					}
-				local taplast="$(listtaps | sort -V | cut -c4- | tail -n1)"
-				if [ -z $taplast ]; then
-					local tap='0'
-				else
-					local tap="$(expr $taplast + 1)"
-				fi
-				listcons(){
-					for i in $guestlist ; do
-						local conprop="$(zfs get -H -o value chyves:con $i)"
-						printf $conprop'\n'
-					done
-				}
-				local conlast="$(listcons | sort -V | cut -c5- | tail -n1)"
-				if [ -z $conlast ]; then
-					local con='0'
-				else
-					local con="$(expr $conlast + 1)"
-				fi
-
+        local tap="$( __get_next_tap )"
+        local con="$( __get_next_console )"
 				zfs set chyves:tap=tap$tap $pool/chyves/guests/$cname
 				zfs set chyves:con=nmdm$con $pool/chyves/guests/$cname
 			fi
