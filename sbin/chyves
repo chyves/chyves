@@ -18,14 +18,16 @@ __fault_detected_exit(){
   exit 1
 }
 
-# Grep needs an arguement and a UUID stastically should not have a collision...
-#  ...if there are no pools in an offline role
+# Checks to see variable is empty as grep needs an arguement and a UUID stastically should not have a collision if there are no pools in an offline role
 if [ -z "${_OFFLINE_POOLS_GREP_STRING}" ]; then
   _OFFLINE_POOLS_GREP_STRING=${_UUID_GENERAL_USE}
 fi
-#  ...if there are no guests in an template role
+
+# Appends ".defaults" to $_TEMPLATE_GUESTS_GREP_STRING
 if [ -z "${_TEMPLATE_GUESTS_GREP_STRING}" ]; then
-  _TEMPLATE_GUESTS_GREP_STRING=${_UUID_GENERAL_USE}
+  _TEMPLATE_GUESTS_GREP_STRING=".defaults"
+else
+  _TEMPLATE_GUESTS_GREP_STRING=$( echo "${_TEMPLATE_GUESTS_GREP_STRING}|.defaults" )
 fi
 
 # Check for out of date datasets when not running setup.
