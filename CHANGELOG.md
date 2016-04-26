@@ -10,7 +10,7 @@ Internal development.
 
 - Changes other internal references from `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
 
-##### General enchancement and bug fixes:
+##### General enhancement and bug fixes:
 
 - Fixed various typos and expanded man page. Added much to `chyves set` section.
 
@@ -32,7 +32,9 @@ Internal development.
 
 - Additional kernel modules are loaded with `chyves setup kmod=1` for networking taps and bridges. Creation of bridges and taps would fail without these modules.
 
-- Consolidated `list`, `isolist`, `fwlist`, `snaplist`, `taplist`, `activetaps`, and `conlist` into one function/command: `chyves list` with the use of arguments. For example `chyves isolist` is replaced by `chyves list iso` and so forth. Not to worry, `chyves list` still displays the traditional output and `chyves list trad` is available for the compulsive.
+- Consolidated `list`, `isolist`, `fwlist`, `snaplist`, `taplist`, `activetaps`, and `conlist` into one function/command: `chyves list` with the use of arguments. For example `chyves isolist` is replaced by `chyves list iso` and so forth. Not to worry, `chyves list` still displays the traditional output.
+
+- Expanded `chyves list` to include all guest properties, this is dynamically determined so if a user manually sets a properties with `zfs` using a `chyves:` prefix this will display that property.
 
 - Changed `get` command syntax to `chyves get [property] [name]`. This follows the syntax of `iocage`.
 
@@ -42,7 +44,28 @@ Internal development.
 
 - Added `make deinstall` and `make rcremove` directives to Makefile for source installations.
 
-##### Developer enchancements:
+- Added checks to verify pool name and guest name when supplied from command line. Displays an error message and exits when an invalid name is used.
+
+- Added dependencies section to USAGE.md for clarify the components being used in `chyves`.
+
+- Checks for if kernel modules are loaded or built into the kernel before starting a guest.
+
+- Deprecated property `chyves:name`.
+
+##### Internal code changes:
+
+-
+
+- Added function `__fault_detected_exit` to standardized the way to exit with a message and why the exit was necessary.
+
+- Added functions `__verify_valid_pool` and `__verify_valid_guest` to verify a pool and guest are valid and exit if not.
+
+
+
+- Added `__verify_kernel_module_loaded` to verify, load `-l`, or unload kernels `-u`. Exits when no argument is given and modules not loaded. Added variable `_KERNEL_MODULES` to keep track of modules to check for, load, or unload.
+
+- Added functions `__get_next_console` and `__get_next_tap` to return the next number for respective device.
+
+##### Developer enhancements:
 
 - Added `make buildman` and `make clean` directives to Makefile.
-
