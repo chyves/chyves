@@ -7,6 +7,7 @@ _UUID_GENERAL_USE="$(/bin/uuidgen)"
 _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
 _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
+_KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # Function used to exit with a message.
@@ -129,10 +130,13 @@ __verify_kernel_module_loaded() {
       sleep 5
       __verify_kernel_module_loaded "$_module"
     else
-      __fault_detected_exit "Kernel module '$_module' not loaded."
+      __fault_detected_exit "Kernel module '$_module' not loaded. Run 'chyves setup kmod=1'"
     fi
   elif [ "$_flags" = "-u" ]; then
     kldunload -v $_module
+    echo "Kernel module '$_module' loaded."
+  else
+    echo "Kernel module '$_module' already loaded."
   fi
 }
 
@@ -418,22 +422,22 @@ __setup() {
 						fi
 					fi
 				fi
-			elif [ "${prop}" = "kmod" ]; then
+      elif [ "${prop}" = "kmod" ]; then
 				if [ "${val}" = "1" ]; then
 					echo "Loading kernel modules..."
-					kldload vmm
-					kldload nmdm
-					kldload if_tap
-					kldload bridgestp
-					kldload if_bridge
-				elif [ "${val}" = "0" ]; then
-					echo "Unloading kernel modules..."
-					kldunload vmm
-					kldunload nmdm
+          for _module in $_KERNEL_MODULES ; do
+            __verify_kernel_module_loaded "$_module" -l
+          done
+				elif [ "${val}" = "2" ]; then
+          echo "Attempting to unloading kernel modules..."
+          for _module in $_KERNEL_MODULES ; do
+            __verify_kernel_module_loaded "$_module" -u
+          done
 				else
 					echo "Improper syntax"
+          echo "kmod=0 do nothing"
 					echo "kmod=1 to load modules"
-					echo "kmod=0 to unload modules"
+					echo "kmod=2 to unload modules"
 				fi
 			elif [ "${prop}" = "net" ]; then
 				local bridgeif="$('ifconfig' -l | grep -F "bridge0 " | cut -c1)"
@@ -887,6 +891,7 @@ __install() {
 	local iso="$3"
 	local pool="$( __get_pool_for_guest "$name" )"
   __verify_valid_guest "$name" "$pool"
+  __verify_kernel_module_loaded
 	local dataset="$pool/chyves/guests/$name"
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -922,6 +927,7 @@ __load() {
 	local media="$2"
   local pool="$( __get_pool_for_guest "$name" )"
   __verify_valid_guest "$name" "$pool"
+  __verify_kernel_module_loaded
   local _path="$( __get_path_for_guest_dataset "$name" "$pool" )"
   echo "Path is: $_path"
   local dataset="${pool}/chyves/guests/${name}"
@@ -1029,6 +1035,7 @@ __boot() {
   local pool="$( __get_pool_for_guest "$name" )"
   __verify_valid_guest "$name" "$pool"
   local dataset="${pool}/chyves/guests/${name}"
+  __verify_kernel_module_loaded
 	# runmode (runonce/persist)
 	#   0 = once
 	#   1 = persist regular (stop if guest is powering off)
@@ -1118,6 +1125,7 @@ __start() {
   local pool=$( __get_pool_for_guest "$name" )
   __verify_valid_pool "$pool"
   __verify_valid_guest "$name" "$pool" -s
+  __verify_kernel_module_loaded
   local dataset="$pool/chyves/guests/$name"
   local pci=""
 	local runmode="1"
