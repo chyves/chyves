@@ -179,6 +179,26 @@ __get_property_list() {
   echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
 }
 
+# Return the value of the next console to use
+__get_next_console() {
+  local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
+  if [ -z $conlast ]; then
+    echo "0"
+  else
+    echo "$(expr $conlast + 1)"
+  fi
+}
+
+# Return the value of the next tap interface to use
+__get_next_tap() {
+  local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
+  if [ -z $taplast ]; then
+    echo "0"
+  else
+    echo "$(expr $taplast + 1)"
+  fi
+}
+
 # Get a list of guests on system
 __get_guests_list() {
   local _flags="$1"
