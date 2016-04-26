@@ -513,11 +513,11 @@ __list() {
 
   if [ -z "${output_type}" ]; then
     # Traditional `chyves list` true when null
-    local pools=$(__get_pool_names -a)
+    local pools=$( __get_pool_names -a )
     (
     printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
     for pool in $pools; do
-      local guests="$( __get_guests_list )"
+      local guests="$( __get_guests_list - $pool )"
       for g in $guests; do
         local vmm="/dev/vmm/chy-$g"
         if [ -e $vmm ]; then
@@ -525,19 +525,19 @@ __list() {
         else
           vmm="NO"
         fi
-        local running=$(pgrep -fx "bhyve: chy-$g")
+        local running=$( pgrep -fx "bhyve: chy-$g" )
         if [ -z $running ]; then
           running="NO"
         else
           running="YES"
         fi
-        local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
+        local boot="$( zfs get -H -o value chyves:boot $pool/chyves/guests/$g )"
         if [ $boot = '1' ]; then
           boot="YES"
         else
           boot="NO"
         fi
-        local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
+        local description="$( zfs get -H -o value chyves:description $pool/chyves/guests/$g )"
         printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
       done
     done
@@ -557,29 +557,24 @@ __list() {
   elif [ "${output_type}" = "snapshots" ]; then
     echo "Listing snapshots..."
     zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
-  elif [ "${output_type}" = "tap" ]; then
-    if [ -z "${active_taps}" ]; then
-      local guestlist="$( __get_guests_list -af )"
-      echo "Listing all network taps:"
-      for guest in $guestlist ; do
-        conprop="$(zfs get -H -o value chyves:tap $guest)"
-        printf $guest'......'$conprop'\n'
-      done
-    elif [ "${active_taps}" = "active" ]; then
-      echo "Listing active network taps..."
-      ls /dev | grep tap
-    else
-      echo "$active_taps is an unknown argument."
-    fi
   # Displays a list for a property for all active guests. See chyves list properties for options
   elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
+
+    # Displays active tap via /dev
+    if [ "$output_type" = "tap" ] && [ "${active_taps}" = "active" ]; then
+      echo "Listing active network taps..."
+      ls /dev | grep tap
+      exit
+    fi
+
+    # Displays singular property
     (
     printf 'Guest\t'$output_type'\n'
     local poollist=$( __get_pool_names -a )
     for pool in $poollist; do
-      local guestlist=$(__get_guests_list - $pool)
+      local guestlist=$( __get_guests_list - $pool )
       for guest in $guestlist; do
-        local property="$(zfs get -H -o value chyves:${output_type} $pool/chyves/guests/$guest)"
+        local property="$( zfs get -H -o value chyves:${output_type} $pool/chyves/guests/$guest )"
         printf $guest'\t'$property'\n'
       done
     done
