@@ -873,7 +873,6 @@ __create() {
 	echo "Creating $name..."
 	zfs create $pool/chyves/guests/$name
 	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
-	zfs set chyves:name=$name $pool/chyves/guests/$name
 	zfs set chyves:ram=$def_ram $pool/chyves/guests/$name
 	zfs set chyves:cpu=$def_cpu $pool/chyves/guests/$name
 	zfs set chyves:tap=tap$tap $pool/chyves/guests/$name
@@ -1275,7 +1274,6 @@ __rename() {
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name" | cut -d '/' -f 1 | head -n1)"
 	echo "Renaming $name to $newname..."
 	zfs rename -f $dataset $pool/chyves/guests/$newname
-	zfs set chyves:name=$newname $pool/chyves/guests/$newname
 }
 
 # Delete guest
@@ -1548,8 +1546,6 @@ __cloneguest() {
 			# clean up
 			zfs destroy -rR $pool/chyves/guests/$name@$cname
 			zfs destroy -rR $pool/chyves/guests/$cname@$cname
-			# rename the guest
-			zfs set chyves:name=$cname $pool/chyves/guests/$cname
 			zfs set chyves:description=$description $pool/chyves/guests/$cname
 			# change con and tap properties to next available if -r is specified
 			if [ "$flag" == "-r" ]; then
