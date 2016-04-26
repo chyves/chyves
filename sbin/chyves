@@ -111,6 +111,31 @@ __verify_valid_guest() {
   fi
 }
 
+# Verify kernel module loaded
+__verify_kernel_module_loaded() {
+  local _module="$1"
+  local _flags="$2"
+  local _status=$(kldstat -v | grep $_module )
+  # Valid _flags are:
+  # $null   [no flag used] check only
+  # -l      [load] Load module if not loaded
+  # -u      [unload] Unload module
+
+  # When erroring out the following message is displayed:
+  # kldload: can't load $_module: No such file or directory
+  if [ -z "$_status" ]; then
+    if [ "$_flags" = "-l" ]; then
+      kldload $_module
+      sleep 5
+      __verify_kernel_module_loaded "$_module"
+    else
+      __fault_detected_exit "Kernel module '$_module' not loaded."
+    fi
+  elif [ "$_flags" = "-u" ]; then
+    kldunload -v $_module
+  fi
+}
+
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
   local _flags="$1"
