@@ -862,6 +862,92 @@ __deletefw() {
 	zfs destroy -rR $pool/chyves/Firmware/$name
 }
 
+# Handles fetch, rename, delete, list for Firmware, ISO, and some guests resources
+__resource_functions() {
+	local _function="$1"
+	local _subfunction="$2"
+	local _arg3="$3"			# URL|File-Path\File-Name|Firmware-Name
+	local _arg4="$4"			# Rename-Name
+	local _prim_pool="$( __get_primary_pool_name )"
+
+	# Sets the variable to use to for the resource
+	if [ "$_function" = "firmware" ]; then
+		local _resource_name="Firmware"
+	elif [ "$_function" = "ISO" ]; then
+		local _resource_name="iso"
+	elif [ "$_function" = "guests" ]; then
+		local _resource_name="guests"
+	fi
+
+	if [ "$_subfunction" = "fetch" ]; then
+		local _file_name="$(basename $_arg3)"
+		if [ -n "$(echo "$_arg3" | grep -E '^http|^ftp')" ]; then
+			echo "Downloading $_file_name from $_arg3 to /chyves/$_resource_name/$_file_name..."
+			zfs create $_prim_pool/chyves/$_resource_name/$_file_name
+			fetch $_arg3 -o /chyves/$_resource_name/$_file_name
+			# Do a file hash check if an ISO download
+			if [ "$_function" = "iso" ]; then
+				echo "Please enter a supported file hash for '$_arg3':"
+				read -p "Supported file hashes are (md5\|sha1\|sha256\|sha512):" an </dev/tty
+				local _hash_guess=$( echo $an | wc )
+				case "$_hash_guess" in
+					33)	local cksum=$(md5 -q /chyves/ISO/$_file_name)
+					;;
+					41)	local cksum=$(sha1 -q /chyves/ISO/$_file_name)
+					;;
+					65)	local cksum=$(sha256 -q /chyves/ISO/$_file_name)
+					;;
+					129)	local cksum=$(sha512 -q /chyves/ISO/$_file_name)
+					;;
+					*) echo "Unknown hash given."
+				esac
+
+				echo "$an"
+				echo "$cksum"
+				echo "$_hash_guess"
+				# Check if hash sums match
+				if [ "$cksum" = "$an" ]; then
+					echo "Hashes matched"
+				else
+					echo "Hashes did not match for ''$_file_name':"
+					echo "Supplied hash: $an"
+					echo "File hashed:   $cksum"
+					read -p "[WARNING] Do you want to delete ISO '$_arg3' ? [y/N]? " an </dev/tty
+					case "$an" in
+						y|Y|yes) zfs destroy -rR $_prim_pool/chyves/ISO/$_file_name
+						;;
+						*) echo "No action taken. You should probably delete '$_file_name' and download it again."
+					esac
+				fi
+			fi
+		# Local file copies only.
+		else
+			echo "Copying $_file_name from $_arg3..."
+			zfs create $_prim_pool/chyves/$_resource_name/$_file_name
+			cp $_arg3 /chyves/$_resource_name/$_file_name
+		fi
+	elif [ "$_subfunction" = "rename" ]; then
+		read -p "Do you want to rename firmware from '$_arg3' to '$_arg4'? [y/N]? " an </dev/tty
+		case "$an" in
+			y|Y|yes)	mv -f /chyves/$_resource_name/$_arg3/$_arg3 /chyves/$_resource_name/$_arg3/$_arg4
+					zfs rename $_prim_pool/chyves/$_resource_name/$_arg3 $_prim_pool/chyves/$_resource_name/$_arg4
+			;;
+			*) echo "No action taken."
+		esac
+	elif [ "$_subfunction" = "delete" ]; then
+		read -p "[WARNING] Do you want to delete $_resource_name '$_arg3' [y/N]? " an </dev/tty
+		case "$an" in
+			y|Y|yes) zfs destroy -rR $_prim_pool/chyves/$_resource_name/$_arg3
+			;;
+			*) echo "No action taken."
+		esac
+	elif [ "$_subfunction" = "list" ] && [ "$_function" = "firmware" ]; then
+		__list "firmwares"
+	elif [ "$_subfunction" = "list" ] && [ "$_function" = "iso" ]; then
+		__list "iso"
+	fi
+}
+
 # Create guest
 __create() {
 	local name="$1"
