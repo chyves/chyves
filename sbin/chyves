@@ -1251,11 +1251,21 @@ __forcekill() {
 	local name="$2"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
-	local pids="$(pgrep -f $name)"
-	for apid in "$pids"; do
-		kill -9 $apid
-	done
-	bhyvectl --destroy --vm=chy-$name
+
+	# Display current running processes for guest
+	__list processes $name | grep -v "/bin/sh /usr/local/sbin/chyves forcekill"
+
+	read -p "[WARNING] Are you sure you want to kill all processes above? [y/N]? " an </dev/tty
+	case "$an" in
+		y|Y|yes) 	local pids="$(pgrep -f $name)"
+			for apid in "$pids"; do
+				kill -9 $apid
+			done
+			bhyvectl --force-poweroff --vm=chy-$name
+			bhyvectl --destroy --vm=chy-$name
+		;;
+		*) echo "No action taken."
+	esac
 }
 
 # Gracefully shut down all guests via ACPI (Does not destroy)
