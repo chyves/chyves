@@ -783,6 +783,8 @@ __resource_functions() {
 		local _resource_name="iso"
 	elif [ "$_function" = "guest" ]; then
 		local _resource_name="guests"
+	elif [ "$_function" = "disk" ]; then
+		local _resource_name="guests/$_arg4/disk$_arg5"
 	fi
 
 	if [ "$_subfunction" = "fetch" ]; then
