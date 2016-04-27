@@ -283,29 +283,11 @@ __parse_cmd () {
     info)	__info "$2"
           		exit
     ;;
-    fetchiso|fetch)    __fetchiso "$@"
-              exit
-    ;;
-    cpiso)	__cpiso "$@"
-          		exit
-    ;;
-    renameiso) __renameiso "$@"
-              exit
-    ;;
-    rmiso) 	__deleteiso "$@"
-              exit
-    ;;
-    fetchfw)	__fetchfw "$@"
-              exit
-    ;;
-    cpfw)	__cpfw "$@"
-              exit
-    ;;
-    renamefw) __renamefw "$@"
-              exit
-    ;;
-    rmfw)	__deletefw "$@"
-              exit
+		firmware) __resource_functions "$1" "$2" "$3" "$4"
+							exit
+		;;
+		iso) 	__resource_functions "$1" "$2" "$3" "$4"
+							exit
     ;;
     create)   __create "$@"
               exit
@@ -337,10 +319,10 @@ __parse_cmd () {
     destroy)  __destroy "$@"
               exit
     ;;
-    rename)   __rename "$@"
+    rename)   __resource_functions "guest" "$2" "$3" "$4"
               exit
     ;;
-    delete)   __delete "$@"
+    delete)   __resource_functions "guest" "$2" "$3"
               exit
     ;;
     set)      __set "$@"
@@ -786,82 +768,6 @@ EOT
 	)
 }
 
-# Fetch ISO
-__fetchiso() {
-	local url="$2"
-	local pool="$( __get_primary_pool_name )"
-	local name="$(basename $2)"
-	echo "Fetching $url..."
-	zfs create $pool/chyves/ISO/$name
-	fetch $url -o /chyves/ISO/$name
-}
-
-# Copy ISO from local machine
-__cpiso() {
-	local loc="$2"
-	local pool="$( __get_primary_pool_name )"
-	local name="$(basename $loc)"
-	echo "Copying $name from $loc..."
-	zfs create $pool/chyves/ISO/$name
-	cp $loc /chyves/ISO/$name
-}
-
-# Rename an ISO
-__renameiso() {
-	local pool="$( __get_primary_pool_name )"
-	local iso="$2"
-	local name="$3"
-	echo "Renaming ISO $2 to $3..."
-	mv /chyves/ISO/$iso/$iso /chyves/ISO/$iso/$name
-	zfs rename $pool/chyves/ISO/$iso $pool/chyves/ISO/$name
-}
-
-# Delete ISO
-__deleteiso() {
-	local name="$2"
-	local pool="$( __get_primary_pool_name )"
-	echo "Deleting $name..."
-	zfs destroy -rR $pool/chyves/ISO/$name
-}
-
-# Fetch Firmware
-__fetchfw() {
-	local url="$2"
-	local pool="$( __get_primary_pool_name )"
-	local name="$(basename $2)"
-	echo "Fetching $url..."
-	zfs create $pool/chyves/Firmware/$name
-	fetch $url -o /chyves/Firmware/$name
-}
-
-# Copy Firmware from local machine
-__cpfw() {
-	local loc="$2"
-	local pool="$( __get_primary_pool_name )"
-	local name="$(basename $loc)"
-	echo "Copying $name from $loc..."
-	zfs create $pool/chyves/Firmware/$name
-	cp $loc /chyves/Firmware/$name
-}
-
-# Rename Firmware
-__renamefw() {
-	local pool="$( __get_primary_pool_name )"
-	local fw="$2"
-	local name="$3"
-	echo "Renaming Firmware $2 to $3..."
-	mv /chyves/Firmware/$fw/$fw /chyves/Firmware/$fw/$name
-	zfs rename $pool/chyves/Firmware/$fw $pool/chyves/Firmware/$name
-}
-
-# Delete Firmware
-__deletefw() {
-	local name="$2"
-	local pool="$( __get_primary_pool_name )"
-	echo "Deleting $name..."
-	zfs destroy -rR $pool/chyves/Firmware/$name
-}
-
 # Handles fetch, rename, delete, list for Firmware, ISO, and some guests resources
 __resource_functions() {
 	local _function="$1"
@@ -875,7 +781,7 @@ __resource_functions() {
 		local _resource_name="Firmware"
 	elif [ "$_function" = "ISO" ]; then
 		local _resource_name="iso"
-	elif [ "$_function" = "guests" ]; then
+	elif [ "$_function" = "guest" ]; then
 		local _resource_name="guests"
 	fi
 
@@ -1370,49 +1276,6 @@ __destroy() {
 	bhyvectl --destroy --vm=chy-$name
 }
 
-# Rename the guest
-__rename() {
-	local name="$2"
-	local pool="$( __get_pool_for_guest "$name" )"
-	__verify_valid_guest "$name" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
-	local newname="$3"
-	if [ "$name" = "$newname" ]; then
-		echo "Can not rename guest to itself ($name). Exitting."
-		exit
-	fi
-	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name" | cut -d '/' -f 1 | head -n1)"
-	echo "Renaming $name to $newname..."
-	zfs rename -f $dataset $pool/chyves/guests/$newname
-}
-
-# Delete guest
-__delete() {
-	local flagone="$2"
-	local flagtwo="$3"
-	if [ $flagone = "-f" ]; then
-		local target_dataset="$(zfs list -H -t filesystem -o name | grep chyves | grep $flagtwo | head -n1)"
-		echo ""
-		echo "[WARNING] Forcing permanent deletion of $flagtwo"
-		echo "Location: $target_dataset including children and clones"
-		echo ""
-		echo "Hit Ctrl+C in the next 10 seconds to cancel..."
-		sleep 10
-		echo "Deleting $flagtwo at $target_dataset..."
-		zfs destroy -rR $target_dataset
-	else
-		local target_dataset="$(zfs list -H -t filesystem -o name | grep chyves | grep $flagone | head -n1)"
-		echo ""
-		echo "[WARNING] Are you sure you want to permanently delete $flagone and all child datasets?"
-		read -p "Location: $target_dataset [Y/N]? " an </dev/tty
-		case "$an" in
-			y|Y) echo "Deleting $flagone at $target_dataset..."; zfs destroy -r $target_dataset
- 			;;
-			*) echo "$flagone not deleted..."
-		esac
-	fi
-}
-
 # Set ZFS properties
 __set() {
 	local name="$2"
@@ -1744,14 +1607,14 @@ chyves  version
 	     tap active
 	     processes [name]
 	info [-rvstdgaikhl]
-	fetchiso [URL]
-	cpiso [path]
-	renameiso [ISO] [newname]
-	rmiso [ISO]
-	fetchfw [URL]
-	cpfw [path]
-	renamefw [firmware] [newname]
-	rmfw [firmware]
+	iso [list]
+	    [fetch] [URL|path]
+			[rename] [oldname] [newname]
+			[delete] [name]
+	firmware [list]
+	         [fetch] [URL|path]
+	         [rename] [oldname] [newname]
+	         [delete] [name]
 	create [name] [size]
 	install [name] [ISO]
 	load [name] [path/to/bootdisk]
@@ -1762,7 +1625,7 @@ chyves  version
 	scram
 	destroy [name]
 	rename [name] [newname]
-	delete [-f] [name]
+	delete [name]
 	set [name|.defaults] [prop1=value] [prop2=value]...
 	get [[property]|all] [name]
 	rmpci [-f] [name] [pcidev:N]
