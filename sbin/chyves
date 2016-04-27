@@ -142,6 +142,22 @@ __verify_kernel_module_loaded() {
   fi
 }
 
+# Verify all modules in $_KERNEL_MODULES
+__verify_all_kernel_modules(){
+  local _flag="$1"
+  # Valid _flag are:
+  # $null   [no flag used] check only
+  # -l      [load] Load module if not loaded
+  # -u      [unload] Unload module
+
+  if [ -z "$_flag" ] || [ "$_flag" = "-l" ] || [ "$_flag" = "-u" ]; then
+    for _module in $_KERNEL_MODULES ; do
+      echo "Checking module: $_module"
+      __verify_kernel_module_loaded "$_module" "$_flag"
+    done
+  fi
+}
+
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
   local _flags="$1"
@@ -386,7 +402,7 @@ __setup() {
 			local val="$(echo $arg | cut -d '=' -f2)"
 			if [ "${prop}" = "pool" ]; then
 				local pool="$val"
-        __verify_valid_pool -ce "$val"
+				__verify_valid_pool -ce "$val"
 				echo "Setting up chyves pool..."
 				zfs create $pool/chyves
 				zfs create $pool/chyves/guests
@@ -444,20 +460,16 @@ __setup() {
 						fi
 					fi
 				fi
-      elif [ "${prop}" = "kmod" ]; then
+          elif [ "${prop}" = "kmod" ]; then
 				if [ "${val}" = "1" ]; then
 					echo "Loading kernel modules..."
-          for _module in $_KERNEL_MODULES ; do
-            __verify_kernel_module_loaded "$_module" -l
-          done
+					__verify_all_kernel_modules -l
 				elif [ "${val}" = "2" ]; then
-          echo "Attempting to unloading kernel modules..."
-          for _module in $_KERNEL_MODULES ; do
-            __verify_kernel_module_loaded "$_module" -u
-          done
+					echo "Attempting to unloading kernel modules..."
+					__verify_all_kernel_modules -u
 				else
 					echo "Improper syntax"
-          echo "kmod=0 do nothing"
+					echo "kmod=0 do nothing"
 					echo "kmod=1 to load modules"
 					echo "kmod=2 to unload modules"
 				fi
@@ -894,8 +906,8 @@ __install() {
 	local name="$2"
 	local iso="$3"
 	local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  __verify_kernel_module_loaded
+	__verify_valid_guest "$name" "$pool"
+	__verify_all_kernel_modules
 	local dataset="$pool/chyves/guests/$name"
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -905,7 +917,7 @@ __install() {
 			local ram="$(zfs get -H -o value chyves:ram $dataset)"
 			local con="$(zfs get -H -o value chyves:con $dataset)"
 			local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
-      local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
+			local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 			local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 			local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
 			echo "Installing $name..."
@@ -929,12 +941,11 @@ __install() {
 __load() {
 	local name="$1"
 	local media="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  __verify_kernel_module_loaded
-  local _path="$( __get_path_for_guest_dataset "$name" "$pool" )"
-  echo "Path is: $_path"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	__verify_all_kernel_modules
+	local _path="$( __get_path_for_guest_dataset "$name" "$pool" )"
+	local dataset="${pool}/chyves/guests/${name}"
 	local disk="${pool}/chyves/guests/${name}/disk0"
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
@@ -1036,10 +1047,10 @@ __load() {
 # Boot guest
 __boot() {
 	local name="$1"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
-  __verify_kernel_module_loaded
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
+	__verify_all_kernel_modules
 	# runmode (runonce/persist)
 	#   0 = once
 	#   1 = persist regular (stop if guest is powering off)
@@ -1049,7 +1060,7 @@ __boot() {
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
-  local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
+	local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 	local persist="$(zfs get -H -o value chyves:persist $dataset)"
 	local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 	local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
@@ -1091,9 +1102,9 @@ __boot() {
 
 __prepare_guest() {
 	local name="$1"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	local pci="$(__get_zfs_pcidev_conf $dataset)"
 	# Setup tap if needed
 	local listtap="$(zfs get -H -o value chyves:tap $dataset)"
@@ -1126,18 +1137,18 @@ __prepare_guest() {
 __start() {
 	local name="$2"
 	local flag="$3"
-  local pool=$( __get_pool_for_guest "$name" )
-  __verify_valid_pool "$pool"
-  __verify_valid_guest "$name" "$pool" -s
-  __verify_kernel_module_loaded
-  local dataset="$pool/chyves/guests/$name"
-  local pci=""
+	local pool=$( __get_pool_for_guest "$name" )
+	__verify_valid_pool "$pool"
+	__verify_valid_guest "$name" "$pool" -s
+	__verify_all_kernel_modules
+	local dataset="$pool/chyves/guests/$name"
+	local pci=""
 	local runmode="1"
 	local loader="$(zfs get -H -o value chyves:loader $dataset)"
 	# Check if loader is UEFI
 	if [ $loader = "uefi" ]; then
 		__uefi "$name" "null.iso"
-    exit
+		exit
 	fi
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1169,15 +1180,16 @@ __start() {
 __uefi() {
 	local name="$2"
 	local media="$3"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	__verify_all_kernel_modules
+	local dataset="${pool}/chyves/guests/${name}"
 	local ram="$(zfs get -H -o value chyves:ram $dataset)"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
 	local fw="$(zfs get -H -o value chyves:fw $dataset)"
 	local tap="$(zfs get -H -o value chyves:tap $dataset)"
-  local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
+	local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 	local bargs="$(zfs get -H -o value chyves:bargs $dataset | sed -e 's/_/ /g')"
 	local pool="$(zfs list -H -t volume -o name | grep chyves/guests/$name | cut -d '/' -f1)"
 	# Create tap if needed
@@ -1223,8 +1235,8 @@ __uefi() {
 # Gracefully stop a guest
 __stop() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
 	local pid=$(pgrep -fx "bhyve: chy-$name")
 	echo "Stopping $name..."
 	kill $pid
@@ -1234,8 +1246,8 @@ __stop() {
 # THIS WILL KILL EVERYTHING MATCHING $NAME
 __forcekill() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
 	local pids="$(pgrep -f $name)"
 	for apid in "$pids"; do
 		kill -9 $apid
@@ -1256,8 +1268,8 @@ __scram() {
 # Destroy guest
 __destroy() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
 	echo "Destroying $name..."
 	bhyvectl --force-poweroff --vm=chy-$name
 	bhyvectl --destroy --vm=chy-$name
@@ -1266,9 +1278,9 @@ __destroy() {
 # Rename the guest
 __rename() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	local newname="$3"
 	if [ "$name" = "$newname" ]; then
 		echo "Can not rename guest to itself ($name). Exitting."
@@ -1309,9 +1321,9 @@ __delete() {
 # Set ZFS properties
 __set() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	shift 2
 	for arg in "$@"; do
 		local prop="$(echo $arg | cut -d '=' -f1)"
@@ -1335,9 +1347,9 @@ __set() {
 __get() {
 	local prop="$1"
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 
 	if [ "$prop" = "all" ]; then
 		echo "Getting all $name chyves properties..."
@@ -1356,9 +1368,9 @@ __rmpci() {
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pciprop="$(echo "$flagthree" | grep pcidev:)"
-    local pool="$( __get_pool_for_guest "$name" )"
-    __verify_valid_guest "$flagtwo" "$pool"
-    local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$flagtwo" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
@@ -1367,9 +1379,9 @@ __rmpci() {
 		fi
 	else
 		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
-    local pool="$( __get_pool_for_guest "$flagone" )"
-    __verify_valid_guest "$flagone" "$pool"
-    local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$flagone" )"
+	__verify_valid_guest "$flagone" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
