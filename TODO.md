@@ -1,37 +1,46 @@
 This early in the project, a map is not defined. However many goals are planned:
 
-Add `chyves list processes`
+Show a list of processes to kill for `chyves killall`
+- Use __list processes $guest
 
-Show list of processes to kill for `chyves killall`
+Check if binary exists on system function
+- Add check when loader=grub-bhyve for binary
+- tmux for console -t flag
 
 Add __verify_console_unused function
-  
-Add bridge property and handling.
+- Get guest name
+- Get guest console
+- `ps-aux | grep $console`
 
-Deprecate chyves:name property
+Add `chyves:bridge` property to guests
+- Handling so that multiple bridges can used
+- Requirement:
+ - A physical interface/vlan can only be assigned to one bridge
+   - Maybe add `chyves:bridgeXX_physical_parent` to `.config`
+     - Valid values would be physical|vlan|null
+      - null would be used for internal networks only.
 
-Checks for more than one .default, ISO, and Firmware dataset on system.
+Add check for `set` for properties in `.defaults` that way a property can not be set that does not get pulled in for guests.
 
-Check and test to see if secondary pools store the device.map and grub.cfg files with the correct dataset.
+Checks for more than one `.default`, `ISO`, and `Firmware` dataset on system.
+- Use `wc -l`
 
-Get redundant code into functions. Use a standard nomenclature to denote internal use functions. See vm-bhyve for help.
-
-Changed the output of `info` to be more verbose with command line flags.
-
-Added comments throughout the code to indicate what is going on.
-
-Added more output to indicate to the end user what is happening in the script
+Check and test to see if secondary pools store the `device.map` and `grub.cfg` files with the correct dataset.
 
 Restructured command layout to have less sub-commands.
-- `iso` for `fetchiso` `cpiso` `renameiso` and `rmiso`
-- `firmware` for `fetchfw` `cpfw` `renamefw` and `rmfw`
 - `remove` for `remove` `rmiso` `rmfw` `rmpci`
-
-Add checksum check for ftp/http copied ISOs.
 
 Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
 - Check if tmux is installed
 - Check if guest is valid
 - Check is cu is openned for guest already (shared)
 
-Testing!!!
+#### General plan:
+Added comments throughout the code to indicate what is going on.
+
+Added more output to indicate to the end user what is happening in the script
+
+Get redundant code into functions. Use a standard nomenclature to denote internal use functions? See vm-bhyve for help.
+
+## Testing!!!
+
