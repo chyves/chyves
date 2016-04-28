@@ -79,6 +79,10 @@ Internal development.
 
 - Deprecated properties `chyves:name` and `chyves:size`
 
+- Added check when starting guest to see if  `grub2-bhyve` is installed for guests using the `grub-bhyve` loader property value.
+
+- Added prompt when using the `chyves forcekill $guest` command and also displays processes that will be killed.
+
 ##### Internal code changes:
 
 
@@ -102,6 +106,8 @@ Internal development.
 
 - Added function `__resource_functions` to fetch, rename, delete, and list for Firmware and ISO resources. Also works compatiable with rename and delete for guests resources Potentially can be used for guest disk operations as well.
  - This deprecates the following functions: `__fetchiso`, `__cpiso`, `__renameiso`, `__deleteiso`, `__fetchfw`, `__cpfw`, `__renamefw`, and `__deletefw`.
+ 
+- Added function `__verify_binary_available` to check if an executable is available on the system.
 
 ##### Developer enhancements:
 
