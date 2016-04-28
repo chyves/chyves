@@ -975,6 +975,7 @@ __load() {
 		*) local wire_memory="" ;;
 	esac
 	if [ $loader = "grub-bhyve" ]; then
+		__verify_binary_available "grub-bhyve"
 		if [ $install = "yes" ]; then
 			if [ $os = "openbsd59" ]; then
 				__create_device_map "$_path" "$disk" "$media"
@@ -1162,6 +1163,8 @@ __start() {
 	if [ $loader = "uefi" ]; then
 		__uefi "$name" "null.iso"
 		exit
+	elif [ $loader = "grub-bhyve" ]; then
+		__verify_binary_available "grub-bhyve"
 	fi
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
