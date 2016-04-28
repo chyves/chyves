@@ -158,6 +158,16 @@ __verify_all_kernel_modules(){
   fi
 }
 
+# Verify that a binary is available 
+__verify_binary_available() {
+  local _binary_to_check_for="$1"
+	local _path_to_binary=$( which ${_binary_to_check_for} )
+
+	if [ ! -x "${_path_to_binary}" ]; then
+		__fault_detected_exit "Failed to find executable binary: '$_binary_to_check_for'"
+	fi
+}
+
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
   local _flags="$1"
