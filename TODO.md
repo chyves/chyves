@@ -1,9 +1,5 @@
 This early in the project, a map is not defined. However many goals are planned:
 
-Check if binary exists on system function
-- Add check when loader=grub-bhyve for binary
-- tmux for console -t flag
-
 Add __verify_console_unused function
 - Get guest name
 - Get guest console
