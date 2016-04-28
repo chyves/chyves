@@ -158,7 +158,7 @@ __verify_all_kernel_modules(){
   fi
 }
 
-# Verify that a binary is available 
+# Verify that a binary is available
 __verify_binary_available() {
   local _binary_to_check_for="$1"
 	local _path_to_binary=$( which ${_binary_to_check_for} )
@@ -203,6 +203,19 @@ __get_primary_pool_name() {
 #  Get all chyves properties that are set on the system
 __get_property_list() {
   echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
+}
+
+#  Get all chyves properties that are set on the system
+__get_chyves_zfs_property() {
+	local _pool=$1	# primary|<pool name>
+	local _resource=$2	# .config|guests
+	local _property=$3	# Property Name
+	local _guest="$4"	# Optional
+
+	[ -n "${_guest}" ] && local _guest="/$4"
+	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
+
+	zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
 }
 
 # Return the value of the next console to use

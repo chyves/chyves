@@ -2,7 +2,7 @@ This early in the project, a map is not defined. However many goals are planned:
 
 Modify the check for which dataset version is in use.
 - This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
-- A warning will be required for version that do make changes that are not backwards compatiable.
+- A warning will be required for version that do make changes that are not backwards compatible.
 - A range might be necessary.
 
 Add `__verify_console_unused` function
@@ -22,7 +22,7 @@ Change networking handling
 - Rewritten start of a guest to include:
  - Creation or verification of `bridge`
  - Creation or verification of `tap`
- - Addition or verfication of `tap` membership of `bridge`
+ - Addition or verification of `tap` membership of `bridge`
  - Verify sysctl
  - Verify all interfaces are `UP`
 - Add `.default` property for bridge
@@ -34,7 +34,7 @@ Write `__reorder_consoles` function
 - Will reorder all the console numbers
 - All guests must be stopped
 - Settable offset to start at.
-- This will increase compatiability on systems using multiple bhyve management tools
+- This will increase compatibility on systems using multiple bhyve management tools
 
 Write `__check_guest_running` function
 - Insert where necessary.
@@ -46,7 +46,7 @@ Write some function to simplify the YES|NO blocks in `__list` and `__info`
 
 Pull FreeNAS verification out of setup and into a function.
 - Will be used elsewhere to tell user to configure tunables
-- Likley just a true|false return
+- Likely just a true|false return
 - Maybe write code to `grep` config file and see if the tunables are actually set. (This would be another function)
 
 Add check for `set` for properties in `.defaults` that way a property can not be set that does not get pulled in for guests.
@@ -62,9 +62,9 @@ Restructured command layout to have less sub-commands.
 - `remove` for `remove` `rmiso` `rmfw` `rmpci`
 
 Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
-- Check if tmux is installed (use `__verify_binary_available`) 
+- Check if tmux is installed (use `__verify_binary_available`)
 - Check if guest is valid
-- Check is cu is openned for guest already (shared)
+- Check is cu is opened for guest already (shared)
 
 Debug mode?
 - Print populated command used to execute grub-bhyve, bhyvectl, and bhyve.
@@ -82,10 +82,10 @@ Normalize variables to a consistent verbose naming scheme.
 Need help with:
 - Spelling and grammar checking `man`, UI, and internal notes.
 - Pre-release testers
-- Fill in gaps in `CHANGELOG.MD` 
+- Fill in gaps in `CHANGELOG.MD`
 - Feedback
 - Creating ports
- - Find someone who can help with this. 
+ - Find someone who can help with this.
  - chyves
    - Require / Optional
      - tmux "Used with `chyves console $guest -t` to create a console pane and rename it."

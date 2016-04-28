@@ -15,7 +15,7 @@ Internal development.
 ##### General enhancement and bug fixes:
 
 - Fixed various typos and expanded man page.
- - Added more explaination to the `chyves set` section for what each property influences.
+ - Added more explanation to the `chyves set` section for what each property influences.
 
 - Created new document structure and folders.
  - The root directory of the project contains documents about the project and also the Makefile for installing from source
@@ -93,7 +93,7 @@ Internal development.
 - Added function `__create_device_map` to create device map used in `__load`.
 
 - Added function `__get_path_for_guest_dataset` to get the mount path of a guest.
- 
+
 
 - Added functions `__get_next_console` and `__get_next_tap` to return the next number for respective device.
 
@@ -101,13 +101,15 @@ Internal development.
 - Added `__verify_kernel_module_loaded` function to verify, load `-l`, or unload `-u` kernels modules. Exits when no argument is given and the module is not loaded.
 
 - Added variable `_KERNEL_MODULES` to keep track of modules to check for, load, or unload.
- 
+
 - Added `__verify_all_kernel_modules` function to check and load `-l` or unload `-u` kernel modules set in `_KERNEL_MODULES`.
 
 - Added function `__resource_functions` to fetch, rename, delete, and list for Firmware and ISO resources. Also works compatiable with rename and delete for guests resources Potentially can be used for guest disk operations as well.
  - This deprecates the following functions: `__fetchiso`, `__cpiso`, `__renameiso`, `__deleteiso`, `__fetchfw`, `__cpfw`, `__renamefw`, and `__deletefw`.
- 
+
 - Added function `__verify_binary_available` to check if an executable is available on the system.
+
+- Added function `__get_chyves_zfs_property` to get ZFS property. Works with .config, .defaults, and guests.
 
 ##### Developer enhancements:
 
