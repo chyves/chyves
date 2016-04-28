@@ -1,8 +1,5 @@
 This early in the project, a map is not defined. However many goals are planned:
 
-Show a list of processes to kill for `chyves killall`
-- Use __list processes $guest
-
 Check if binary exists on system function
 - Add check when loader=grub-bhyve for binary
 - tmux for console -t flag
