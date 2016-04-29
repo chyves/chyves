@@ -230,19 +230,6 @@ __get_property_list() {
 	echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
 }
 
-#  Get all chyves properties that are set on the system
-__get_chyves_zfs_property() {
-	local _pool=$1	# primary|<pool name>
-	local _resource=$2	# .config|guests
-	local _property=$3	# Property Name
-	local _guest="$4"	# Optional
-
-	[ -n "${_guest}" ] && local _guest="/$4"
-	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
-
-	zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
-}
-
 # Return the value of the next console to use
 __get_next_console() {
 	local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
@@ -314,6 +301,29 @@ __create_device_map() {
 	local _iso="$3"
 	printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
 	printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
+}
+
+#  get|set chyves: properties
+__multi_chyves_zfs_property() {
+	local _action=$1        # get|set
+	local _pool=$2          # primary|<pool name>
+	local _resource=$3      # .config|guests
+	local _property=$4      # <property name>
+	local _guest="$5"       # <guest name>
+
+	# If the guest value is populated, prepend a "/" - This is for .config compatibility
+	[ -n "${_guest}" ] && local _guest="/$4"
+
+	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
+	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
+
+	if [ "$_action" = "set" ]; then
+		zfs set chyves:$_property $_pool/chyves/${_resource}${_guest}
+	elif [ "$_action" = "get" ]; then
+		zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
+	else
+		__fault_detected_exit "Unrecoginized action: '$_action'"
+	fi
 }
 
 # Process command line

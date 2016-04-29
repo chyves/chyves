@@ -8,7 +8,7 @@ Modify the check for which dataset version is in use.
 Add `__verify_console_unused` function
 - Get guest name
 - Get guest console
-- `ps-aux | grep $console`
+- `ps -aux | grep $console`
 
 Change networking handling
 - Use `chyves:bridge` property to guests
@@ -39,7 +39,7 @@ Write `__reorder_consoles` function
 Write `__check_guest_running` function
 - Insert where necessary.
 
-Write `__get_property` function
+Write `__set_zfs_property` function
 - Use flags to specify either the guest|`.defaults`|`.config` properties.
 
 Write some function to simplify the YES|NO blocks in `__list` and `__info`
@@ -55,6 +55,8 @@ Add check for `set` for properties in `.defaults` that way a property can not be
 Checks for more than one `.default`, `ISO`, and `Firmware` dataset on system.
 - Use `wc -l`
 - Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
+
+Rewrite `__get_guests_list`, like seriously.
 
 Check and test to see if secondary pools store the `device.map` and `grub.cfg` files with the correct dataset. Is this even necessary? Even imported `iohyve` guests will copy from the wrong location to the right location.
 
