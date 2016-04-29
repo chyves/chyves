@@ -109,7 +109,7 @@ Internal development.
 
 - Added function `__verify_binary_available` to check if an executable is available on the system.
 
-- Added function `__get_chyves_zfs_property` to get ZFS property. Works with .config, .defaults, and guests.
+- Added function `__multi_chyves_zfs_property` to `get`|`set` `chyves:`` ZFS property. Works with `.config`, `.defaults`, and guests.
 
 ##### Developer enhancements:
 

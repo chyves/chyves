@@ -39,9 +39,6 @@ Write `__reorder_consoles` function
 Write `__check_guest_running` function
 - Insert where necessary.
 
-Write `__set_zfs_property` function
-- Use flags to specify either the guest|`.defaults`|`.config` properties.
-
 Write some function to simplify the YES|NO blocks in `__list` and `__info`
 
 Pull FreeNAS verification out of setup and into a function.
