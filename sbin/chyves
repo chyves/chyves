@@ -307,7 +307,7 @@ __multi_chyves_zfs_property() {
 	local _guest="$5"       # <guest name>
 
 	# If the guest value is populated, prepend a "/" - This is for .config compatibility
-	[ -n "${_guest}" ] && local _guest="/$4"
+	[ -n "${_guest}" ] && local _guest="/$_guest"
 
 	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
 	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
@@ -560,7 +560,7 @@ __list() {
 
 	if [ -z "${output_type}" ]; then
 		# Traditional `chyves list` true when null
-		local pools=$( __get_pool_names -a )
+		local pools=$( __get_pool_names )
 		(
 		printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
 		for pool in $pools; do
@@ -573,13 +573,13 @@ __list() {
 					vmm="NO"
 				fi
 				local running=$( pgrep -fx "bhyve: chy-$g" )
-				if [ -z $running ]; then
+				if [ -z "$running" ]; then
 					running="NO"
 				else
 					running="YES"
 				fi
 				local boot="$( __multi_chyves_zfs_property "get" "boot" "$pool" "guests" "$g" )"
-				if [ $boot = '1' ]; then
+				if [ "$boot" = '1' ]; then
 					boot="YES"
 				else
 					boot="NO"
