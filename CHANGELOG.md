@@ -116,3 +116,7 @@ Internal development.
 - Added `make buildman` directive to `Makefile` in order to build man page file: `chyves.8`.
 
 - Added `make clean` directive to `Makefile` in order to remove man page `.gz` file. Useful before using `git commit` when using the directory to install and develop from.
+
+- Standardized whitespace
+ - Using spaces for code examples in Markdown documents and the `man` page.
+ - Using tabs is now the standard for scripts, this makes it easier to edit from a command line text editor. This is to prevent the internal conversation: "Is it two or three spaces after an `if` statement?". The answer is it is a tab every time.

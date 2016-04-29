@@ -25,9 +25,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-_VERSION=0.0.0
-_VERSION_LONG="v0.0.0 2016/04/00"
-_VERSION_INT="000"
+_VERSION=0.0.0                        # Example: v11.6.25 - XXX.YY.ZZZ
+_VERSION_LONG="v0.0.0 2016/04/00"     # Example: v11.6.25 2021/12/31
+_VERSION_INT="00000000"               # Example: 01106025 XXXYYZZZ
 _UUID_GENERAL_USE="$(/bin/uuidgen)"
 _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
 _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
@@ -78,114 +78,114 @@ __readonly_cmd () {
 
 # Validates if a given pool name exists.
 __verify_valid_pool() {
-  local _name_to_check="$1"
-  local _flags="$2"
-  # Valid _flags are:
-  # $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
-  # -p      [primary] Validates the supplied pool has the primary role set
-  # -c      [chyves] Validates the supplied pool is setup for chyves
-  # -e      [escape] Escape from a normal fatal exit. Good for __setup().
+	local _name_to_check="$1"
+	local _flags="$2"
+	# Valid _flags are:
+	# $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
+	# -p      [primary] Validates the supplied pool has the primary role set
+	# -c      [chyves] Validates the supplied pool is setup for chyves
+	# -e      [escape] Escape from a normal fatal exit. Good for __setup().
 
-  if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
-    # When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
+	if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
+		# When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
 
-    # Check to see if the pool is in the primary dataset_role
-    if [ -n "$(echo $_flags | grep 'p')" ] && [ "$(zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
-      if [ -n "$(echo $_flags | grep 'e')" ]; then
-      else
-        __fault_detected_exit "${_name_to_check} is not a primary pool."
-      fi
-    fi
+		# Check to see if the pool is in the primary dataset_role
+		if [ -n "$(echo $_flags | grep 'p')" ] && [ "$(zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
+			if [ -n "$(echo $_flags | grep 'e')" ]; then
+			else
+				__fault_detected_exit "${_name_to_check} is not a primary pool."
+			fi
+		fi
 
-    # Check to see if the pool has been setup for chyves
-    if [ -n "$(echo $_flags | grep 'c')" ] && [ -z "$(zfs list -H $_name_to_check/chyves | grep -v "dataset does not exist" )" ]; then
-      if [ -n "$(echo $_flags | grep 'e')" ]; then
-      else
-        __fault_detected_exit "${_name_to_check} has not been setup with chyves."
-      fi
-    fi
-  else
-    if [ -n "$(echo $_flags | grep 'e')" ]; then
-    else
-      __fault_detected_exit "Invalid pool name supplied."
-    fi
-  fi
+		# Check to see if the pool has been setup for chyves
+		if [ -n "$(echo $_flags | grep 'c')" ] && [ -z "$(zfs list -H $_name_to_check/chyves | grep -v "dataset does not exist" )" ]; then
+			if [ -n "$(echo $_flags | grep 'e')" ]; then
+			else
+				__fault_detected_exit "${_name_to_check} has not been setup with chyves."
+			fi
+		fi
+	else
+		if [ -n "$(echo $_flags | grep 'e')" ]; then
+		else
+			__fault_detected_exit "Invalid pool name supplied."
+		fi
+	fi
 }
 
 # Validates if a given guest name on a given pool exists.
 __verify_valid_guest() {
-  local _guest_to_check="$1"
-  local _pool="$2"
-  local _flags="$3"
-  # Valid _flags are:
-  # $null   [no flag used] Validates the supplied pool is in fact on the supplied ZFS pool
-  # -s      [start] Exits if guest is a template or on an offline pool
+	local _guest_to_check="$1"
+	local _pool="$2"
+	local _flags="$3"
+	# Valid _flags are:
+	# $null   [no flag used] Validates the supplied pool is in fact on the supplied ZFS pool
+	# -s      [start] Exits if guest is a template or on an offline pool
 
-  # Check to see if pool has chyves setup on it.
-  __verify_valid_pool $_pool -c
+	# Check to see if pool has chyves setup on it.
+	__verify_valid_pool $_pool -c
 
-  # Check to see if guest name used more than once
-  if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
-    __fault_detected_exit "More than one $_guest_to_check exists on system within active pools and guests, fix it!"
-  fi
+	# Check to see if guest name used more than once
+	if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
+		__fault_detected_exit "More than one $_guest_to_check exists on system within active pools and guests, fix it!"
+	fi
 
-  if [ ! -n "$(zfs list -H $_pool/chyves/guests/$_guest_to_check | grep -v "dataset does not exist" | grep -v "No such file or directory" )" ]; then
-    __fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
-  fi
+	if [ ! -n "$(zfs list -H $_pool/chyves/guests/$_guest_to_check | grep -v "dataset does not exist" | grep -v "No such file or directory" )" ]; then
+		__fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
+	fi
 
-  # Check to see if a template or offline pool.
-  if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
-    __fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
-  fi
+	# Check to see if a template or offline pool.
+	if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
+		__fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
+	fi
 }
 
 # Verify kernel module loaded
 __verify_kernel_module_loaded() {
-  local _module="$1"
-  local _flags="$2"
-  local _status=$(kldstat -v | grep $_module )
-  # Valid _flags are:
-  # $null   [no flag used] check only
-  # -l      [load] Load module if not loaded
-  # -u      [unload] Unload module
+	local _module="$1"
+	local _flags="$2"
+	local _status=$(kldstat -v | grep $_module )
+	# Valid _flags are:
+	# $null   [no flag used] check only
+	# -l      [load] Load module if not loaded
+	# -u      [unload] Unload module
 
-  # When erroring out the following message is displayed:
-  # kldload: can't load $_module: No such file or directory
-  if [ -z "$_status" ]; then
-    if [ "$_flags" = "-l" ]; then
-      kldload $_module
-      sleep 5
-      __verify_kernel_module_loaded "$_module"
-    else
-      __fault_detected_exit "Kernel module '$_module' not loaded. Run 'chyves setup kmod=1'"
-    fi
-  elif [ "$_flags" = "-u" ]; then
-    kldunload -v $_module
-    echo "Kernel module '$_module' loaded."
-  else
-    echo "Kernel module '$_module' already loaded."
-  fi
+	# When erroring out the following message is displayed:
+	# kldload: can't load $_module: No such file or directory
+	if [ -z "$_status" ]; then
+		if [ "$_flags" = "-l" ]; then
+			kldload $_module
+			sleep 5
+			__verify_kernel_module_loaded "$_module"
+		else
+			__fault_detected_exit "Kernel module '$_module' not loaded. Run 'chyves setup kmod=1'"
+		fi
+	elif [ "$_flags" = "-u" ]; then
+		kldunload -v $_module
+		echo "Kernel module '$_module' loaded."
+	else
+		# echo "Kernel module '$_module' already loaded."
+	fi
 }
 
 # Verify all modules in $_KERNEL_MODULES
 __verify_all_kernel_modules(){
-  local _flag="$1"
-  # Valid _flag are:
-  # $null   [no flag used] check only
-  # -l      [load] Load module if not loaded
-  # -u      [unload] Unload module
+	local _flag="$1"
+	# Valid _flag are:
+	# $null   [no flag used] check only
+	# -l      [load] Load module if not loaded
+	# -u      [unload] Unload module
 
-  if [ -z "$_flag" ] || [ "$_flag" = "-l" ] || [ "$_flag" = "-u" ]; then
-    for _module in $_KERNEL_MODULES ; do
-      echo "Checking module: $_module"
-      __verify_kernel_module_loaded "$_module" "$_flag"
-    done
-  fi
+	if [ -z "$_flag" ] || [ "$_flag" = "-l" ] || [ "$_flag" = "-u" ]; then
+		for _module in $_KERNEL_MODULES ; do
+			echo "Checking module: $_module"
+			__verify_kernel_module_loaded "$_module" "$_flag"
+		done
+	fi
 }
 
 # Verify that a binary is available
 __verify_binary_available() {
-  local _binary_to_check_for="$1"
+	local _binary_to_check_for="$1"
 	local _path_to_binary=$( which ${_binary_to_check_for} )
 
 	if [ ! -x "${_path_to_binary}" ]; then
@@ -195,39 +195,39 @@ __verify_binary_available() {
 
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
-  local _flags="$1"
-  # Valid flags are:
-  # -a [all] for  primary|secondary|offline pools
-  # -i [inactive] only display offline pools
+	local _flags="$1"
+	# Valid flags are:
+	# -a [all] for  primary|secondary|offline pools
+	# -i [inactive] only display offline pools
 
-  if [ -n "$(echo "$_flags" | grep 'a')" ]; then
+	if [ -n "$(echo "$_flags" | grep 'a')" ]; then
 		echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq )"
-  elif [ -n "$(echo "$_flags" | grep 'i')" ]; then
-	   echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E "$_OFFLINE_POOLS_GREP_STRING" )"
+	elif [ -n "$(echo "$_flags" | grep 'i')" ]; then
+		echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E "$_OFFLINE_POOLS_GREP_STRING" )"
 	else
-    echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" )"
-  fi
+		echo "$( zfs list -r -H | grep chyves | cut -d'/' -f1 | uniq | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" )"
+	fi
 }
 
 # Get pool name for guest
 __get_pool_for_guest() {
-  local _guest_name="$1"
-  local _pool="$(zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests/$_guest_name | cut -d '/' -f 1 )"
-  __verify_valid_pool "$_pool"
-  __verify_valid_guest "$_guest_name" "$_pool"
-  echo "$_pool"
+	local _guest_name="$1"
+	local _pool="$(zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests/$_guest_name | cut -d '/' -f 1 )"
+	__verify_valid_pool "$_pool"
+	__verify_valid_guest "$_guest_name" "$_pool"
+	echo "$_pool"
 }
 
 # Get primary pool name
 __get_primary_pool_name() {
-  local _var="$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
-  __verify_valid_pool "$_var" "-p"
-  echo "${_var}"
+	local _var="$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
+	__verify_valid_pool "$_var" "-p"
+	echo "${_var}"
 }
 
 #  Get all chyves properties that are set on the system
 __get_property_list() {
-  echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
+	echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
 }
 
 #  Get all chyves properties that are set on the system
@@ -245,75 +245,75 @@ __get_chyves_zfs_property() {
 
 # Return the value of the next console to use
 __get_next_console() {
-  local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
-  if [ -z $conlast ]; then
-    echo "0"
-  else
-    echo "$(expr $conlast + 1)"
-  fi
+	local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
+	if [ -z $conlast ]; then
+		echo "0"
+	else
+		echo "$(expr $conlast + 1)"
+	fi
 }
 
 # Return the value of the next tap interface to use
 __get_next_tap() {
-  local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
-  if [ -z $taplast ]; then
-    echo "0"
-  else
-    echo "$(expr $taplast + 1)"
-  fi
+	local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
+	if [ -z $taplast ]; then
+		echo "0"
+	else
+		echo "$(expr $taplast + 1)"
+	fi
 }
 
 # Get a list of guests on system
 __get_guests_list() {
-  local _flags="$1"
-  local _pool="$2"
-  # $null      Get a list of active guests
-  # -d      [disks] Get a list of guests and their disks.
-  # -a      [all] Get a list of all guests regardless if dataset_role is offline or if guest_roll is set to template
-  # -f      [full] List as a full dataset name.
+	local _flags="$1"
+	local _pool="$2"
+	# $null      Get a list of active guests
+	# -d      [disks] Get a list of guests and their disks.
+	# -a      [all] Get a list of all guests regardless if dataset_role is offline or if guest_roll is set to template
+	# -f      [full] List as a full dataset name.
 
-  if [ -z "$_pool" ]; then
-    if [ -n "$(echo "$_flags" | grep 'a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
-      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep chyves/guests/ | grep -v .defaults | cut -f1 )"
-    elif [ -n "$(echo "$_flags" | grep 'd')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
-      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests/ | grep -v .defaults | cut f1 | sed '/^$/d' )"
-    elif [ "$_flags" = "-d" ]; then
-      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
-    elif [ "$_flags" = "-a" ]; then
-        echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
-    elif [ "$_flags" = "-f" ]; then
-      echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
-    else
-      echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
-    fi
-  else
-    if [ -n "$(echo "$_flags" | grep -E 'd|a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
-      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
-    elif [ "$_flags" = "-d" ] || [ "$_flags" = "-a" ]; then
-      echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
-    elif [ "$_flags" = "-f" ]; then
-      echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
-    else
-      echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
-    fi
-  fi
+	if [ -z "$_pool" ]; then
+		if [ -n "$(echo "$_flags" | grep 'a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+			echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep chyves/guests/ | grep -v .defaults | cut -f1 )"
+		elif [ -n "$(echo "$_flags" | grep 'd')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+			echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests/ | grep -v .defaults | cut f1 | sed '/^$/d' )"
+		elif [ "$_flags" = "-d" ]; then
+			echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+		elif [ "$_flags" = "-a" ]; then
+			echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
+		elif [ "$_flags" = "-f" ]; then
+			echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+		else
+			echo "$( zfs list -d 3 -r -H -t filesystem -o name | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | cut -d '/' -f4 | sed '/^$/d' )"
+		fi
+	else
+		if [ -n "$(echo "$_flags" | grep -E 'd|a')" ] && [ -n "$(echo "$_flags" | grep 'f')" ]; then
+			echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+		elif [ "$_flags" = "-d" ] || [ "$_flags" = "-a" ]; then
+			echo "$( zfs list -d 4 -r -H -t filesystem,volume -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+		elif [ "$_flags" = "-f" ]; then
+			echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -f1 | sed '/^$/d' )"
+		else
+			echo "$( zfs list -d 3 -r -H -t filesystem -o name $_pool/chyves/guests | grep -v .defaults | cut -d '/' -f4- | sed '/^$/d' )"
+		fi
+	fi
 }
 
 # Get path for dataset
 __get_path_for_guest_dataset() {
-  local _guest_name="$1"
-  local _pool="$2"
-  local _path="$( zfs list -r -H -t filesystem -o mountpoint $_pool/chyves/guests/$_guest_name )"
-  echo "$_path"
+	local _guest_name="$1"
+	local _pool="$2"
+	local _path="$( zfs list -r -H -t filesystem -o mountpoint $_pool/chyves/guests/$_guest_name )"
+	echo "$_path"
 }
 
 # Builds the device map file
 __create_device_map() {
-  local _path="$1"
-  local _disk="$2"
-  local _iso="$3"
-  printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
-  printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
+	local _path="$1"
+	local _disk="$2"
+	local _iso="$3"
+	printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
+	printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
 }
 
 # Process command line
@@ -328,14 +328,14 @@ __parse_cmd () {
     list)     __list "$2" "$3"
               exit
     ;;
-    info)	__info "$2"
-          		exit
+    info)     __info "$2"
+              exit
     ;;
-		firmware) __resource_functions "$1" "$2" "$3" "$4"
-							exit
-		;;
-		iso) 	__resource_functions "$1" "$2" "$3" "$4"
-							exit
+    firmware) __resource_functions "$1" "$2" "$3" "$4"
+              exit
+    ;;
+    iso)      __resource_functions "$1" "$2" "$3" "$4"
+              exit
     ;;
     create)   __create "$@"
               exit
@@ -352,8 +352,8 @@ __parse_cmd () {
     start)    __start "$@"
               exit
     ;;
-    uefi)	__uefi "$@"
-          		exit
+    uefi)     __uefi "$@"
+              exit
     ;;
     stop)     __stop "$@"
               exit
@@ -379,32 +379,32 @@ __parse_cmd () {
     get)      __get "$2" "$3"
               exit
     ;;
-    rmpci)	__rmpci "$@"
-          		exit
+    rmpci)    __rmpci "$@"
+              exit
     ;;
-    add)	__add "$@"
-          		exit
+    add)      __add "$@"
+              exit
     ;;
-    remove)	__remove "$@"
-          		exit
+    remove)   __remove "$@"
+              exit
     ;;
     resize)   __resize "$@"
               exit
     ;;
-    disks)	__disks "$@"
-          		exit
+    disks)    __disks "$@"
+              exit
     ;;
-    snap)	__snapguest "$@"
-          		exit
+    snap)     __snapguest "$@"
+              exit
     ;;
-    roll)	__rollguest "$@"
-          		exit
+    roll)     __rollguest "$@"
+              exit
     ;;
-    clone)	__cloneguest "$@"
-          		exit
+    clone)    __cloneguest "$@"
+              exit
     ;;
-    export)	__exportguest "$@"
-          		exit
+    export)   __exportguest "$@"
+              exit
     ;;
     console)  __console "$@"
               exit
@@ -550,94 +550,94 @@ __get_zfs_pcidev_conf() {
 
 # List Guests
 __list() {
-  local output_type="$1"
-  local active_taps="$2" # Used for tap and processes
+	local output_type="$1"
+ local active_taps="$2" # Used for tap and processes
 
-  if [ -z "${output_type}" ]; then
-    # Traditional `chyves list` true when null
-    local pools=$( __get_pool_names -a )
-    (
-    printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
-    for pool in $pools; do
-      local guests="$( __get_guests_list - $pool )"
-      for g in $guests; do
-        local vmm="/dev/vmm/chy-$g"
-        if [ -e $vmm ]; then
-          vmm="YES"
-        else
-          vmm="NO"
-        fi
-        local running=$( pgrep -fx "bhyve: chy-$g" )
-        if [ -z $running ]; then
-          running="NO"
-        else
-          running="YES"
-        fi
-        local boot="$( zfs get -H -o value chyves:boot $pool/chyves/guests/$g )"
-        if [ $boot = '1' ]; then
-          boot="YES"
-        else
-          boot="NO"
-        fi
-        local description="$( zfs get -H -o value chyves:description $pool/chyves/guests/$g )"
-        printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
-      done
-    done
-    ) | column -ts^
-  elif [ "${output_type}" = "properties" ]; then
-    echo "Use the following syntax to display of list of the guests on the system and a property."
-    echo "These are the available properties: "
-    __get_property_list
-    echo "Run \'chyves list <property>\' to see what that property is for each guest."
-  elif [ "${output_type}" = "iso" ]; then
-    local pool=$( __get_primary_pool_name )
-  	echo "Listing ISOs..."
-  	zfs list -H -r $pool/chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
-  elif [ "${output_type}" = "firmwares" ]; then
-    echo "Listing Firmware..."
-    zfs list -H -r $pool/chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
-  elif [ "${output_type}" = "snapshots" ]; then
-    echo "Listing snapshots..."
-    zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
-  elif [ "${output_type}" = "processes" ]; then
-    echo "Listing processes..."
-    if [ -z "${active_taps}" ]; then
-      ps -aux | grep -E "chy-|chyves|bhyveload|grub-bhyve" | grep -v -E "grep -E chy-|/bin/sh /usr/local/sbin/chyves list"
-    else
-      local pool="$( __get_pool_for_guest "${active_taps}" )"
-      __verify_valid_guest "${active_taps}" "$pool"
-      ps -aux | grep ${active_taps} | grep -E -v "grep ${active_taps}|/bin/sh /usr/local/sbin/chyves list"
-    fi
-  # Displays a list for a property for all active guests. See chyves list properties for options
-  elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
+	if [ -z "${output_type}" ]; then
+		# Traditional `chyves list` true when null
+		local pools=$( __get_pool_names -a )
+		(
+		printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
+		for pool in $pools; do
+			local guests="$( __get_guests_list - $pool )"
+			for g in $guests; do
+				local vmm="/dev/vmm/chy-$g"
+				if [ -e $vmm ]; then
+					vmm="YES"
+				else
+					vmm="NO"
+				fi
+				local running=$( pgrep -fx "bhyve: chy-$g" )
+				if [ -z $running ]; then
+					running="NO"
+				else
+					running="YES"
+				fi
+				local boot="$( zfs get -H -o value chyves:boot $pool/chyves/guests/$g )"
+				if [ $boot = '1' ]; then
+					boot="YES"
+				else
+					boot="NO"
+				fi
+				local description="$( zfs get -H -o value chyves:description $pool/chyves/guests/$g )"
+				printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
+			done
+		done
+		) | column -ts^
+	elif [ "${output_type}" = "properties" ]; then
+		echo "Use the following syntax to display of list of the guests on the system and a property."
+		echo "These are the available properties: "
+		__get_property_list
+		echo "Run \'chyves list <property>\' to see what that property is for each guest."
+	elif [ "${output_type}" = "iso" ]; then
+		local pool=$( __get_primary_pool_name )
+		echo "Listing ISOs..."
+		zfs list -H -r $pool/chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
+	elif [ "${output_type}" = "firmwares" ]; then
+		echo "Listing Firmware..."
+		zfs list -H -r $pool/chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
+	elif [ "${output_type}" = "snapshots" ]; then
+		echo "Listing snapshots..."
+		zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
+	elif [ "${output_type}" = "processes" ]; then
+		echo "Listing processes..."
+		if [ -z "${active_taps}" ]; then
+			ps -aux | grep -E "chy-|chyves|bhyveload|grub-bhyve" | grep -v -E "grep -E chy-|/bin/sh /usr/local/sbin/chyves list"
+		else
+			local pool="$( __get_pool_for_guest "${active_taps}" )"
+			__verify_valid_guest "${active_taps}" "$pool"
+			ps -aux | grep ${active_taps} | grep -E -v "grep ${active_taps}|/bin/sh /usr/local/sbin/chyves list"
+		fi
+	# Displays a list for a property for all active guests. See chyves list properties for options
+	elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
 
-    # Displays active tap via /dev
-    if [ "$output_type" = "tap" ] && [ "${active_taps}" = "active" ]; then
-      echo "Listing active network taps..."
-      ls /dev | grep tap
-      exit
-    fi
+		# Displays active tap via /dev
+		if [ "$output_type" = "tap" ] && [ "${active_taps}" = "active" ]; then
+			echo "Listing active network taps..."
+			ls /dev | grep tap
+			exit
+		fi
 
-    # Displays singular property
-    (
-    printf 'Guest\t'$output_type'\n'
-    local poollist=$( __get_pool_names -a )
-    for pool in $poollist; do
-      local guestlist=$( __get_guests_list - $pool )
-      for guest in $guestlist; do
-        local property="$( zfs get -H -o value chyves:${output_type} $pool/chyves/guests/$guest )"
-        printf $guest'\t'$property'\n'
-      done
-    done
-    ) | column -t
-  fi
+		# Displays singular property
+		(
+		printf 'Guest\t'$output_type'\n'
+		local poollist=$( __get_pool_names -a )
+		for pool in $poollist; do
+			local guestlist=$( __get_guests_list - $pool )
+			for guest in $guestlist; do
+				local property="$( zfs get -H -o value chyves:${output_type} $pool/chyves/guests/$guest )"
+				printf $guest'\t'$property'\n'
+			done
+		done
+		) | column -t
+	fi
 }
 
 # Display info about all guests.
 __info() {
-  local flags="$1"
+	local flags="$1"
 
-  if [ -n "$(echo "$flags" | grep 'h')" ]; then
+	if [ -n "$(echo "$flags" | grep 'h')" ]; then
 cat << 'EOT'
 
     chyves info
@@ -667,25 +667,25 @@ The flags [-a|-g], [-i] are mutally exclusive.
 The [-a] flag does not include the [-l] flag for piping to less.
 
 EOT
-    exit
-  fi
+		exit
+	fi
 
 	# Poll to see what pools have active guests
-  # or the '-g' flag for all guests
-  # or the '-i' flag for offline and templates
-  if [ -n "$(echo "$flags" | grep -E 'g|a')" ]; then
+	# or the '-g' flag for all guests
+	# or the '-i' flag for offline and templates
+	if [ -n "$(echo "$flags" | grep -E 'g|a')" ]; then
 		local pools=$( __get_pool_names -a )
-  elif [ -n "$(echo "$flags" | grep 'i')" ]; then
-    local pools=$( __get_pool_names -a | grep -E -v "$( __get_pool_names | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g' )" )
-  else
-    local pools=$( __get_pool_names )
-  fi
+	elif [ -n "$(echo "$flags" | grep 'i')" ]; then
+		local pools=$( __get_pool_names -a | grep -E -v "$( __get_pool_names | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g' )" )
+	else
+		local pools=$( __get_pool_names )
+	fi
 
 	( # Begining of very large table of output.
 	# Print common header
 	printf "%s^%s^%s^%s^%s" "Guest" "Size" "CPU" "RAM" "Pool"
 
-  # Print headers for -r flag
+	# Print headers for -r flag
 	if [ -n "$(echo "$flags" | grep -E 'r|a')" ]; then
 		printf "^%s" "Dataset Role"
 	fi
@@ -700,10 +700,10 @@ EOT
 		printf "^%s^%s^%s" "VMM" "Running" "rcboot"
 	fi
 
-  # Print headers for -t flag
-  if [ -n "$(echo "$flags" | grep -E 't|a')" ]; then
-    printf "^%s" "Template"
-  fi
+	# Print headers for -t flag
+	if [ -n "$(echo "$flags" | grep -E 't|a')" ]; then
+		printf "^%s" "Template"
+	fi
 
 	# Print headers for -d flag
 	if [ -n "$(echo "$flags" | grep -E 'd|a')" ]; then
@@ -715,95 +715,95 @@ EOT
 
 	# Spider through pools
 	for pool in $pools; do
-    # Poll to see which guests are on $pool
+		# Poll to see which guests are on $pool
 
-    if [ -n "$(echo "$flags" | grep 'k')" ]; then
-  		local guests="$( __get_guests_list - $pool )"
-    elif [ -n "$(echo "$flags" | grep 'g')" ]; then
-  		local guests="$( __get_guests_list -a $pool )"
-    else
-      local guests="$( __get_guests_list -d $pool )"
-    fi
+		if [ -n "$(echo "$flags" | grep 'k')" ]; then
+			local guests="$( __get_guests_list - $pool )"
+		elif [ -n "$(echo "$flags" | grep 'g')" ]; then
+			local guests="$( __get_guests_list -a $pool )"
+		else
+			local guests="$( __get_guests_list -d $pool )"
+		fi
 
-    local dataset_role=$( zfs get -H -o value chyves:dataset_role $pool/chyves/.config )
+		local dataset_role=$( zfs get -H -o value chyves:dataset_role $pool/chyves/.config )
 
-    # Spider through guests
-    for g in $guests; do
+		# Spider through guests
+		for g in $guests; do
 
-  		# Poll variables for size. Use chyves property for guest and volsize for disks.
-      if [ -z "$(echo "$g" | grep -E -v 'disk')" ]; then
-        local size="$( zfs get -H -o value volsize $pool/chyves/guests/$g )"
-      else
-        local size="$( zfs get -H -o value usedbychildren $pool/chyves/guests/$g )"
-      fi
+			# Poll variables for size. Use chyves property for guest and volsize for disks.
+			if [ -z "$(echo "$g" | grep -E -v 'disk')" ]; then
+				local size="$( zfs get -H -o value volsize $pool/chyves/guests/$g )"
+			else
+				local size="$( zfs get -H -o value usedbychildren $pool/chyves/guests/$g )"
+			fi
 
-      # Poll remaining variables for common section
-  		local cpu="$( zfs get -H -o value chyves:cpu $pool/chyves/guests/$g )"
-  		local ram="$( zfs get -H -o value chyves:ram $pool/chyves/guests/$g )"
+			# Poll remaining variables for common section
+			local cpu="$( zfs get -H -o value chyves:cpu $pool/chyves/guests/$g )"
+			local ram="$( zfs get -H -o value chyves:ram $pool/chyves/guests/$g )"
 
-  		# Print common section (guest, size, cpu, raml)
-  		printf "%s^%s^%s^%s^%s" "$g" "$size" "$cpu" "$ram" "$pool"
+			# Print common section (guest, size, cpu, raml)
+			printf "%s^%s^%s^%s^%s" "$g" "$size" "$cpu" "$ram" "$pool"
 
-      # Print dataset role section
-      if [ -n "$(echo "$flags" | grep -E 'r|a')" ]; then
-        printf "^%s" "$dataset_role"
-      fi
+			# Print dataset role section
+			if [ -n "$(echo "$flags" | grep -E 'r|a')" ]; then
+				printf "^%s" "$dataset_role"
+			fi
 
-  		# Get variable and print for verbose section (os, loader, tap, con)
-  		if [ -n "$(echo "$flags" | grep -E 'v|a')" ]; then
-  			local os="$(zfs get -H -o value chyves:os $pool/chyves/guests/$g)"
-  			local loader="$(zfs get -H -o value chyves:loader $pool/chyves/guests/$g)"
-  			local tap="$(zfs get -H -o value chyves:tap $pool/chyves/guests/$g)"
-  			local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$g)"
+			# Get variable and print for verbose section (os, loader, tap, con)
+			if [ -n "$(echo "$flags" | grep -E 'v|a')" ]; then
+				local os="$(zfs get -H -o value chyves:os $pool/chyves/guests/$g)"
+				local loader="$(zfs get -H -o value chyves:loader $pool/chyves/guests/$g)"
+				local tap="$(zfs get -H -o value chyves:tap $pool/chyves/guests/$g)"
+				local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$g)"
 
-  			printf "^%s^%s^%s^%s" "$os" "$loader" "$tap" "$con"
-  		fi
+				printf "^%s^%s^%s^%s" "$os" "$loader" "$tap" "$con"
+			fi
 
-  		# Get information, set variables, and print for status section (VMM, Running, rcboot)
-  		if [ -n "$(echo "$flags" | grep -E 's|a')" ]; then
-  			local vmm="/dev/vmm/chy-$g"
-  			if [ -e $vmm ]; then
-  				vmm="YES"
-  			else
-  				vmm="NO"
-  			fi
-  			local running=$(pgrep -fx "bhyve: chy-$g")
-  			if [ -z $running ]; then
-  				running="NO"
-  			else
-  				running="YES"
-  			fi
-  			local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
-  			if [ $boot = '1' ]; then
-  				boot="YES"
-  			else
-  				boot="NO"
-  			fi
+			# Get information, set variables, and print for status section (VMM, Running, rcboot)
+			if [ -n "$(echo "$flags" | grep -E 's|a')" ]; then
+				local vmm="/dev/vmm/chy-$g"
+				if [ -e $vmm ]; then
+					vmm="YES"
+				else
+					vmm="NO"
+				fi
+				local running=$(pgrep -fx "bhyve: chy-$g")
+				if [ -z $running ]; then
+					running="NO"
+				else
+					running="YES"
+				fi
+				local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
+				if [ $boot = '1' ]; then
+					boot="YES"
+				else
+					boot="NO"
+				fi
 
-  			printf "^%s^%s^%s" "$vmm" "$running" "$boot"
-  		fi
+				printf "^%s^%s^%s" "$vmm" "$running" "$boot"
+			fi
 
-      # Get template information
-  		if [ -n "$(echo "$flags" | grep -E 't|a')" ]; then
-  			local template="$(zfs get -H -o value chyves:template $pool/chyves/guests/$g)"
-  			if [ $template = 'template' ]; then
-  				template="YES"
-  			else
-  				template="NO"
-  			fi
+			# Get template information
+			if [ -n "$(echo "$flags" | grep -E 't|a')" ]; then
+				local template="$(zfs get -H -o value chyves:template $pool/chyves/guests/$g)"
+				if [ $template = 'template' ]; then
+					template="YES"
+				else
+					template="NO"
+				fi
 
-  			printf "^%s" "$template"
-      fi
+				printf "^%s" "$template"
+			fi
 
-  		# Print description if flag set
-  		if [ -n "$(echo "$flags" | grep -E 'd|a')" ]; then
-  			local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
-  			printf "^%s" "$description"
-  		fi
+			# Print description if flag set
+			if [ -n "$(echo "$flags" | grep -E 'd|a')" ]; then
+				local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
+				printf "^%s" "$description"
+			fi
 
-  		# Print new line for next guest.
-  		printf "\n"
-    done
+			# Print new line for next guest.
+			printf "\n"
+	  done
 	done
 	) | column -ts^ | \
 	(
@@ -909,7 +909,7 @@ __create() {
 	local name="$1"
 	local size="$2"
 	local pool="$3"
-  __verify_valid_pool "$pool" -c
+	__verify_valid_pool "$pool" -c
 	local description="$(date)"
 	# Gets primary pool
 	local prim_pool="$( __get_primary_pool_name )"
@@ -923,15 +923,15 @@ __create() {
 	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
-  local tap="$( __get_next_tap )"
-  local con="$( __get_next_console )"
+	local tap="$( __get_next_tap )"
+	local con="$( __get_next_console )"
 
 	# If size not declared in command line, use .default's
 	if [ -z $size ]; then
-	  local size="$def_size"
+		local size="$def_size"
 	fi
 
-  # If [pool] not set use primary pool
+	# If [pool] not set use primary pool
 	if [ -z "${pool}" ]; then
 		local pool="${prim_pool}"
 	fi
@@ -1020,74 +1020,74 @@ __load() {
 				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ] || [ $os = "centos7" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "arch" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > $_path/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-      elif [ $os = "gentoo" ]; then
-        __create_device_map "$_path" "$disk" "$media"
-        printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
-        grub-bhyve $wire_memory -m $_path/device.map -r host -d $_path -c /dev/${con}A -M $ram chy-$name
+			elif [ $os = "gentoo" ]; then
+				__create_device_map "$_path" "$disk" "$media"
+				printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
+				grub-bhyve $wire_memory -m $_path/device.map -r host -d $_path -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			else
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
 			fi
 		elif [ $install = "no" ]; then
 			if [ $os = "openbsd59" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd58" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "openbsd57" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "netbsd" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_path}/grub.cfg
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "debian" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "d8lvm" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos6" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "centos7" ]; then
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
 			elif [ $os = "custom" ]; then
 				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
 			else
-        __create_device_map "$_path" "$disk" "$media"
+				__create_device_map "$_path" "$disk" "$media"
 				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
 			fi
 		fi
@@ -1276,7 +1276,7 @@ __uefi() {
 			        -s 31,lpc \
 			        -l com1,/dev/${con}A \
 			        -l bootrom,/chyves/Firmware/$fw/$fw \
-              -U $uuid \
+			        -U $uuid \
 			        chy-$name &
 		else
 			echo "Guest is already running."
@@ -1422,9 +1422,9 @@ __rmpci() {
 __add() {
 	local name="$2"
 	local size="$3"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	# optionally allow the pool for the new disk to be specified. If not set, its set to $pool
 	local newpool="${4-$pool}"
 	# Find the last disk number and increment one
@@ -1485,9 +1485,9 @@ __resize(){
 	local name="$2"
 	local disk="$3"
 	local size="$4"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	# Check if guest exists
 	echo "Resizing $disk to $size"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1506,9 +1506,9 @@ __resize(){
 # List disks for a guest
 __disks() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	if [ -z $name ]; then
 		echo "You must enter a guest name."
 	elif [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1541,8 +1541,8 @@ __snapguest() {
 __rollguest() {
 	local fullsnap="$2"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
 	local snap="$(echo $fullsnap | cut -d '@' -f2)"
 	local disklist="$(zfs list -H | grep chyves/guests/$name | grep disk | \
 				cut -f1 | cut -d '/' -f4-)"
@@ -1600,8 +1600,7 @@ __cloneguest() {
 __exportguest() {
 	local name="$2"
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
-	local disklist="$(zfs list -H | grep "chyves/guests/$name/disk" | \
-				cut -f1 | cut -d '/' -f4-)"
+	local disklist="$(zfs list -H | grep "chyves/guests/$name/disk" | cut -f1 | cut -d '/' -f4-)"
 	# Check if guest exists
 	echo "Exporting $name. Note this may take some time depending on the size."
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
@@ -1637,9 +1636,9 @@ __exportguest() {
 # Run console
 __console() {
 	local name="$2"
-  local pool="$( __get_pool_for_guest "$name" )"
-  __verify_valid_guest "$name" "$pool"
-  local dataset="${pool}/chyves/guests/${name}"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	local dataset="${pool}/chyves/guests/${name}"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	echo "Starting console on $name..."
 	echo "~~. to escape console [uses cu(1) for console]"
@@ -1654,9 +1653,9 @@ __conreset() {
 	ps -aux | grep cu
 	read -p "[WARNING] Are you sure you want to kill all processes cu console processes above? [y/N]? " an </dev/tty
 	case "$an" in
-		y|Y|yes) killall cu
- 		;;
-		*) echo "No action taken."
+	  y|Y|yes) killall cu
+	  ;;
+	  *) echo "No action taken."
 	esac
 }
 
@@ -1672,8 +1671,8 @@ chyves  version
 	info [-rvstdgaikhl]
 	iso [list]
 	    [fetch] [URL|path]
-			[rename] [oldname] [newname]
-			[delete] [name]
+	    [rename] [oldname] [newname]
+	    [delete] [name]
 	firmware [list]
 	         [fetch] [URL|path]
 	         [rename] [oldname] [newname]
@@ -1708,10 +1707,10 @@ EOT
 
 # Check for out of date datasets when not running setup.
 if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
-  echo "Out of date chyves\' dataset(s) version found."
-  echo "Please install sysutils/chyves-utils and then run:"
-  echo "chyves-upgrade"
-  exit 1
+	echo "Out of date chyves\' dataset(s) version found."
+	echo "Please install sysutils/chyves-utils and then run:"
+	echo "chyves-upgrade"
+	exit 1
 fi
 
 if [ "$(zfs get -r chyves:dataset_role | grep -v @ | grep "primary" | wc -l )" -gt "1" ]; then
