@@ -51,7 +51,8 @@ Add check for `set` for properties in `.defaults` that way a property can not be
 
 Checks for more than one `.default`, `ISO`, and `Firmware` dataset on system.
 - Use `wc -l`
-- Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
+
+Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
 
 Rewrite `__get_guests_list`, like seriously.
 

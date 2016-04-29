@@ -227,7 +227,7 @@ __get_primary_pool_name() {
 
 #  Get all chyves properties that are set on the system
 __get_property_list() {
-	echo "$( zfs get -r -H -t filesystem -o property all | grep /guests/ | grep chyves: | sort | sed -e 's/chyves://g' | uniq )"
+	echo "$( zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq )"
 }
 
 # Return the value of the next console to use
@@ -306,9 +306,9 @@ __create_device_map() {
 #  get|set chyves: properties
 __multi_chyves_zfs_property() {
 	local _action=$1        # get|set
-	local _pool=$2          # primary|<pool name>
-	local _resource=$3      # .config|guests
-	local _property=$4      # <property name>
+	local _property=$2      # <property name>
+	local _pool=$3          # primary|<pool name>
+	local _resource=$4      # .config|guests
 	local _guest="$5"       # <guest name>
 
 	# If the guest value is populated, prepend a "/" - This is for .config compatibility
@@ -317,9 +317,9 @@ __multi_chyves_zfs_property() {
 	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
 	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
 
-	if [ "$_action" = "set" ]; then
+	if [ "${_action}" = "set" ]; then
 		zfs set chyves:$_property $_pool/chyves/${_resource}${_guest}
-	elif [ "$_action" = "get" ]; then
+	elif [ "${_action}" = "get" ]; then
 		zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
 	else
 		__fault_detected_exit "Unrecoginized action: '$_action'"
@@ -583,13 +583,13 @@ __list() {
 				else
 					running="YES"
 				fi
-				local boot="$( zfs get -H -o value chyves:boot $pool/chyves/guests/$g )"
+				local boot="$( __multi_chyves_zfs_property "get" "boot" "$pool" "guests" "$g" )"
 				if [ $boot = '1' ]; then
 					boot="YES"
 				else
 					boot="NO"
 				fi
-				local description="$( zfs get -H -o value chyves:description $pool/chyves/guests/$g )"
+				local description="$( __multi_chyves_zfs_property "get" "description" "$pool" "guests" "$g" )"
 				printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
 			done
 		done
@@ -598,7 +598,7 @@ __list() {
 		echo "Use the following syntax to display of list of the guests on the system and a property."
 		echo "These are the available properties: "
 		__get_property_list
-		echo "Run \'chyves list <property>\' to see what that property is for each guest."
+		echo "Run 'chyves list <property>' to see what that property is for each guest."
 	elif [ "${output_type}" = "iso" ]; then
 		local pool=$( __get_primary_pool_name )
 		echo "Listing ISOs..."
