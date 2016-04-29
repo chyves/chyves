@@ -696,29 +696,19 @@ EOT
 	printf "%s^%s^%s^%s^%s" "Guest" "Size" "CPU" "RAM" "Pool"
 
 	# Print headers for -r flag
-	if [ -n "$(echo "$flags" | grep -E 'r|a')" ]; then
-		printf "^%s" "Dataset Role"
-	fi
+	[ -n "$(echo "$flags" | grep -E 'r|a')" ] && printf "^%s" "Dataset Role"
 
 	# Print headers for -v flag
-	if [ -n "$(echo "$flags" | grep -E 'v|a')" ]; then
-		printf "^%s^%s^%s^%s" "OS" "Loader" "Tap" "Con"
-	fi
+	[ -n "$(echo "$flags" | grep -E 'v|a')" ] && printf "^%s^%s^%s^%s" "OS" "Loader" "Tap" "Con"
 
 	# Print headers for -s flag
-	if [ -n "$(echo "$flags" | grep -E 's|a')" ]; then
-		printf "^%s^%s^%s" "VMM" "Running" "rcboot"
-	fi
+	[ -n "$(echo "$flags" | grep -E 's|a')" ] && printf "^%s^%s^%s" "VMM" "Running" "rcboot"
 
 	# Print headers for -t flag
-	if [ -n "$(echo "$flags" | grep -E 't|a')" ]; then
-		printf "^%s" "Template"
-	fi
+	[ -n "$(echo "$flags" | grep -E 't|a')" ] && printf "^%s" "Template"
 
 	# Print headers for -d flag
-	if [ -n "$(echo "$flags" | grep -E 'd|a')" ]; then
-		printf "^%s" "Description"
-	fi
+	[ -n "$(echo "$flags" | grep -E 'd|a')" ] && printf "^%s" "Description"
 
 	# Print new line for first guest.
 	printf "\n"
@@ -755,9 +745,7 @@ EOT
 			printf "%s^%s^%s^%s^%s" "$g" "$size" "$cpu" "$ram" "$pool"
 
 			# Print dataset role section
-			if [ -n "$(echo "$flags" | grep -E 'r|a')" ]; then
-				printf "^%s" "$dataset_role"
-			fi
+			[ -n "$(echo "$flags" | grep -E 'r|a')" ] && printf "^%s" "$dataset_role"
 
 			# Get variable and print for verbose section (os, loader, tap, con)
 			if [ -n "$(echo "$flags" | grep -E 'v|a')" ]; then
