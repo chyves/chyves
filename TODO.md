@@ -54,8 +54,6 @@ Checks for more than one `.default`, `ISO`, and `Firmware` dataset on system.
 
 Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
 
-Rewrite `__get_guests_list`, like seriously.
-
 Check and test to see if secondary pools store the `device.map` and `grub.cfg` files with the correct dataset. Is this even necessary? Even imported `iohyve` guests will copy from the wrong location to the right location.
 
 Restructured command layout to have less sub-commands.
