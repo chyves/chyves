@@ -17,16 +17,20 @@ Internal development.
 - Fixed various typos and expanded man page.
  - Added more explanation to the `chyves set` section for what each property influences.
 
+
 - Created new document structure and folders.
  - The root directory of the project contains documents about the project and also the Makefile for installing from source
  - The installed files are now in their respective places `sbin/`, `rc.d/`, and `man/`.
 
+
 - Created a new dataset to house all the guests under `$pool/chyves/guests/$guest`.
  - Changed code to correctly reference this new location, including `cut` commands.
+
 
 - Created a new dataset for referencing the default values for new guests.
  - The ZFS properties contained in `$pool/chyves/guests/.defaults` replace the old hardcoded values.
  - Use `chyves set .defaults` to change from the initial values.
+
 
 - Created the dataset `$pool/chyves/.config` with two ZFS user properties, `chyves:pool_version` and `chyves:dataset_role` as explained below.
 
@@ -48,17 +52,25 @@ Internal development.
 
 - Expanded `chyves list <property name>` to display that property value for each guest.
  - This is dynamically determined so if a user manually sets a properties with `zfs` using a `chyves:` prefix this will display that property.
- - This can be helpful in custom installations where more information is necessary.
+ - This can be helpful in installations where custom properties are set when more information is necessary.
+
+
+- Deprecated the distinction of using `fetch` and `cp` for ISO and Firmware resources.
+  - Both are handled by the same function of `fetch`.
+  - A regular expression is used to determine if the source starts with `http` or `ftp` and uses `fetch` to download the file. Otherwise `cp` is used.
+
 
 - Consolidated `fetchiso`, `cpiso,` `renameiso`, and `rmiso` into one function/command: `chyves iso` with the use of arguments. For example `chyves fetchiso` is replaced by `chyves iso fetch` and so forth.
- - Added hash check function for fetched ISOs. Before the ISO is downloaded, the user is prompted for a hash. The following hashes are supported md5, sha1, sha256, and sha512. After the file is downloaded the file is hashed, if the hashes match then "Hashes matched" is displayed. If the hashes do not match, the user is prompted to delete the file.
- - Added support to download `.gz` compressed iso images.
+ - Added hash check function for remotely fetched ISOs.
+   - Before the ISO is downloaded, the user is prompted for a hash. The following hashes are supported md5, sha1, sha256, and sha512.
+   - After the file is downloaded the file is hashed, if the hashes match then "Hashes matched" is displayed. If the hashes do not match, the user is prompted to delete the file.
+   - If no hash checksum is entered, the user is heckled into feeling bad about their life choices of supporting evil.
+ - Added support to for `.gz` and `.xz` compressed iso images for both local and remote fetches.
+   - These formats are commonly used for pfSense and FreeBSD releases respectively. Now saving bandwidth costs for the projects is even easier.
+
 
 - Consolidated  `fetchfw`, `cpfw`, `renamefw`, and `rmfw` into one function/command: `chyves firmware` with the use of arguments. For example `chyves fetchfw` is replaced by `chyves firmware fetch` and so forth.
 
-- Deprecated the distinction of using `fetch` and `copy`|`cp` for ISO and Firmware resouces.
- - Both are handled by the same function of `fetch`.
-   - A regular expression is used to determine if the source starts with `http` or `ftp` and uses `fetch` to download the file. Otherwise `cp` is used.
 
 - Changed `get` command syntax to `chyves get [property] [name]`. This follows the syntax of `iocage`.
 
@@ -82,6 +94,8 @@ Internal development.
 - Added check when starting guest to see if  `grub2-bhyve` is installed for guests using the `grub-bhyve` loader property value.
 
 - Added prompt when using the `chyves forcekill $guest` command and also displays processes that will be killed.
+
+- Added check to see if CPU has the necessary features to run `bhyve`. This includes `POPCNT` for AMD and Intel CPUs. Intel CPUs also require the unrestricted guest `UG` feature for allocating more than one virtual CPU to a guest and also `UG` is required for UEFI support. These restrictions are enforced by `chyves` so that error messages do not spew across the screen.
 
 ##### Internal code changes:
 
@@ -110,6 +124,19 @@ Internal development.
 - Added function `__verify_binary_available` to check if an executable is available on the system.
 
 - Added function `__multi_chyves_zfs_property` to `get`|`set` `chyves:`` ZFS property. Works with `.config`, `.defaults`, and guests.
+
+- Added function `__preflight_check` to run before any other code is to make sure the environment is safe for flight.
+ - Added CPU feature check in this section.
+   - The variable `_CPU_MISSING_UG` is set to "1" when the running on an Intel CPU that lacks the unrestricted guest `UG` feature is unavailable.
+	 - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
+
+- Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU function is missing.
+
+- Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
+
+- Added variable `_FORBIDDEN_GUEST_NAMES` to prevent guests with these names from being created.
+
+- Added function `__check_if_freenas` to return nothing or "1" if on FreeNAS system.
 
 ##### Developer enhancements:
 
