@@ -682,8 +682,9 @@ __list() {
 	local output_type="$1"
 	local _arg2="$2"         # Used for tap and processes
 
+	# Lists the traditional output
 	if [ -z "${output_type}" ]; then
-		# Traditional `chyves list` true when null
+
 		local pools=$( __get_pool_names )
 		(
 		printf "%s^%s^%s^%s^%s^%s\n" "Guest" "VMM" "Running" "rcboot" "Pool" "Description"
@@ -698,18 +699,26 @@ __list() {
 			done
 		done
 		) | column -ts^
+
+	# Dynamically lists the guest chyves properties
 	elif [ "${output_type}" = "properties" ]; then
 		echo "Use the following syntax to display of list of the guests on the system and a property."
 		echo "These are the available properties: "
 		__get_property_list
 		echo "Run 'chyves list <property>' to see what that property is for each guest."
+
+	# List ISO firmware resources.
 	elif [ "${output_type}" = "iso" ]; then
 		local pool=$( __get_primary_pool_name )
 		echo "Listing ISOs..."
 		zfs list -H -r $pool/chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
+
+	# List Firmware resources. Using "firmware" lists the property firmware rather than the resource
 	elif [ "${output_type}" = "firmwares" ]; then
 		echo "Listing Firmware..."
 		zfs list -H -r $pool/chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
+
+	# List snapshots
 	elif [ "${output_type}" = "snapshots" ]; then
 		echo "Listing snapshots..."
 		zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
@@ -735,19 +744,22 @@ __list() {
 
 	# List processes
 	elif [ "${output_type}" = "processes" ]; then
+		local _guest_name=$_arg2
+
 		echo "Listing processes..."
-		if [ -z "${active_taps}" ]; then
+		if [ -z "$_guest_name" ]; then
 			ps -aux | grep -E "chy-|chyves|bhyveload|grub-bhyve" | grep -v -E "grep -E chy-|/bin/sh /usr/local/sbin/chyves list"
 		else
-			local pool="$( __get_pool_for_guest "${active_taps}" )"
-			__verify_valid_guest "${active_taps}" "$pool"
-			ps -aux | grep ${active_taps} | grep -E -v "grep ${active_taps}|/bin/sh /usr/local/sbin/chyves list"
+			local pool="$( __get_pool_for_guest "${_guest_name}" )"
+			__verify_valid_guest "${_guest_name}" "$pool"
+			ps -aux | grep ${_guest_name} | grep -E -v "grep ${_guest_name}|/bin/sh /usr/local/sbin/chyves list"
 		fi
-	# Displays a list for a property for all active guests. See chyves list properties for options
+
+	# Lists a property for all active guests. See "chyves list properties" for options
 	elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
 
 		# Displays active tap via /dev
-		if [ "$output_type" = "tap" ] && [ "${active_taps}" = "active" ]; then
+		if [ "$output_type" = "tap" ] && [ "${_arg2}" = "active" ]; then
 			echo "Listing active network taps..."
 			ls /dev | grep tap
 			exit
