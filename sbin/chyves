@@ -680,7 +680,7 @@ __get_zfs_pcidev_conf() {
 # List Guests
 __list() {
 	local output_type="$1"
-	local active_taps="$2" # Used for tap and processes
+	local _arg2="$2"         # Used for tap and processes
 
 	if [ -z "${output_type}" ]; then
 		# Traditional `chyves list` true when null
@@ -713,6 +713,27 @@ __list() {
 	elif [ "${output_type}" = "snapshots" ]; then
 		echo "Listing snapshots..."
 		zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
+
+	# List properties set in .config
+	elif [ "${output_type}" = ".config" ]; then
+		local _pool=$arg2
+
+		echo "Listing properties set in .config"
+		[ "$_arg2" = "primary" ] && _pool="$( __get_primary_pool_name )"
+
+		if [ -n "${_pool}" ]; then
+			(
+			echo -e "Property\t Value"
+			zfs get -r -t filesystem -o property,value all $_pool/chyves/.config | grep chyves: | sed -e 's/chyves://g'
+			) | column -t
+		else
+			(
+			echo -e "Dataset\t Property\t Value"
+			zfs get -r -t filesystem -o name,property,value all | grep chyves/.config | grep chyves: | sed -e 's/chyves://g' | sed -e 's/\/chyves\/\.config//g'
+			) | column -t
+		fi
+
+	# List processes
 	elif [ "${output_type}" = "processes" ]; then
 		echo "Listing processes..."
 		if [ -z "${active_taps}" ]; then
