@@ -1850,45 +1850,62 @@ __conreset() {
 __help() {
 __version
 cat << 'EOT'
-chyves  version
-	setup pool=[poolname] kmod=[0/1] net=[interface]
-	list [$null|iso|firmware|snapshots|processes|<property-name>]
-	     tap active
-	     processes [name]
-	info [-rvstdgaikhl]
-	iso [list]
-	    [fetch] [URL|path]
-	    [rename] [oldname] [newname]
-	    [delete] [name]
-	firmware [list]
-	         [fetch] [URL|path]
-	         [rename] [oldname] [newname]
-	         [delete] [name]
-	create [name] [size]
-	install [name] [ISO]
-	load [name] [path/to/bootdisk]
-	boot [name] [runmode] [pcidevices]
-	start [name] [-s | -a]
-	stop [name]
-	forcekill [name]
-	scram
-	destroy [name]
-	rename [name] [newname]
-	delete [name]
-	set [name|.defaults] [prop1=value] [prop2=value]...
-	get [[property]|all] [name]
-	rmpci [-f] [name] [pcidev:N]
-	add [name] [size] [[pool]]
-	remove [-f] [name] [diskN]
-	resize [name] [diskN] [size]
-	disks [name]
-	snap [name]@[snapshotname]
-	roll [name]@[snapshotname]
-	clone [-c | -r] [name] [clonename]
-	export [name]
-	console [name]
-	conreset
-	help
+
+chyves
+  version
+  setup pool=<pool> kmod=<0|1> net=<interface-name>
+  list [iso|firmwares|snapshots|.config|processes|<property-name>]
+  list tap active
+  list .config [<pool>|primary]
+  list processes [<name>]
+  info [-rvstdnakgil|-h]
+  iso {list|fetch|rename|delete}
+  iso list
+  iso fetch {http-URL|ftp-URL|local-path}
+  iso rename <oldname> <newname>
+  iso delete <name>
+  firmware {list|fetch|rename|delete}
+  firmware list
+  firmware fetch {http-URL|ftp-URL|local-path}
+  firmware rename <oldname> <newname>
+  firmware delete <name>
+  create <name> [size] [pool]
+  install <name> <iso-file>
+  load [name] [path/to/bootdisk]
+  boot [name] [runmode] [pcidevices]
+  start <name> [-s | -a]
+  stop <name>
+  forcekill <name>
+  scram
+  destroy <name>
+  rename <name> <newname>
+  delete <name>
+  set <property1>=<value> {<name>|.defaults} [prop2=value]...
+  get {<property>|all} <name>
+  rmpci [-f] [name] [pcidev:N]
+  add [name] [size] [[pool]]
+  remove [-f] [name] [diskN]
+  resize [name] [diskN] [size]
+  disks [name]
+  snap <name>[@<snapshotname>]
+  roll <name>[@<snapshotname>]
+  clone [-c | -r] <name> <clonename>
+  export <name>
+  console <name> -t
+  conreset
+  help
+
+Syntax nomenclature:
+ list             - Text without brackets are assumed to be required, "list" in
+                    this case.
+ [optional]       - An optional field
+ [optional|list]  - An optional list, valid if not used
+ {require|list}   - A require list where one option much be used
+ <user-input>     - User supplied input field. Required when not contain in [ ]
+ [-abcdefg]       - An optional field but must start with a "-" and followed by
+                    any combination, in any order. Eg. "-gca" is valid.
+ name             - chyves guest name
+
 EOT
 }
 
