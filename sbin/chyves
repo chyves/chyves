@@ -394,6 +394,59 @@ __multi_chyves_zfs_property() {
 	fi
 }
 
+# Check VMM resource allocation status
+__check_vmm_alocated() {
+	local _guest=$1
+	local _flags=$2
+	local _vmm_dev="/dev/vmm/chy-$_guest"
+	# Valid flags are:
+	# null    Return nothing or a 1
+	# -h      [human] for a "YES" or "NO" indicator
+
+	if [ "$_flags" = "-h" ]; then
+		if [ -e "$_vmm_dev" ]; then
+			echo "YES"
+		else
+			echo "NO"
+		fi
+	elif [ -e "$_vmm_dev" ]; then
+		echo "1"
+	fi
+}
+
+# Check bhyve process running status
+__check_bhyve_process_running() {
+	local _guest=$1
+	local _flags=$2
+	local _bhyve_process_running=$( pgrep -fx "bhyve: chy-$_guest" )
+	# Valid flags are:
+	# null    Return nothing or a 1
+	# -h      [human] for a "YES (pid)" or "NO" indicator
+
+	if [ "$_flags" = "-h" ]; then
+		if [ -n "$_bhyve_process_running" ]; then
+			echo "YES ($_bhyve_process_running)"
+		else
+			echo "NO"
+		fi
+	elif [ -e "$_bhyve_process_running" ]; then
+		echo "1"
+	fi
+}
+
+# Displays the boot priority of a guest "YES (xxx)" where number is the priority
+__display_rcboot_priority() {
+	local _pool=$1
+	local _guest=$2
+	local _rcboot_property="$( __multi_chyves_zfs_property "get" "boot" "$_pool" "guests" "$_guest" )"
+
+	if [ "$_rcboot_property" -gt '0' ]; then
+		echo "YES ($_rcboot_property)"
+	else
+		echo "NO"
+	fi
+}
+
 # Process command line
 __parse_cmd () {
   case "$1" in
@@ -637,26 +690,11 @@ __list() {
 		for pool in $pools; do
 			local guests="$( __get_guests_list - $pool )"
 			for g in $guests; do
-				local vmm="/dev/vmm/chy-$g"
-				if [ -e $vmm ]; then
-					vmm="YES"
-				else
-					vmm="NO"
-				fi
-				local running=$( pgrep -fx "bhyve: chy-$g" )
-				if [ -z "$running" ]; then
-					running="NO"
-				else
-					running="YES"
-				fi
-				local boot="$( __multi_chyves_zfs_property "get" "boot" "$pool" "guests" "$g" )"
-				if [ "$boot" = '1' ]; then
-					boot="YES"
-				else
-					boot="NO"
-				fi
+				local _vmm_status=$( __check_vmm_alocated $g -h  )
+				local _bhyve_status=$( __check_bhyve_process_running $g -h )
+				local _rcboot_priority=$( __display_rcboot_priority $pool $g )
 				local description="$( __multi_chyves_zfs_property "get" "description" "$pool" "guests" "$g" )"
-				printf "%s^%s^%s^%s^%s^%s\n" "$g" "$vmm" "$running" "$boot" "$pool" "$description"
+				printf "%s^%s^%s^%s^%s^%s\n" "$g" "$_vmm_status" "$_bhyve_status" "$_rcboot_priority" "$pool" "$description"
 			done
 		done
 		) | column -ts^
@@ -835,26 +873,11 @@ EOT
 
 			# Get information, set variables, and print for status section (VMM, Running, rcboot)
 			if [ -n "$(echo "$flags" | grep -E 's|a')" ]; then
-				local vmm="/dev/vmm/chy-$g"
-				if [ -e "$vmm" ]; then
-					vmm="YES"
-				else
-					vmm="NO"
-				fi
-				local running=$(pgrep -fx "bhyve: chy-$g")
-				if [ -z "$running" ]; then
-					running="NO"
-				else
-					running="YES"
-				fi
-				local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
-				if [ "$boot" = '1' ]; then
-					boot="YES"
-				else
-					boot="NO"
-				fi
+				local _vmm_status=$( __check_vmm_alocated $g -h  )
+				local _bhyve_status=$( __check_bhyve_process_running $g -h )
+				local _rcboot_priority=$( __display_rcboot_priority $pool $g )
 
-				printf "^%s^%s^%s" "$vmm" "$running" "$boot"
+				printf "^%s^%s^%s" "$_vmm_status" "$_bhyve_status" "$_rcboot_priority"
 			fi
 
 			# Get template information
