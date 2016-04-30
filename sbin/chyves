@@ -234,6 +234,17 @@ __verify_binary_available() {
 	fi
 }
 
+# Checks to see if on FreeNAS
+# The web UI references this file to display the version
+__check_if_freenas() {
+	if [ -e /etc/version ]; then
+		local OS=$( cat /etc/version | cut -d - -f1 )
+		if [ "$OS" = "FreeNAS" ]; then
+			echo 1
+		fi
+	fi
+]
+
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
 	local _flags="$1"
@@ -528,33 +539,30 @@ __setup() {
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
 				fi
-				# Checks to see if on FreeNAS
-				# The web UI references this file to display the version
-				if [ -e /etc/version ]; then
-					local OS=$( cat /etc/version | cut -d - -f1 )
-					if [ "$OS" = "FreeNAS" ]; then
-						echo "On FreeNAS installation."
-						echo "Checking for symbolic link to /chyves from /mnt/chyves..."
-						if [ -d /mnt/chyves ]; then
-							if [ ! -e /chyves ]; then
-								ln -s /mnt/chyves /chyves
-								if [ -L /chyves ]; then
-									echo "Symbolic link to /chyves from /mnt/chyves successfully created."
-								else
-									echo "Failed to create symbolic link."
-									echo "Please manually do so by running the following as root:"
-									echo "# ln -s /mnt/chyves /chyves"
-								fi
-							elif [ -L /chyves ]; then
-								echo "Symbolic link to /chyves already exists."
+
+				# If on FreeNAS do a couple of needed changes.
+				if [ "$( __check_if_freenas )" ]; then
+					echo "On FreeNAS installation."
+					echo "Checking for symbolic link to /chyves from /mnt/chyves..."
+					if [ -d /mnt/chyves ]; then
+						if [ ! -e /chyves ]; then
+							ln -s /mnt/chyves /chyves
+							if [ -L /chyves ]; then
+								echo "Symbolic link to /chyves from /mnt/chyves successfully created."
+							else
+								echo "Failed to create symbolic link."
+								echo "Please manually do so by running the following as root:"
+								echo "# ln -s /mnt/chyves /chyves"
 							fi
-						elif [ "$val" = "freenas-boot" ] && [ -d /chyves ]; then
-							echo "Symbolic link not needed. /chyves exists."
-							echo "chyves is installed on the freenas-boot pool."
-							echo "This is not recommended configuration."
-						else
-							echo "chyves does not seem to be setup."
+						elif [ -L /chyves ]; then
+							echo "Symbolic link to /chyves already exists."
 						fi
+					elif [ "$val" = "freenas-boot" ] && [ -d /chyves ]; then
+						echo "Symbolic link not needed. /chyves exists."
+						echo "chyves is installed on the freenas-boot pool."
+						echo "This is not recommended configuration."
+					else
+						echo "chyves does not seem to be setup."
 					fi
 				fi
           elif [ "${prop}" = "kmod" ]; then
