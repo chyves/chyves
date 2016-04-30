@@ -68,16 +68,13 @@ __preflight_check() {
 		exit 1
 	fi
 
-	if [ "$(zfs get -r chyves:dataset_role | grep -v @ | grep "primary" | wc -l )" -gt "1" ]; then
-		echo "More than one primary pool set, fix it!"
-		exit
-	fi
-
+	# If no sub-command is used, run the help function
 	if [ -z "$1" ] ; then
 		__help
 		exit 0
 	fi
 
+	# Check to see if running with elevated credentials
 	if [ $(__readonly_cmd "$1") != "0" -a "$(whoami)" != "root" ] ; then
 		echo "The $1 command needs root credentials!"
 		exit 1
@@ -1780,6 +1777,6 @@ chyves  version
 EOT
 }
 
-__preflight_check
+__preflight_check "$1"
 
 __parse_cmd "$@"
