@@ -33,6 +33,7 @@ _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_v
 _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
+_FORBIDDEN_GUEST_NAMES=".defaults|reorder"
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # This function gets ran before any other.
@@ -592,6 +593,7 @@ __setup() {
 	done
 }
 
+# Outputs PCI device string for bhyve command
 __get_bhyve_cmd() {
 	local devices="$1"
 	local pci_slot_count=0
