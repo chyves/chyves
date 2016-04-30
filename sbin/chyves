@@ -35,35 +35,63 @@ _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
+# This function gets ran before any other.
+__preflight_check() {
+
+	# Checks to see variable is empty as grep needs an arguement and a UUID stastically should not have a collision if there are no pools in an offline role
+	if [ -z "${_OFFLINE_POOLS_GREP_STRING}" ]; then
+	  _OFFLINE_POOLS_GREP_STRING=${_UUID_GENERAL_USE}
+	fi
+
+	# Appends ".defaults" to $_TEMPLATE_GUESTS_GREP_STRING
+	if [ -z "${_TEMPLATE_GUESTS_GREP_STRING}" ]; then
+	  _TEMPLATE_GUESTS_GREP_STRING=".defaults"
+	else
+	  _TEMPLATE_GUESTS_GREP_STRING=$( echo "${_TEMPLATE_GUESTS_GREP_STRING}|.defaults" )
+	fi
+
+	# Check for out of date datasets when not running setup.
+	if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
+	  __fault_detected_exit "Out of date chyves\' dataset(s) version found. \nPlease install sysutils/chyves-utils and then run: \nchyves-upgrade"
+	fi
+
+	# Check to see if more than one pool has the primary role set.
+	if [ "$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | wc -l )" -gt "1" ]; then
+		__fault_detected_exit "More than one primary pool set, fix it!"
+	fi
+
+	# Check for out of date datasets when not running setup.
+	if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
+		echo "Out of date chyves\' dataset(s) version found."
+		echo "Please install sysutils/chyves-utils and then run:"
+		echo "chyves-upgrade"
+		exit 1
+	fi
+
+	if [ "$(zfs get -r chyves:dataset_role | grep -v @ | grep "primary" | wc -l )" -gt "1" ]; then
+		echo "More than one primary pool set, fix it!"
+		exit
+	fi
+
+	if [ -z "$1" ] ; then
+		__help
+		exit 0
+	fi
+
+	if [ $(__readonly_cmd "$1") != "0" -a "$(whoami)" != "root" ] ; then
+		echo "The $1 command needs root credentials!"
+		exit 1
+	fi
+
+}
+
 # Function used to exit with a message.
-__fault_detected_exit(){
+__fault_detected_exit() {
   local message="$1"
   echo "Critical error detected. Exiting for following reason:"
   echo -e "${message}"
   exit 1
 }
-
-# Checks to see variable is empty as grep needs an arguement and a UUID stastically should not have a collision if there are no pools in an offline role
-if [ -z "${_OFFLINE_POOLS_GREP_STRING}" ]; then
-  _OFFLINE_POOLS_GREP_STRING=${_UUID_GENERAL_USE}
-fi
-
-# Appends ".defaults" to $_TEMPLATE_GUESTS_GREP_STRING
-if [ -z "${_TEMPLATE_GUESTS_GREP_STRING}" ]; then
-  _TEMPLATE_GUESTS_GREP_STRING=".defaults"
-else
-  _TEMPLATE_GUESTS_GREP_STRING=$( echo "${_TEMPLATE_GUESTS_GREP_STRING}|.defaults" )
-fi
-
-# Check for out of date datasets when not running setup.
-if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
-  __fault_detected_exit "Out of date chyves\' dataset(s) version found. \nPlease install sysutils/chyves-utils and then run: \nchyves-upgrade"
-fi
-
-# Check to see if more than one pool has the primary role set.
-if [ "$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | wc -l )" -gt "1" ]; then
-	__fault_detected_exit "More than one primary pool set, fix it!"
-fi
 
 # See whether given command is readonly
 # and therefore doesn't need root credentials
@@ -1718,27 +1746,6 @@ chyves  version
 EOT
 }
 
-# Check for out of date datasets when not running setup.
-if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
-	echo "Out of date chyves\' dataset(s) version found."
-	echo "Please install sysutils/chyves-utils and then run:"
-	echo "chyves-upgrade"
-	exit 1
-fi
-
-if [ "$(zfs get -r chyves:dataset_role | grep -v @ | grep "primary" | wc -l )" -gt "1" ]; then
-	echo "More than one primary pool set, fix it!"
-	exit
-fi
-
-if [ -z "$1" ] ; then
-	__help
-	exit 0
-fi
-
-if [ $(__readonly_cmd "$1") != "0" -a "$(whoami)" != "root" ] ; then
-	echo "The $1 command needs root credentials!"
-	exit 1
-fi
+__preflight_check
 
 __parse_cmd "$@"
