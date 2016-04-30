@@ -243,7 +243,7 @@ __check_if_freenas() {
 			echo 1
 		fi
 	fi
-]
+}
 
 # Gets pool names from ZFS with flag options for active/inactive
 __get_pool_names() {
@@ -680,7 +680,7 @@ __get_zfs_pcidev_conf() {
 # List Guests
 __list() {
 	local output_type="$1"
- local active_taps="$2" # Used for tap and processes
+	local active_taps="$2" # Used for tap and processes
 
 	if [ -z "${output_type}" ]; then
 		# Traditional `chyves list` true when null
