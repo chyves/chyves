@@ -908,66 +908,115 @@ __resource_functions() {
 	fi
 
 	if [ "$_subfunction" = "fetch" ]; then
-		local _file_name="$(basename $_arg3)"
-		if [ -n "$(echo "$_arg3" | grep -E '^http|^ftp')" ]; then
-			echo "Downloading $_file_name from $_arg3 to /chyves/$_resource_name/$_file_name..."
-			zfs create $_prim_pool/chyves/$_resource_name/$_file_name
-			fetch $_arg3 -o /chyves/$_resource_name/$_file_name
-			# Do a file hash check if an ISO download
+		local _URL=$_arg3
+		local _file_name="$(basename $_URL)"
+
+		# If file ends with .gz|.xz do not use the extension as the folder name.
+		if [ -n "$( echo "$_URL" | grep -E "\.gz$" )" ]; then
+			local _folder_name=$(basename $_file_name .gz)
+		elif [ -n "$( echo "$_URL" | grep -E "\.xz$" )" ]; then
+			local _folder_name=$(basename $_file_name .xz)
+		else
+			local _folder_name=$_file_name
+		fi
+
+		# Check to see if file is on a remote source
+		if [ -n "$(echo "$_URL" | grep -E '^http|^ftp')" ]; then
+			echo "Creating ZFS dataset: $_prim_pool/chyves/$_resource_name/$_folder_name"
+			zfs create $_prim_pool/chyves/$_resource_name/$_folder_name
+
+			# Remote ISOs are downloaded using fetch and hash checked.
 			if [ "$_function" = "iso" ]; then
-				echo "Please enter a supported file hash for '$_arg3':"
-				read -p "Supported file hashes are (md5\|sha1\|sha256\|sha512):" an </dev/tty
-				local _hash_guess=$( echo $an | wc )
-				case "$_hash_guess" in
-					33)	local cksum=$(md5 -q /chyves/ISO/$_file_name)
+				echo "Please enter a supported hash checksum for '$_file_name':"
+				read -p "Supported cryptographic hash function are (md5|sha1|sha256|sha512|null): " _user_supplied_hash </dev/tty
+
+				echo "Downloading $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/..."
+				fetch $_URL -o /chyves/$_resource_name/$_folder_name
+
+				local _hash_length=$( echo $_user_supplied_hash | wc | awk '{ print $3 }' )
+				case "$_hash_length" in
+					33)     local _calcd_chksum=$( md5 -q /chyves/ISO/$_folder_name/$_file_name )
+					        local _hash_type=MD5
 					;;
-					41)	local cksum=$(sha1 -q /chyves/ISO/$_file_name)
+					41)     local _calcd_chksum=$( sha1 -q /chyves/ISO/$_folder_name/$_file_name )
+					        local _hash_type=SHA1
 					;;
-					65)	local cksum=$(sha256 -q /chyves/ISO/$_file_name)
+					65)     local _calcd_chksum=$( sha256 -q /chyves/ISO/$_folder_name/$_file_name )
+					        local _hash_type=SHA256
 					;;
-					129)	local cksum=$(sha512 -q /chyves/ISO/$_file_name)
+					129)    local _calcd_chksum=$( sha512 -q /chyves/ISO/$_folder_name/$_file_name )
+					        local _hash_type=SHA512
 					;;
-					*) echo "Unknown hash given."
+					*)      local _calcd_chksum=""
+					        local _hash_type="Unsupported hash string given. Please contact the chyves developers to have this hash function added."
 				esac
 
-				echo "$an"
-				echo "$cksum"
-				echo "$_hash_guess"
 				# Check if hash sums match
-				if [ "$cksum" = "$an" ]; then
-					echo "Hashes matched"
+				if [ -z "$_user_supplied_hash" ]; then
+					echo "All that is necessary for the triumph of evil is that good (wo)men do nothing..."
+					echo "...like check their downloaded ISO images against a known hash checksum."
+					echo "No hash checksum given, good luck with your potentially corrupt or manipulated ISO, you facilitator of evil."
+				elif [ "$_calcd_chksum" = "$_user_supplied_hash" ]; then
+					echo "$_hash_type hashes matched."
 				else
-					echo "Hashes did not match for ''$_file_name':"
-					echo "Supplied hash: $an"
-					echo "File hashed:   $cksum"
-					read -p "[WARNING] Do you want to delete ISO '$_arg3' ? [y/N]? " an </dev/tty
-					case "$an" in
-						y|Y|yes) zfs destroy -rR $_prim_pool/chyves/ISO/$_file_name
-						;;
-						*) echo "No action taken. You should probably delete '$_file_name' and download it again."
-					esac
+					echo "Hashes did not match for '$_file_name':"
+					echo "Supplied hash:            $_user_supplied_hash"
+					echo "Reason for hash mismatch: $_hash_type"
+					echo "It is recommended to delete '$_file_name', download it again, and supply a supported hash checksum."
+					__resource_functions iso delete "$_folder_name"
 				fi
+
+			# Downloads remote firmware
+			else
+				echo "Downloading $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/..."
+				fetch $_URL -o /chyves/$_resource_name/$_file_name
 			fi
+
 		# Local file copies only.
 		else
-			echo "Copying $_file_name from $_arg3..."
-			zfs create $_prim_pool/chyves/$_resource_name/$_file_name
-			cp $_arg3 /chyves/$_resource_name/$_file_name
+			echo "Creating ZFS dataset: $_prim_pool/chyves/$_resource_name/$_folder_name"
+			zfs create $_prim_pool/chyves/$_resource_name/$_folder_name
+			echo "Copying $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/"
+			cp $_URL /chyves/$_resource_name/$_folder_name
+		fi
+
+		# Decompress resource if ending in .gz|.xz
+		# These programs delete the original files after decompression
+		if [ -n "$( echo "$_file_name" | grep -E "\.gz$" )" ]; then
+			echo "Decompressing .gz file."
+			gunzip -d /chyves/ISO/$_folder_name/$_file_name
+		elif [ -n "$( echo "$_file_name" | grep -E "\.xz$" )" ]; then
+			echo "Decompressing .xz file."
+			xz -d /chyves/ISO/$_folder_name/$_file_name
+		else
+		fi
+
+		# Checks to see if resource exists now.
+		if [ -e /chyves/ISO/$_folder_name/$_folder_name ]; then
+			echo "$_folder_name sucessfully imported as a chyves $_resource_name resource."
+		else
+			echo "Operation unsucessful: delete the dataset and try again."
+			__resource_functions $_function delete "$_folder_name"
 		fi
 	elif [ "$_subfunction" = "rename" ]; then
-		read -p "Do you want to rename firmware from '$_arg3' to '$_arg4'? [y/N]? " an </dev/tty
-		case "$an" in
-			y|Y|yes)	mv -f /chyves/$_resource_name/$_arg3/$_arg3 /chyves/$_resource_name/$_arg3/$_arg4
-					zfs rename $_prim_pool/chyves/$_resource_name/$_arg3 $_prim_pool/chyves/$_resource_name/$_arg4
+		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
+		# <INSERT> check to verify target dataset does not exist __verify_valid_dataset "$pool" "$_resource_type" "$name" -n
+		[ "$_arg3" = "$_arg4" ] && __fault_detected_exit "Can not rename $_resource_name from $_arg3 to $_arg4"
+		read -p "Do you want to rename firmware from '$_arg3' to '$_arg4' [y/N]? " _rename_or_no </dev/tty
+		case "$_rename_or_no" in
+			y|Y|yes)   mv -f /chyves/$_resource_name/$_arg3/$_arg3 /chyves/$_resource_name/$_arg3/$_arg4
+			           zfs rename $_prim_pool/chyves/$_resource_name/$_arg3 $_prim_pool/chyves/$_resource_name/$_arg4
 			;;
-			*) echo "No action taken."
+			*) echo "${_resource_name}: '$_arg3' not renamed."
 		esac
 	elif [ "$_subfunction" = "delete" ]; then
-		read -p "[WARNING] Do you want to delete $_resource_name '$_arg3' [y/N]? " an </dev/tty
-		case "$an" in
-			y|Y|yes) zfs destroy -rR $_prim_pool/chyves/$_resource_name/$_arg3
+		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
+		read -p "[WARNING] Do you want to delete ${_resource_name}: '$_arg3' [y/N]? " _delete_or_no </dev/tty
+		case "$_delete_or_no" in
+			y|Y|yes)   zfs destroy -rR $_prim_pool/chyves/$_resource_name/$_arg3
+			           exit
 			;;
-			*) echo "No action taken."
+			*) echo "${_resource_name}: '$_arg3' not deleted."
 		esac
 	elif [ "$_subfunction" = "list" ] && [ "$_function" = "firmware" ]; then
 		__list "firmwares"
