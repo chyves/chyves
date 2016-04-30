@@ -3,44 +3,58 @@ chyves(8) - bhyve(8) front end manager version 0.0.0
 
 SYNOPSIS
 chyves version
-chyves setup pool=[poolname] kmod=[0|1] net=[interface]
-chyves list [$null|trad|iso|firmware|snapshots|tap|con]
+chyves setup pool=<pool> kmod=<0|1> net=<interface-name>
+chyves list [iso|firmwares|snapshots|.config|processes|<property-name>]
 chyves list tap active
-chyves info [-vsdl]
-chyves fetchiso [URL]
-chyves cpiso [path]
-chyves renameiso [ISO] [newname]
-chyves rmiso [ISO]
-chyves fetchfw [URL]
-chyves cpfw [path]
-chyves renamefw [firmware] [newname]
-chyves rmfw [firmware]
-chyves create [name] [size] [[pool]]
-chyves install [name] [ISO]
-chyves load [name]
-chyves boot [name] [ISO]
-chyves start [name] [-a | -s]
-chyves stop [name]
-chyves forcekill [name]
+chyves list .config [<pool>|primary]
+chyves list processes [<name>]
+chyves info [-rvstdnakgil|-h]
+chyves iso {list|fetch|rename|delete}
+chyves iso list
+chyves iso fetch {http-URL|ftp-URL|local-path}
+chyves iso rename <oldname> <newname>
+chyves iso delete <name>
+chyves firmware {list|fetch|rename|delete}
+chyves firmware list
+chyves firmware fetch {http-URL|ftp-URL|local-path}
+chyves firmware rename <oldname> <newname>
+chyves firmware delete <name>
+chyves create <name> [size] [pool]
+chyves install <name> <iso-file>
+chyves load [name] [path/to/bootdisk]
+chyves boot [name] [runmode] [pcidevices]
+chyves start <name> [-s | -a]
+chyves stop <name>
+chyves forcekill <name>
 chyves scram
-chyves destroy [name]
-chyves rename [name] [newname]
-chyves delete [-f] [name]
-chyves set [name|.defaults] [prop1=value] [prop2=value]...
-chyves get [[property]|all] [name]
+chyves destroy <name>
+chyves rename <name> <newname>
+chyves delete <name>
+chyves set <property1>=<value> {<name>|.defaults} [prop2=value]...
+chyves get {<property>|all} <name>
 chyves rmpci [-f] [name] [pcidev:N]
 chyves add [name] [size] [[pool]]
 chyves remove [-f] [name] [diskN]
 chyves resize [name] [diskN] [size]
 chyves disks [name]
-chyves snap [name]@[snapshotname]
-chyves roll [name]@[snapshotname]
-chyves clone [-c | -r] [name] [clonename]
-chyves export [name]
-chyves console [name]
+chyves snap <name>[@<snapshotname>]
+chyves roll <name>[@<snapshotname>]
+chyves clone [-c | -r] <name> <clonename>
+chyves export <name>
+chyves console <name> -t
 chyves conreset
 chyves help
-chyves man
+
+Syntax nomenclature:
+ list             - Text without brackets are assumed to be required, "list" in
+                    this case.
+ [optional]       - An optional field
+ [optional|list]  - An optional list, valid if not used
+ {require|list}   - A require list where one option much be used
+ <user-input>     - User supplied input field. Required when not contain in [ ]
+ [-abcdefg]       - An optional field but must start with a "-" and followed by
+                    any combination, in any order. Eg. "-gca" is valid.
+ name             - chyves guest name
 
 DESCRIPTION
 The chyves(8) Bourne shell script utilizes the FreeBSD hypervisor bhyve(8),
