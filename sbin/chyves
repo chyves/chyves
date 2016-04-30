@@ -133,8 +133,8 @@ __verify_valid_guest() {
 		__fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
 	fi
 
-	# Check to see if a template or offline pool.
-	if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
+	# Exits if guest is a template or on an offline pool.
+	if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
 		__fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
 	fi
 }
@@ -277,7 +277,7 @@ __get_guests_list() {
 	if [ -n "$(echo "$_flags" | grep 'a')" ]; then
 		$_zfs_command $_pool | grep chyves/guests | grep -v .defaults | $_what_type_of_cutter | sed '/^$/d'
 	else
-		$_zfs_command $_pool | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | grep -E -v "$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | $_what_type_of_cutter | sed '/^$/d'
+		$_zfs_command $_pool | grep -E -v "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | $_what_type_of_cutter | sed '/^$/d'
 	fi
 }
 
@@ -305,6 +305,10 @@ __multi_chyves_zfs_property() {
 	local _pool=$3          # primary|<pool name>
 	local _resource=$4      # .config|guests
 	local _guest="$5"       # <guest name>
+	local _value="$6"       # <property value>
+
+	# Null out value when "-" used
+	[ "${_guest}" = "-" ] && local _guest=""
 
 	# If the guest value is populated, prepend a "/" - This is for .config compatibility
 	[ -n "${_guest}" ] && local _guest="/$_guest"
@@ -313,7 +317,7 @@ __multi_chyves_zfs_property() {
 	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
 
 	if [ "${_action}" = "set" ]; then
-		zfs set chyves:$_property $_pool/chyves/${_resource}${_guest}
+		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
 	elif [ "${_action}" = "get" ]; then
 		zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
 	else
@@ -642,46 +646,53 @@ __list() {
 __info() {
 	local flags="$1"
 
-	if [ -n "$(echo "$flags" | grep 'h')" ]; then
+	if [ "$flags" = "-h" ] || [ -n "$(echo "$flags" | grep 'g' | grep 'i')" ]; then
 cat << 'EOT'
 
     chyves info
 
-Displays information about chyves guests. Without any additional options each
-guests name, size, CPU count, RAM allotment and respective pool are displayed.
-The following flags can be used in combination to display more fields than the
-default. These flags are used in combination the correct syntax is "-rvs" rather
-than "-r -v -s". See below for a description of what each flag does:
+Displays information about chyves guests. Without the use of flags, each guest's
+name, disks, size, CPU count, RAM allotment, and respective pool are displayed.
+The following flags are used in combination to display more fields than the
+default. These flags are used in combination meaning the correct syntax is
+"-rvs" rather than "-r -v -s". See below for a description of what each flag
+does:
 
+ Flags to controls which fields are displayed:
   -r    [role] Display what role the dataset is set to.
   -v    [verbose] Display OS, loader, tap, and console port.
   -s    [status] Display VMM status, if bhyve instance running, and if the rc
         boot is set.
   -t    [template] Displays if guest is a template.
   -d    [description] Dispays description property.
-  -g    [guests] Display all guests (Even offline and templates).
+	-n    [notes] Dispays notes property.
   -a    [all] Display all fields above.
+
+ Flags to controls which guests are display or their disks:
+  -k    [no-disks] Do not display guests' disks.
+  -g    [all-guests] Display all guests (Even offline and templates).
   -i    [inactive] Display only templates and guests on pools with property
-        dataset_role set to offline.
-  -k    [no-disks] Do not display disks inline with guests.
+        dataset_role set to offline. Incompatiable with the -g flag.
+
+ Miscellaneous flags:
   -h    [help] Display this message.
-  -l    [less] Pipe output to less.
-
-The flags [-a|-g], [-i] are mutally exclusive.
-
-The [-a] flag does not include the [-l] flag for piping to less.
+  -l    [less] Pipes the output to less.
 
 EOT
+
+	# These two flags options are competitive, exit with a warning.
+	[ -n "$(echo "$flags" | grep 'g' | grep 'i')" ] && __fault_detected_exit "The -g and -i flags for 'chyves info' are incompatiable. All other flags combinations are fine."
+
 		exit
 	fi
 
 	# Poll to see what pools have active guests
 	# or the '-g' flag for all guests
 	# or the '-i' flag for offline and templates
-	if [ -n "$(echo "$flags" | grep -E 'g|a')" ]; then
+	if [ -n "$(echo "$flags" | grep 'i')" ]; then
+		local pools=$( __get_pool_names -a | grep -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" )
+	elif [ -n "$(echo "$flags" | grep -E 'g|a' )" ]; then
 		local pools=$( __get_pool_names -a )
-	elif [ -n "$(echo "$flags" | grep 'i')" ]; then
-		local pools=$( __get_pool_names -a | grep -E -v "$( __get_pool_names | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g' )" )
 	else
 		local pools=$( __get_pool_names )
 	fi
@@ -705,19 +716,22 @@ EOT
 	# Print headers for -d flag
 	[ -n "$(echo "$flags" | grep -E 'd|a')" ] && printf "^%s" "Description"
 
+	# Print headers for -n flag
+	[ -n "$(echo "$flags" | grep -E 'n|a')" ] && printf "^%s" "Notes"
+
 	# Print new line for first guest.
 	printf "\n"
 
 	# Spider through pools
 	for pool in $pools; do
 		# Poll to see which guests are on $pool
-
+		# This is required for showing inactive guests as __get_guests_list normally omits these guests
+		[ -n "$(echo "$flags" | grep -E 'g|i')" ] && local _do_not_omit_inactive=a
 		if [ -n "$(echo "$flags" | grep 'k')" ]; then
-			local guests="$( __get_guests_list - $pool )"
-		elif [ -n "$(echo "$flags" | grep 'g')" ]; then
-			local guests="$( __get_guests_list -a $pool )"
+			local guests="$( __get_guests_list -${_do_not_omit_inactive} $pool )"
 		else
-			local guests="$( __get_guests_list -d $pool )"
+			# Default is to display disks.
+			local guests="$( __get_guests_list -d${_do_not_omit_inactive} $pool )"
 		fi
 
 		local dataset_role=$( zfs get -H -o value chyves:dataset_role $pool/chyves/.config )
@@ -755,19 +769,19 @@ EOT
 			# Get information, set variables, and print for status section (VMM, Running, rcboot)
 			if [ -n "$(echo "$flags" | grep -E 's|a')" ]; then
 				local vmm="/dev/vmm/chy-$g"
-				if [ -e $vmm ]; then
+				if [ -e "$vmm" ]; then
 					vmm="YES"
 				else
 					vmm="NO"
 				fi
 				local running=$(pgrep -fx "bhyve: chy-$g")
-				if [ -z $running ]; then
+				if [ -z "$running" ]; then
 					running="NO"
 				else
 					running="YES"
 				fi
 				local boot="$(zfs get -H -o value chyves:boot $pool/chyves/guests/$g)"
-				if [ $boot = '1' ]; then
+				if [ "$boot" = '1' ]; then
 					boot="YES"
 				else
 					boot="NO"
@@ -792,6 +806,12 @@ EOT
 			if [ -n "$(echo "$flags" | grep -E 'd|a')" ]; then
 				local description="$(zfs get -H -o value chyves:description $pool/chyves/guests/$g)"
 				printf "^%s" "$description"
+			fi
+
+			# Print notes property if flag set
+			if [ -n "$(echo "$flags" | grep -E 'n|a')" ]; then
+				local notes="$(zfs get -H -o value chyves:notes $pool/chyves/guests/$g)"
+				printf "^%s" "$notes"
 			fi
 
 			# Print new line for next guest.
@@ -820,8 +840,8 @@ __resource_functions() {
 	# Sets the variable to use to for the resource
 	if [ "$_function" = "firmware" ]; then
 		local _resource_name="Firmware"
-	elif [ "$_function" = "ISO" ]; then
-		local _resource_name="iso"
+	elif [ "$_function" = "iso" ]; then
+		local _resource_name="ISO"
 	elif [ "$_function" = "guest" ]; then
 		local _resource_name="guests"
 	elif [ "$_function" = "disk" ]; then
