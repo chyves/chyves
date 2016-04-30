@@ -26,13 +26,11 @@ chyves_start()
 {
 	echo "Starting chyves guests..."
 	/usr/local/sbin/chyves setup ${chyves_flags}
-	guestlist="$(zfs list -H -t volume -o name | grep chyves | grep disk0 | cut -d'/' -f3)"
+	sleep 8 # Sleeping for network to come up.
+	guestlist="$( zfs get -H -t filesystem -o name,value chyves:boot | grep chyves/guests/ | sort -k2nr -k1 | awk '{ if ($2 > 0) print $1; }' )"
 	for i in $guestlist ; do
-		pool="$(zfs list -H -t volume -o name | grep chyves | grep $i | grep disk0 | cut -d'/' -f1-3)"
-		bootprop="$(zfs get -H -o value chyves:boot $pool)"
-		if [ $bootprop = "1" ]; then
-			/usr/local/sbin/chyves start $i
-		fi
+		/usr/local/sbin/chyves start $i
+		sleep 3
 	done
 }
 
