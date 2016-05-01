@@ -430,7 +430,7 @@ __check_bhyve_process_running() {
 			echo "NO"
 		fi
 	elif [ -e "$_bhyve_process_running" ]; then
-		echo "1"
+		echo "$_bhyve_process_running"
 	fi
 }
 
