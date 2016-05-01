@@ -1921,7 +1921,7 @@ chyves
   destroy <name>
   rename <name> <newname>
   delete <name>
-  set <property1>=<value> {<name>|.defaults} [prop2=value]...
+  set <property1>=<value> {<name>|.defaults} [<property2>=<value>]...
   get {<property>|all} <name>
   rmpci [-f] [name] [pcidev:N]
   add [name] [size] [[pool]]
@@ -1937,7 +1937,7 @@ chyves
   help
 
 Syntax nomenclature:
- list             - Text without brackets are assumed to be required, "list" in
+ subcommand       - Text without brackets are assumed to be required, "list" in
                     this case.
  [optional]       - An optional field
  [optional|list]  - An optional list, valid if not used
