@@ -447,6 +447,19 @@ __display_rcboot_priority() {
 	fi
 }
 
+# Verifies the number of parameters and exits if met or exceeded
+__verify_number_of_arguments() {
+	local _number_of_minimum_parameters=$1        # Minimum number of parameters
+	local _number_of_supplied_parameters=$2       # As counted by "$#"
+	local _number_of_maximum_parameters=$3        # (Optional) Maximum number of parameters
+
+	# While $3 is optinal, it does need a value if not set.
+	[ -z "${_number_of_maximum_parameters}" ] && local _number_of_maximum_parameters=$_number_of_supplied_parameters
+
+	if [ "${_number_of_supplied_parameters}" -lt "${_number_of_minimum_parameters}" ] || [ "${_number_of_supplied_parameters}" -gt "${_number_of_maximum_parameters}" ]; then
+	fi
+}
+
 # Process command line
 __parse_cmd () {
   case "$1" in
