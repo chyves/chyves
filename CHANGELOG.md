@@ -17,6 +17,9 @@ Internal development.
 - Fixed various typos and expanded man page.
  - Added more explanation to the `chyves set` section for what each property influences.
 
+- Updated `chyves help` for the new changes.
+ - Added a nomenclature section to indicate what is required and what is optional.
+
 
 - Created new document structure and folders.
  - The root directory of the project contains documents about the project and also the Makefile for installing from source
@@ -37,6 +40,8 @@ Internal development.
  - The `chyves:pool_version` ZFS property within `$pool/chyves/.config` contains the chyves version the dataset is compatible with. This will be set upon dataset creation and then updated via [chyves-utils](https://github.com/chyves/chyves-utils) using the `chyves-upgrade` command, non-contiguous updates are possible. This will be the automated process of ensuring the dataset contains the necessary properties to run correctly. This will also make future dataset changes easier to implement. This feature will make the file `UPGRADING.md` a matter of reference. There is also a check ran before anything else to ensure the dataset is upgraded, even if the only change made to the dataset structure is an increment in the version. Setup is still able to run if multiple datasets exist. This setup use-case is if you want to migrate guests from one pool to another pool that is not currently setup, limited but possible.
 
  - The `chyves:dataset_role` ZFS property within `$pool/chyves/.config` contains which role the dataset is used for. The valid values are `primary`, `secondary`, and possibly `offline` in the future. The primary pool will always host the ISO and Firmware resources. The primary pool will also own the `mountpoint` "`/chyves`". All pool that are active and not the primary are considered `secondary`.
+
+ - Using `chyves list .config` will display the current properties for all the pools and using `chyves list .config [pool]` will list the properties for a single pool.
 
 - Rewrote `chyves info` to use flags for verbosity. See `man chyves` for available flags or `chyves info -h`.
 
@@ -97,6 +102,10 @@ Internal development.
 
 - Added check to see if CPU has the necessary features to run `bhyve`. This includes `POPCNT` for AMD and Intel CPUs. Intel CPUs also require the unrestricted guest `UG` feature for allocating more than one virtual CPU to a guest and also `UG` is required for UEFI support. These restrictions are enforced by `chyves` so that error messages do not spew across the screen.
 
+- Boot priority can now be set for guests. Guests with the highest boot priority are booted first. This is set by assigning a positive integer to the "boot" property. Zero still indicates to not start the guest on host boot.
+
+- `chyves list` and `chyves info -s` now shows the boot priority of each guest and the bhyve PID if the guest is running.
+
 ##### Internal code changes:
 
 
@@ -137,6 +146,12 @@ Internal development.
 - Added variable `_FORBIDDEN_GUEST_NAMES` to prevent guests with these names from being created.
 
 - Added function `__check_if_freenas` to return nothing or "1" if on FreeNAS system.
+
+- Added function `__display_rcboot_priority` to display a human friendly "NO" or "YES (boot-priority-number)" when called.
+
+- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES (bhyve-PID)" when called using the `-h` flag. If no flag is used then a "1" is returned.
+
+- Added function `__check_vmm_alocated` to display a human friendly "NO" or "YES" when called using the `-h` flag. If no flag is used then a "1" is returned.
 
 ##### Developer enhancements:
 

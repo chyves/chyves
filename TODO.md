@@ -10,6 +10,38 @@ Add `__verify_console_unused` function
 - Get guest console
 - `ps -aux | grep $console`
 
+Fix `__setup` so that a pool that is already setup does not clobber itself.
+
+Create handling for configuring `.config`.
+
+Write `__reorder_consoles` function
+- Will reorder all the console numbers
+- All guests must be stopped
+- Settable offset to start at.
+- This will increase compatibility on systems using multiple bhyve management tools
+
+Implement `__check_bhyve_process_running` function.
+
+<strike>FreeNAS verification out of setup and into a function.</strike>
+- Will be used elsewhere to tell user to configure tunables
+- Write code to `grep` FreeNAS config file and see if the tunables are actually set. (This would be another function)
+
+Add check for `set` for properties in `.defaults` that way a property can not be set that does not get pulled in for guests.
+- Create variable with list of approved variables
+
+Checks for more than one dataset with `.default`, `ISO`, and `Firmware` dataset on system.
+- Use `wc -l`
+
+Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
+
+Restructured command layout to have less sub-commands.
+- `remove` for `remove` `rmiso` `rmfw` `rmpci`
+
+Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
+- Check if tmux is installed (use `__verify_binary_available`)
+- Check if guest is valid
+- Check is cu is opened for guest already (shared)
+
 Change networking handling
 - Use `chyves:bridge` property to guests
  - Handling so that multiple bridges can used
@@ -28,41 +60,10 @@ Change networking handling
 - Add `.default` property for bridge
 - Write handling for simple systems to guess the the defaults
 
-Create handling for configuring `.config`.
+#### Considerations:
 
-Write `__reorder_consoles` function
-- Will reorder all the console numbers
-- All guests must be stopped
-- Settable offset to start at.
-- This will increase compatibility on systems using multiple bhyve management tools
-
-Write `__check_guest_running` function
-- Insert where necessary.
-
-Write some function to simplify the YES|NO blocks in `__list` and `__info`
-
-Pull FreeNAS verification out of setup and into a function.
-- Will be used elsewhere to tell user to configure tunables
-- Likely just a true|false return
-- Maybe write code to `grep` config file and see if the tunables are actually set. (This would be another function)
-
-Add check for `set` for properties in `.defaults` that way a property can not be set that does not get pulled in for guests.
-- Create variable with list of approved variables
-
-Checks for more than one `.default`, `ISO`, and `Firmware` dataset on system.
-- Use `wc -l`
-
-Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
-
-Check and test to see if secondary pools store the `device.map` and `grub.cfg` files with the correct dataset. Is this even necessary? Even imported `iohyve` guests will copy from the wrong location to the right location.
-
-Restructured command layout to have less sub-commands.
-- `remove` for `remove` `rmiso` `rmfw` `rmpci`
-
-Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
-- Check if tmux is installed (use `__verify_binary_available`)
-- Check if guest is valid
-- Check is cu is opened for guest already (shared)
+Logs?
+- Dual console with one being logged on startup? Is that possible.
 
 Debug mode?
 - Print populated command used to execute grub-bhyve, bhyvectl, and bhyve.
