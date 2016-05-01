@@ -465,97 +465,128 @@ __verify_number_of_arguments() {
 # Process command line
 __parse_cmd () {
   case "$1" in
-    version)  __version
+    version)  __verify_number_of_arguments "1" "$#"
+              __version
               exit
     ;;
-    setup)    __setup "$@"
+    setup)    __verify_number_of_arguments "2" "$#" "4"       # Needs to be switched over to function index rather than script index
+              __setup "$@"
               exit
     ;;
-    list)     __list "$2" "$3"
+    list)     __verify_number_of_arguments "1" "$#" "3"
+              __list "$2" "$3"
               exit
     ;;
-    info)     __info "$2"
+    info)     __verify_number_of_arguments "1" "$#" "2"
+              __info "$2"
               exit
     ;;
-    firmware) __resource_functions "$1" "$2" "$3" "$4"
+    firmware) __verify_number_of_arguments "2" "$#" "5"
+              __resource_functions "firmware" "$2" "$3" "$4"
               exit
     ;;
-    iso)      __resource_functions "$1" "$2" "$3" "$4"
+    iso)      __verify_number_of_arguments "2" "$#" "5"
+              __resource_functions "iso" "$2" "$3" "$4"
               exit
     ;;
-    create)   __create "$@"
+    create)   __verify_number_of_arguments "2" "$#" "4"
+              __create "$2" "$3" "$4"
               exit
     ;;
-    install)  __install "$@"
+    install)  __verify_number_of_arguments "3" "$#" "3"
+              __install "$2" "$3"
               exit
     ;;
-    load)     __load "$2" "$3"
+    load)     __verify_number_of_arguments "3" "$#" "3"       # Soon to be deprecated as a user touchable function
+              __load "$2" "$3"
               exit
     ;;
-    boot)     __boot "$2" "$3" "$4"
+    boot)     __verify_number_of_arguments "4" "$#" "4"       # Soon to be deprecated as a user touchable function
+              __boot "$2" "$3" "$4"
               exit
     ;;
-    start)    __start "$@"
+    start)    __verify_number_of_arguments "2" "$#" "3"
+              __start "$2" "$3"
               exit
     ;;
-    uefi)     __uefi "$@"
+    uefi)     __verify_number_of_arguments "2" "$#" "3"
+              __uefi "$2" "$3"
               exit
     ;;
-    stop)     __stop "$@"
+    stop)     __verify_number_of_arguments "2" "$#" "2"
+              __stop "$2"
               exit
     ;;
-    forcekill) __forcekill "$@"
+    forcekill) __verify_number_of_arguments "2" "$#" "2"
+               __forcekill "$2"
+               exit
+    ;;
+    scram)    __verify_number_of_arguments "1" "$#" "1"
+              __scram
               exit
     ;;
-    scram)    __scram
+    destroy)  __verify_number_of_arguments "2" "$#" "2"
+              __destroy "$2"
               exit
     ;;
-    destroy)  __destroy "$@"
+    rename)   __verify_number_of_arguments "4" "$#" "4"
+              __resource_functions "guest" "rename" "$3" "$4"
               exit
     ;;
-    rename)   __resource_functions "guest" "$2" "$3" "$4"
+    delete)   __verify_number_of_arguments "3" "$#" "3"
+              __resource_functions "guest" "delete" "$3"
               exit
     ;;
-    delete)   __resource_functions "guest" "$2" "$3"
+    set)      __verify_number_of_arguments "3" "$#"           # Technically unlimited number of properties can be set.
+              __set "$@"
               exit
     ;;
-    set)      __set "$@"
+    get)      __verify_number_of_arguments "2" "$#" "3"
+              __get "$2" "$3"
               exit
     ;;
-    get)      __get "$2" "$3"
+    rmpci)    __verify_number_of_arguments "3" "$#" "4"       # Soon to be consolidated
+              __rmpci "$2" "$3" "$4"
               exit
     ;;
-    rmpci)    __rmpci "$@"
+    add)      __verify_number_of_arguments "3" "$#" "3"
+              __add "$2" "$3"
               exit
     ;;
-    add)      __add "$@"
+    remove)   __verify_number_of_arguments "3" "$#" "4"
+              __remove "$2" "$3" "$4"
               exit
     ;;
-    remove)   __remove "$@"
+    resize)   __verify_number_of_arguments "4" "$#" "4"
+              __resize "$2" "$3" "$4"
               exit
     ;;
-    resize)   __resize "$@"
+    disks)    __verify_number_of_arguments "2" "$#" "2"       # Can be consolidated to __list()
+              __disks "$2"
               exit
     ;;
-    disks)    __disks "$@"
+    snap)     __verify_number_of_arguments "2" "$#" "2"       # Needs a rework
+              __snapguest "$2"
               exit
     ;;
-    snap)     __snapguest "$@"
+    roll)     __verify_number_of_arguments "2" "$#" "2"       # Needs a rework
+              __rollguest "$2"
               exit
     ;;
-    roll)     __rollguest "$@"
+    clone)    __verify_number_of_arguments "3" "$#" "4"       # Needs a rework
+              __cloneguest "$2" "$3" "$4"
               exit
     ;;
-    clone)    __cloneguest "$@"
+    export)   __verify_number_of_arguments "2" "$#" "2"       # Going to be moved to chyves-utils
+              __exportguest "$2"
               exit
     ;;
-    export)   __exportguest "$@"
+    console)  __verify_number_of_arguments "2" "$#" "3"       # Tmux support soon
+              __console "$2" "$3"
               exit
     ;;
-    console)  __console "$@"
-              exit
-    ;;
-    conreset) __conreset
+    conreset) __verify_number_of_arguments "1" "$#" "1"       # Can be built to reset just one console
+              __conreset
               exit
     ;;
     help|-h)  __help
