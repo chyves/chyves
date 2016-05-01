@@ -1671,8 +1671,6 @@ __add() {
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
-	# optionally allow the pool for the new disk to be specified. If not set, its set to $pool
-	local newpool="${4-$pool}"
 	# Find the last disk number and increment one
 	local lastdisk="$(zfs list -H | grep chyves/guests/$name | grep disk | cut -d '/' -f4 | cut -f1 | \
 		sort -V | cut -c5- | tail -n1)"
@@ -1940,7 +1938,7 @@ chyves
   set <property1>=<value> {<name>|.defaults} [<property2>=<value>]...
   get {<property>|all} <name>
   rmpci [-f] [name] [pcidev:N]
-  add [name] [size] [[pool]]
+  add [name] [size]
   remove [-f] [name] [diskN]
   resize [name] [diskN] [size]
   disks [name]
