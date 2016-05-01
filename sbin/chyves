@@ -1194,8 +1194,7 @@ __install() {
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			local ram="$(zfs get -H -o value chyves:ram $dataset)"
 			local con="$(zfs get -H -o value chyves:con $dataset)"
 			local cpu="$( __get_liar_cpu_value $dataset )"
@@ -1439,8 +1438,7 @@ __start() {
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			case "$flag" in
 				-s)	runmode="0"	# single - start only once
 					;;
@@ -1498,8 +1496,7 @@ __uefi() {
 	# Check if guest exists
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			# The good stuff...
 			bhyve -c $cpu $bargs -m $ram \
 			        -s 0,hostbridge \
@@ -1725,8 +1722,7 @@ __resize(){
 	echo "Resizing $disk to $size"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			zfs set volsize=$size $pool/chyves/guests/$name/$disk
 		else
 			echo "Please stop the guest first"
@@ -1783,8 +1779,7 @@ __rollguest() {
 	echo "Rolling back to $fullsnap"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			zfs rollback -rR $pool/chyves/guests/$fullsnap
 			for disk in $disklist ; do
 				zfs rollback -rR $pool/chyves/guests/$name/$disk@$snap
@@ -1838,8 +1833,7 @@ __exportguest() {
 	echo "Exporting $name. Note this may take some time depending on the size."
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		local running=$(pgrep -fx "bhyve: chy-$name")
-		if [ -z $running ]; then
+		if [ -z "$( __check_bhyve_process_running )" ]; then
 			# Create /tmp/chyves/guests/$name
 			echo "Creating temp directory..."
 			mkdir -p /tmp/chyves/guests/$name
