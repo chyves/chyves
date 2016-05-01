@@ -457,6 +457,8 @@ __verify_number_of_arguments() {
 	[ -z "${_number_of_maximum_parameters}" ] && local _number_of_maximum_parameters=$_number_of_supplied_parameters
 
 	if [ "${_number_of_supplied_parameters}" -lt "${_number_of_minimum_parameters}" ] || [ "${_number_of_supplied_parameters}" -gt "${_number_of_maximum_parameters}" ]; then
+		__help
+		__fault_detected_exit "Incorrect number of arguments used. Please see above for correct syntax."
 	fi
 }
 
