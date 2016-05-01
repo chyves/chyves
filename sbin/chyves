@@ -1141,7 +1141,7 @@ __create() {
 	local size="$2"
 	local pool="$3"
 	__verify_valid_pool "$pool" -c
-	local description="$(date)"
+	local description=$( echo "Created on $(date | sed -e 's/ /_/g')" )
 	# Gets primary pool
 	local prim_pool="$( __get_primary_pool_name )"
 
@@ -1811,7 +1811,7 @@ __cloneguest() {
 	local flag="$1"
 	local name="$2"
 	local cname="$3"
-	local description="$(date | sed -e 's/ /_/g')"
+	local description=$( echo "Cloned on $(date | sed -e 's/ /_/g')" )
 	local pool="$(zfs list -H -t volume | grep "chyves/guests/$name/disk0" | cut -d '/' -f 1 | head -n1)"
 	# Check if guest exists
 	echo "Cloning $name to $cname"
