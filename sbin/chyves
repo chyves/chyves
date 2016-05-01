@@ -1770,14 +1770,10 @@ __disks() {
 __snapguest() {
 	local fullsnap="$1"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
 	echo "Taking snapshot $fullsnap"
-	# Check if guest exists
-	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		zfs snap -r $pool/chyves/guests/$fullsnap
-	else
-		echo "Not a valid guest name"
-	fi
+	zfs snap -r $pool/chyves/guests/$fullsnap
 }
 
 # Rollback guest
