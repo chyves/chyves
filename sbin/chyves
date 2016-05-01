@@ -1622,9 +1622,9 @@ __rmpci() {
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pciprop="$(echo "$flagthree" | grep pcidev:)"
-	local pool="$( __get_pool_for_guest "$name" )"
-	__verify_valid_guest "$flagtwo" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
+		local pool="$( __get_pool_for_guest "$name" )"
+		__verify_valid_guest "$flagtwo" "$pool"
+		local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
@@ -1633,9 +1633,9 @@ __rmpci() {
 		fi
 	else
 		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
-	local pool="$( __get_pool_for_guest "$flagone" )"
-	__verify_valid_guest "$flagone" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
+		local pool="$( __get_pool_for_guest "$flagone" )"
+		__verify_valid_guest "$flagone" "$pool"
+		local dataset="${pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
 			echo "Not a valid PCIDEV property"
