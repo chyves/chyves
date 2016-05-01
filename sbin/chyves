@@ -1185,8 +1185,8 @@ __create() {
 
 # Install guest
 __install() {
-	local name="$2"
-	local iso="$3"
+	local name="$1"
+	local iso="$2"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
@@ -1419,8 +1419,8 @@ __prepare_guest() {
 
 # Start guest (combine load and boot)
 __start() {
-	local name="$2"
-	local flag="$3"
+	local name="$1"
+	local flag="$2"
 	local pool=$( __get_pool_for_guest "$name" )
 	__verify_valid_pool "$pool"
 	__verify_valid_guest "$name" "$pool" -s
@@ -1464,8 +1464,8 @@ __start() {
 # Start a UEFI enabled bhyve instance.
 # This is experimental, use with caution.
 __uefi() {
-	local name="$2"
-	local media="$3"
+	local name="$1"
+	local media="$2"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
@@ -1521,7 +1521,7 @@ __uefi() {
 
 # Gracefully stop a guest
 __stop() {
-	local name="$2"
+	local name="$1"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local pid=$(pgrep -fx "bhyve: chy-$name")
@@ -1532,7 +1532,7 @@ __stop() {
 # Force kill -9 everyting matching $name and destroy
 # THIS WILL KILL EVERYTHING MATCHING $NAME
 __forcekill() {
-	local name="$2"
+	local name="$1"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 
@@ -1564,7 +1564,7 @@ __scram() {
 
 # Destroy guest
 __destroy() {
-	local name="$2"
+	local name="$1"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	echo "Destroying $name..."
@@ -1574,7 +1574,7 @@ __destroy() {
 
 # Set ZFS properties
 __set() {
-	local name="$2"
+	local name="$3"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
@@ -1616,9 +1616,9 @@ __get() {
 
 # Remove a PCIDEV property
 __rmpci() {
-	local flagone="$2"
-	local flagtwo="$3"
-	local flagthree="$4"
+	local flagone="$1"          # -f | name
+	local flagtwo="$2"          # name | pcidev:N
+	local flagthree="$3"        # pcidev:N | null
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pciprop="$(echo "$flagthree" | grep pcidev:)"
@@ -1653,8 +1653,8 @@ __rmpci() {
 
 # Add a new disk to guest
 __add() {
-	local name="$2"
-	local size="$3"
+	local name="$1"
+	local size="$2"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
@@ -1680,9 +1680,9 @@ __add() {
 
 # Remove disk from guest
 __remove() {
-	local flagone="$2"
-	local flagtwo="$3"
-	local flagthree="$4"
+	local flagone="$1"          # -f | name
+	local flagtwo="$2"          # name | diskN
+	local flagthree="$3"        # diskN | null
 	if [ $flagone = "-f" ]; then
 		echo "Removing $flagthree from $flagtwo"
 		local pool="$(zfs list -H -o name | grep $flagtwo | grep $flagthree | cut -d '/' -f 1)"
@@ -1715,9 +1715,9 @@ __remove() {
 
 # Resize a disk
 __resize(){
-	local name="$2"
-	local disk="$3"
-	local size="$4"
+	local name="$1"
+	local disk="$2"
+	local size="$3"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
@@ -1738,7 +1738,7 @@ __resize(){
 
 # List disks for a guest
 __disks() {
-	local name="$2"
+	local name="$1"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
@@ -1758,7 +1758,7 @@ __disks() {
 
 # Snapshot a guest
 __snapguest() {
-	local fullsnap="$2"
+	local fullsnap="$1"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
 	echo "Taking snapshot $fullsnap"
@@ -1772,7 +1772,7 @@ __snapguest() {
 
 # Rollback guest
 __rollguest() {
-	local fullsnap="$2"
+	local fullsnap="$1"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
@@ -1799,7 +1799,7 @@ __rollguest() {
 
 # Clone a guest
 __cloneguest() {
-	local flag="$2"
+	local flag="$1"
 	local name="$2"
 	local cname="$3"
 	local description="$(date | sed -e 's/ /_/g')"
@@ -1831,7 +1831,7 @@ __cloneguest() {
 
 # Export Guest
 __exportguest() {
-	local name="$2"
+	local name="$1"
 	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
 	local disklist="$(zfs list -H | grep "chyves/guests/$name/disk" | cut -f1 | cut -d '/' -f4-)"
 	# Check if guest exists
@@ -1868,7 +1868,8 @@ __exportguest() {
 
 # Run console
 __console() {
-	local name="$2"
+	local name="$1"
+	local _flag="$2"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
