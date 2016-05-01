@@ -1572,11 +1572,24 @@ __destroy() {
 # Set ZFS properties
 __set() {
 	local name="$3"
+	local _count=1 # Counter needed for setting multiple guests in one go.
+	[ -n "$( echo "$name" | grep '=' )" ] && local name="$2" && echo "The correct syntax is 'chyves set $3 $2', correcting syntax for temporary backwards compatibility."
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
-	shift 2
+	shift 1
 	for arg in "$@"; do
+
+		# Allows for setting multiple guests properties in one command.
+		# As soon as the third parameter the next guest could be specified.
+		# Eg: chyves set ram=1G guest1
+		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "2" ]; then
+			local name="$arg"
+		fi
+
+		# Need to skip guest name iteration
+		[ "${arg}" = "${name}" ] && continue
+
 		local prop="$(echo $arg | cut -d '=' -f1)"
 		local val="$(echo $arg | cut -d '=' -f2)"
 		if [ $prop = "bargs" ]; then
@@ -1591,6 +1604,9 @@ __set() {
 			echo "Setting $name $prop=$val..."
 			zfs set chyves:$prop=$val $dataset
 		fi
+
+		# Needed for multi-guest set support
+		local _count=$( expr $_count + 1 )
 	done
 }
 
