@@ -1752,18 +1752,12 @@ __disks() {
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	local dataset="${pool}/chyves/guests/${name}"
-	if [ -z $name ]; then
-		echo "You must enter a guest name."
-	elif [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		(
-		echo "Listing disks for $name..."
-		printf "diskN\tSize\n"
-		zfs list -H -o name,volsize | grep -E "chyves.*$name.*disk" | \
-			cut -d '/' -f4
-		) | column -t
-	else
-		echo "Not a valid guest name"
-	fi
+	(
+	echo "Listing disks for $name..."
+	printf "diskN\tSize\n"
+	zfs list -H -o name,volsize | grep -E "chyves.*$name.*disk" | \
+		cut -d '/' -f4
+	) | column -t
 }
 
 # Snapshot a guest
