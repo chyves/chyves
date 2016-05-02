@@ -4,7 +4,7 @@ chyves(8) - bhyve(8) front end manager version 0.0.0
 SYNOPSIS
 chyves version
 chyves setup pool=<pool> kmod=<0|1> net=<interface-name>
-chyves list [iso|firmwares|snapshots|.config|processes|<property-name>]
+chyves list [iso|firmwares|snapshots|.config|.defaults|processes|<property-name>]
 chyves list tap active
 chyves list .config [<pool>|primary]
 chyves list processes [<name>]
@@ -279,7 +279,7 @@ set         Sets ZFS properties for guests one at a time
             guests. Only ram, cpu, persist, boot, loader, os, and bargs
             properties are used as defaults for new guests.
 
-            Properties:
+            Guest Properties:
             ram=[nS]
               [n] is a number and [S] is the size in M megabytes or G gigabytes.
             ram=2G for 2 Gigabytes of RAM allocation.
@@ -320,30 +320,59 @@ set         Sets ZFS properties for guests one at a time
               Examples: "pcidev:1=passthru,2/0/0"
               "pcidev:2=ahci-hd,/some/place/disk.img"
             os=[name]
-              Supported values are openbsd59, openbsd58, openbsd57, netbsd,
-              debian, d8lvm, centos6, centos7, arch, gentoo and custom. Any
-              other values are handled by a catch-all and largely intended for
-              bhyveload guests.
-            boot=[0|1]
-              Tells chyves to start guests upon boot when "1" is set and
-              the rc.conf iohyve_enable="YES" directive is configured.
+              Supported values are freebsd, openbsd59, openbsd58, openbsd57,
+              netbsd, debian, d8lvm, centos6, centos7, arch, gentoo and custom.
+              Any other values are handled by a catch-all. There is no special
+              handling for "freebsd" guests except when the CPU lacks the UG
+              feature on Intel CPUs, then only guests with "freebsd" as the "os"
+              property are allowed to start due to bhyve limitations.
+            boot=[0|<positive-integer>]
+              Tells chyves to start guests upon host boot a positive integer is
+              assigned. The integer respresents the boot priority where the
+              highest numbered guest is started first. The iohyve_enable="YES"
+              directive must be configured in /etc/rc.conf for this to work.
             loader=[bhyveload|grub-bhyve|uefi]
               Tells which loader to used to boot guest. bhyveload is for
               FreeBSD based guests. grub-bhyve is used for all other guests.
-              description="<INSERT BRIEF DESCRIPTION>"
+            description="<INSERT BRIEF DESCRIPTION>"
               Used to describe guests. Use double quotes when using spaces.
             notes="<INSERT FURTHER NOTES>"
               Used to further describe guests. Use double quotes when using
               spaces.
             bargs=[]
-              Used to pass flags directly to bhyve. See bhyve(8) for complete
-              list of flags.
+              For use by advanced users to pass additional flags directly to
+              bhyve. See bhyve(8) for complete list of flag options. Not to be
+              changed unless directed. To see complete list of flags used by
+              chyves, turn dev_mode to "on" on the primary pool.
             persist=[0|1|2]
               Used to indicate how to handle when the bhyve process ends.
               [0] - Leave powered off when bhyve process closes
               [1] - Power off guest if shutdown state is detected, attempt to
-              reboot otherwise. This is the default.
+                    reboot otherwise. This is the default.
               [2] - Always attempt to reboot.
+
+            Dataset Properties:
+            pool_version=
+            dataset_role=[primary|secondary|offline]
+              Important purpose in multi-pool configurations, each role type
+              has different characteristics as explained below:
+              primary - Used to store the ISO and Firmware resources for guests.
+                        The primary reference point for dev_mode property. New
+                        guest also default to this pool unless specified as a
+                        parameter for chyves create. Only one ZFS pool can be in
+                        the primary role.
+              secondary - Used for all other active guests not stored on the
+                        primary ZFS pool.
+              offline - Guests hosted on pools in this roll can not be started
+                        and are not shown unless specified for list or info.
+            dev_mode=[off|on]
+              Setting to "on" for the primary pool activates the following
+              features:
+                Displays the full bhyve command used to start a guest.
+              Allows for functions to be called from the command line via
+              chyves dev [function|command] "arg1" "arg2" "arg3" .... "arg8"
+              the parameters are function indexed and only eight parameters are
+              possible due to the way Bourne addresses param[10].
 
 get         Gets ZFS properties for guests
             Usage: 'chyves get [prop] [name]' where [name] is the name of the
