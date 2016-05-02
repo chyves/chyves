@@ -798,6 +798,10 @@ __list() {
 			) | column -t
 		fi
 
+		# List properties set in .defaults
+	elif [ "${output_type}" = ".defaults" ]; then
+			__get all .defaults
+
 	# List processes
 	elif [ "${output_type}" = "processes" ]; then
 		local _guest_name=$_arg2
@@ -1643,10 +1647,10 @@ __get() {
 	local dataset="${pool}/chyves/guests/${name}"
 
 	if [ "$prop" = "all" ]; then
-		echo "Getting all $name chyves properties..."
+		echo "Getting all $name's chyves properties..."
 		zfs get -o property,value all $dataset | grep chyves: | sort | sed -e 's/chyves://g'
 	else
-		echo "Getting $name property \"$prop\"..."
+		echo "Getting $name's property \"$prop\"..."
 		zfs get -H -o value chyves:$prop $dataset
 	fi
 }
@@ -1923,7 +1927,7 @@ cat << 'EOT'
 chyves
   version
   setup pool=<pool> kmod=<0|1> net=<interface-name>
-  list [iso|firmwares|snapshots|.config|processes|<property-name>]
+  list [iso|firmwares|snapshots|.config|.defaults|processes|<property-name>]
   list tap active
   list .config [<pool>|primary]
   list processes [<name>]
