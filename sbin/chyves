@@ -1436,34 +1436,33 @@ __start() {
 	local pci=""
 	local runmode="1"
 	local loader="$(zfs get -H -o value chyves:loader $dataset)"
-	# Check if loader is UEFI
-	if [ $loader = "uefi" ]; then
+	local _os="$(zfs get -H -o value chyves:os $dataset)"
+
+	# Check for special handling.
+	if [ "${_CPU_MISSING_UG}" ] && [ "${_os}" != "freebsd" ]; then
+	 __get_cpu_section_from_dmesg
+	 __fault_detected_exit "Missing CPU feature UG, can only start guests with os=freebsd."
+	elif [ $loader = "uefi" ]; then
 		__uefi "$name" "null.iso"
 		exit
 	elif [ $loader = "grub-bhyve" ]; then
 		__verify_binary_available "grub-bhyve"
 	fi
-	# Check if guest exists
-	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
-			case "$flag" in
-				-s)	runmode="0"	# single - start only once
-					;;
-				-a) 	runmode="2"	# always - persist regardless what
-					;;
-				*)	runmode="1"	# persist - persists until guest is powering off
-					;;
-			esac
-			echo "Starting $name... (Takes 15 seconds for FreeBSD guests)"
-			# Prepare and boot guest
-			pci="$(__prepare_guest $name)"
-			__boot "$name" "$runmode" "$pci"
-		else
-			echo "Guest is already running."
-		fi
-	else
-		echo "Not a valid guest name"
+
+	# Check to make sure guest isn't running
+	if [ -z "$( __check_bhyve_process_running )" ]; then
+		case "$flag" in
+			-s)  runmode="0"    # single - start only once
+			;;
+			-a)  runmode="2"    # always - persist regardless what
+			;;
+			*)   runmode="1"    # persist - persists until guest is powering off
+			;;
+		esac
+		echo "Starting $name... (Takes 15 seconds for FreeBSD guests)"
+		# Prepare and boot guest
+		pci="$(__prepare_guest $name)"
+		__boot "$name" "$runmode" "$pci"
 	fi
 }
 
