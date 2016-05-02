@@ -34,6 +34,7 @@ _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:da
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 _FORBIDDEN_GUEST_NAMES=".defaults|reorder"
+##### More global variables set in __preflight_check #####
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # This function gets ran before any other.
@@ -96,6 +97,8 @@ __preflight_check() {
 		__fault_detected_exit "Your CPU lacks the basic feature to run bhyve. For AMD CPUs this means RVI. For Intel CPUs this means EPT."
 	fi
 
+	# Variables that need functions loaded:
+	_PRIMARY_POOL=$( __get_primary_pool_name )
 }
 
 # Function used to exit with a message.
@@ -383,7 +386,7 @@ __multi_chyves_zfs_property() {
 	[ -n "${_guest}" ] && local _guest="/$_guest"
 
 	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
-	[ "${_pool}" = "primary" ] && local _pool=$( __get_primary_pool_name )
+	[ "${_pool}" = "primary" ] && local _pool=$_PRIMARY_POOL
 
 	if [ "${_action}" = "set" ]; then
 		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
@@ -755,7 +758,7 @@ __list() {
 
 	# List ISO firmware resources.
 	elif [ "${output_type}" = "iso" ]; then
-		local pool=$( __get_primary_pool_name )
+		local pool=$_PRIMARY_POOL
 		echo "Listing ISOs..."
 		zfs list -H -r $pool/chyves/ISO | cut -f 1 | cut -d '/' -f 4 | sed 1d
 
@@ -774,7 +777,7 @@ __list() {
 		local _pool=$arg2
 
 		echo "Listing properties set in .config"
-		[ "$_arg2" = "primary" ] && _pool="$( __get_primary_pool_name )"
+		[ "$_arg2" = "primary" ] && _pool=$_PRIMARY_POOL
 
 		if [ -n "${_pool}" ]; then
 			(
@@ -1004,7 +1007,7 @@ __resource_functions() {
 	local _subfunction="$2"
 	local _arg3="$3"			# URL|File-Path\File-Name|Firmware-Name
 	local _arg4="$4"			# Rename-Name
-	local _prim_pool="$( __get_primary_pool_name )"
+	local _prim_pool=$_PRIMARY_POOL
 
 	# Sets the variable to use to for the resource
 	if [ "$_function" = "firmware" ]; then
@@ -1143,7 +1146,7 @@ __create() {
 	__verify_valid_pool "$pool" -c
 	local description=$( echo "Created on $(date | sed -e 's/ /_/g')" )
 	# Gets primary pool
-	local prim_pool="$( __get_primary_pool_name )"
+	local prim_pool=$_PRIMARY_POOL
 
 	# Get default values as set by .defaults on primary pool
 	local def_size="$(zfs get -H -o value chyves:size $prim_pool/chyves/guests/.defaults)"
