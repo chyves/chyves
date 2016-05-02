@@ -320,21 +320,21 @@ __get_guests_list() {
 		local _zfs_command='zfs list -d 4 -r -H -t filesystem,volume -o name'
 
 		if [ -n "$(echo "$_flags" | grep 'f')" ]; then
-			local _what_type_of_cutter='cut -f1'
+			local _PIPE_what_type_of_cutter='cut -f1'
 		else
-			local _what_type_of_cutter='cut -d/ -f4-'
+			local _PIPE_what_type_of_cutter='cut -d/ -f4-'
 		fi
 	else
 		local _zfs_command='zfs list -d 3 -r -H -t filesystem -o name'
-		local _what_type_of_cutter='cut -d/ -f4'
+		local _PIPE_what_type_of_cutter='cut -d/ -f4'
 	fi
 
 	[ -n "${_pool}" ] && local _pool="$_pool/chyves/guests"
 
 	if [ -n "$(echo "$_flags" | grep 'a')" ]; then
-		$_zfs_command $_pool | grep chyves/guests | grep -v .defaults | $_what_type_of_cutter | sed '/^$/d'
+		$_zfs_command $_pool | grep chyves/guests | grep -v .defaults | $_PIPE_what_type_of_cutter | sed '/^$/d'
 	else
-		$_zfs_command $_pool | grep -E -v "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | $_what_type_of_cutter | sed '/^$/d'
+		$_zfs_command $_pool | grep -E -v "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | grep chyves/guests | grep -v .defaults | $_PIPE_what_type_of_cutter | sed '/^$/d'
 	fi
 }
 
