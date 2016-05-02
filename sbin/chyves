@@ -502,14 +502,6 @@ __parse_cmd () {
               __install "$2" "$3"
               exit
     ;;
-    load)     __verify_number_of_arguments "3" "$#" "3"       # Soon to be deprecated as a user touchable function
-              __load "$2" "$3"
-              exit
-    ;;
-    boot)     __verify_number_of_arguments "4" "$#" "4"       # Soon to be deprecated as a user touchable function
-              __boot "$2" "$3" "$4"
-              exit
-    ;;
     start)    __verify_number_of_arguments "2" "$#" "3"
               __start "$2" "$3"
               exit
@@ -1944,8 +1936,6 @@ chyves
   firmware delete <name>
   create <name> [size] [pool]
   install <name> <iso-file>
-  load [name] [path/to/bootdisk]
-  boot [name] [runmode] [pcidevices]
   start <name> [-s | -a]
   stop <name>
   forcekill <name>
