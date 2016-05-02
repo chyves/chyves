@@ -59,7 +59,6 @@ Internal development.
  - This is dynamically determined so if a user manually sets a properties with `zfs` using a `chyves:` prefix this will display that property.
  - This can be helpful in installations where custom properties are set when more information is necessary.
 
-
 - Deprecated the distinction of using `fetch` and `cp` for ISO and Firmware resources.
   - Both are handled by the same function of `fetch`.
   - A regular expression is used to determine if the source starts with `http` or `ftp` and uses `fetch` to download the file. Otherwise `cp` is used.
@@ -106,6 +105,21 @@ Internal development.
 
 - `chyves list` and `chyves info -s` now shows the boot priority of each guest and the bhyve PID if the guest is running.
 
+- Changed syntax for `chyves set`, the correct syntax is now `chyves set property1=value guest-name`
+  - The ability to set multiple properties is still available and the syntax is: `chyves set property1=value guest-name property2=value property3=value property4=value`
+
+- Added the ability for multi-set guest support. This allows you set properties for multiple guests in one go.
+  - For example: `chyves set cpu=2 debian ram=4G windows cpu=4 ram=12G fw=BHYVE_UEFI_20151002.fd loader=uefi centos os=centos7`
+    - For guest: `debian` the CPU is set to "2" and RAM to "4G"
+    - For guest: `windows` the CPU is set to "4", RAM to "12G", firmware to "BHYVE_UEFI_20151002.fd", and loader to `UEFI`.
+    - For guest: `centos` the OS is set to "centos7"
+
+- Removed the ability to create create second+ disks on a different pool. This functionality was never implemented and is dangerous to leave. See [commit  85274ad](https://github.com/chyves/chyves/commit/85274adddd94d1280a658920101278720391ecdc) for removed code.
+
+- Changed default description to “Created on `date`” for created guests and “Cloned on `date`” for cloned guests.
+
+- Added `chyves list .defaults` to display guest defaults for newly created guests.
+
 ##### Internal code changes:
 
 
@@ -139,7 +153,7 @@ Internal development.
    - The variable `_CPU_MISSING_UG` is set to "1" when the running on an Intel CPU that lacks the unrestricted guest `UG` feature is unavailable.
 	 - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
 
-- Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU function is missing.
+- Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU feature is missing on Intel CPUs.
 
 - Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
 
@@ -149,9 +163,19 @@ Internal development.
 
 - Added function `__display_rcboot_priority` to display a human friendly "NO" or "YES (boot-priority-number)" when called.
 
-- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES (bhyve-PID)" when called using the `-h` flag. If no flag is used then a "1" is returned.
+- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES (bhyve-PID)" when called using the `-h` flag. If no flag is used then the bhyve PID is returned.
 
 - Added function `__check_vmm_alocated` to display a human friendly "NO" or "YES" when called using the `-h` flag. If no flag is used then a "1" is returned.
+
+- Added function `__verify_number_of_arguments` to check the number of parameters and exits if not met or if exceeded.
+
+- Changed parameters to be function indexed rather than script indexed.
+  - This limits the number of addressable parameters to nine due to the Bourne shell, which does not matter.
+  - `chyves set` is the one exception, it is still script indexed.
+
+- Added variable `_PRIMARY_POOL` to global variables instead of polling `__get_primary_pool_name` more than once.
+
+- Deprecated commands `chyves boot` and `chyves load` from users. These functions can still be called from developer mode.
 
 ##### Developer enhancements:
 
@@ -162,3 +186,10 @@ Internal development.
 - Standardized whitespace
  - Using spaces for code examples in Markdown documents and the `man` page.
  - Using tabs is now the standard for scripts, this makes it easier to edit from a command line text editor. This is to prevent the internal conversation: "Is it two or three spaces after an `if` statement?". The answer is it is a tab every time.
+
+- Added "DEVELOPER MODE" changing the value of property "dev_mode" to "on" actives these features:
+  - Display the full `bhyve` command used to start the guests just before executing the same command. This is done in `__boot`, `__start_` and `__uefi`.
+  - Allow functions and commands to be called straight from the command line with `chyves dev`. Examples of how this would be used:
+    - `chyves dev __version` executes the `__version()` function.
+    - `chyves dev __list tap active`
+    - `chyves dev "echo $That_tricksy_hobbit_variable"`
