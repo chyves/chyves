@@ -2,7 +2,7 @@
 
 Internal development.
 
-`chyves` is the puralized, big endian alphabetic increment of `bhyve` but it most manages bhyve guests using ZFS, `nmdm`, `virtio`, `cu` and optionally `tmux` and `grub-bhyve`.
+`chyves` is the pluralized, big endian alphabetic increment of `bhyve` but it most manages bhyve guests using ZFS, `nmdm`, `virtio`, `cu` and optionally `tmux` and `grub-bhyve`.
 
 ##### Changes made to fork from `iohyve`:
 
@@ -10,19 +10,19 @@ Internal development.
 
 - Changed command from `iohyve` to `chyves`.
 
-- Changes other internal references from `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
+- Changed other internal references from `iohyve` to `chyves`. For example, the VMM names now reference `chy-$guest`.
 
 ##### General enhancement and bug fixes:
 
 - Fixed various typos and expanded man page.
  - Added more explanation to the `chyves set` section for what each property influences.
 
-- Updated `chyves help` for the new changes.
- - Added a nomenclature section to indicate what is required and what is optional.
+- Updated `chyves help`.
+ - Added a nomenclature syntax map.
 
 
-- Created new document structure and folders.
- - The root directory of the project contains documents about the project and also the Makefile for installing from source
+- Created new folder structure and project documents.
+ - The root directory of the project contains documents about the project and also the Makefile for installing from source.
  - The installed files are now in their respective places `sbin/`, `rc.d/`, and `man/`.
 
 
@@ -114,9 +114,9 @@ Internal development.
     - For guest: `windows` the CPU is set to "4", RAM to "12G", firmware to "BHYVE_UEFI_20151002.fd", and loader to `UEFI`.
     - For guest: `centos` the OS is set to "centos7"
 
-- Removed the ability to create create second+ disks on a different pool. This functionality was never implemented and is dangerous to leave. See [commit  85274ad](https://github.com/chyves/chyves/commit/85274adddd94d1280a658920101278720391ecdc) for removed code.
+- Removed the ability to create additional guest disks on a different pool. This functionality was never implemented, impractical, is dangerous to leave. See [commit  85274ad](https://github.com/chyves/chyves/commit/85274adddd94d1280a658920101278720391ecdc) for removed code.
 
-- Changed default description to “Created on `date`” for created guests and “Cloned on `date`” for cloned guests.
+- Changed default description to “Created on ```date``” for created guests and “Cloned on ```date``” for cloned guests.
 
 - Added `chyves list .defaults` to display guest defaults for newly created guests.
 
@@ -146,14 +146,14 @@ Internal development.
 
 - Added function `__verify_binary_available` to check if an executable is available on the system.
 
-- Added function `__multi_chyves_zfs_property` to `get`|`set` `chyves:`` ZFS property. Works with `.config`, `.defaults`, and guests.
+- Added function `__multi_chyves_zfs_property` to get or set `chyves:` ZFS properties. Works with `.config`, `.defaults`, and guests.
 
 - Added function `__preflight_check` to run before any other code is to make sure the environment is safe for flight.
  - Added CPU feature check in this section.
    - The variable `_CPU_MISSING_UG` is set to "1" when the running on an Intel CPU that lacks the unrestricted guest `UG` feature is unavailable.
-	 - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
-
-- Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU feature is missing on Intel CPUs.
+   - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
+   - Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU feature is missing on Intel CPUs.
+   - `chyves` will only start guests with the `os` set as `freebsd` as further restriction when the CPU lacks `UG`.
 
 - Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
 
@@ -186,6 +186,7 @@ Internal development.
 - Standardized whitespace
  - Using spaces for code examples in Markdown documents and the `man` page.
  - Using tabs is now the standard for scripts, this makes it easier to edit from a command line text editor. This is to prevent the internal conversation: "Is it two or three spaces after an `if` statement?". The answer is it is a tab every time.
+
 
 - Added "DEVELOPER MODE" changing the value of property "dev_mode" to "on" actives these features:
   - Display the full `bhyve` command used to start the guests just before executing the same command. This is done in `__boot`, `__start_` and `__uefi`.
