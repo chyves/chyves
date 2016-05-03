@@ -1,5 +1,7 @@
 # chyves v0.0.0:
 
+<img src="https://github.com/chyves/chyves-media/raw/master/chyves-logo-v1-medium.png" alt="chyves logo version 1" width="449" height="439" align="right">
+
 bhyve front end manager using ZFS to store guest data and parameters.
 
 `chyves` enters the market of bhyve front end manager tools. It follows the lead set by `iocage` of using ZFS properties to store guest parameters and is a direct descendent of `iohyve`.
