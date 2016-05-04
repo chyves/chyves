@@ -27,7 +27,7 @@ chyves_start()
 	echo "Starting chyves guests..."
 	/usr/local/sbin/chyves setup ${chyves_flags}
 	sleep 8 # Sleeping for network to come up.
-	guestlist="$( zfs get -H -t filesystem -o name,value chyves:boot | grep chyves/guests/ | sort -k2nr -k1 | awk '{ if ($2 > 0) print $1; }' )"
+	guestlist="$( zfs get -H -t filesystem -o name,value chyves:rcboot | grep chyves/guests/ | sort -k2nr -k1 | awk '{ if ($2 > 0) print $1; }' )"
 	for i in $guestlist ; do
 		/usr/local/sbin/chyves start $i
 		sleep 3

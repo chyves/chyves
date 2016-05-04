@@ -443,7 +443,7 @@ __check_bhyve_process_running() {
 __display_rcboot_priority() {
 	local _pool=$1
 	local _guest=$2
-	local _rcboot_property="$( __multi_chyves_zfs_property "get" "boot" "$_pool" "guests" "$_guest" )"
+	local _rcboot_property="$( __multi_chyves_zfs_property "get" "rcboot" "$_pool" "guests" "$_guest" )"
 
 	if [ "$_rcboot_property" -gt '0' ]; then
 		echo "YES ($_rcboot_property)"
@@ -632,7 +632,7 @@ __setup() {
 					zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
 					zfs set chyves:ram=256M $pool/chyves/guests/.defaults
 					zfs set chyves:persist=1 $pool/chyves/guests/.defaults
-					zfs set chyves:boot=0 $pool/chyves/guests/.defaults
+					zfs set chyves:rcboot=0 $pool/chyves/guests/.defaults
 					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
 					zfs set chyves:os=default $pool/chyves/guests/.defaults
 					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
@@ -851,8 +851,8 @@ does:
  Flags to controls which fields are displayed:
   -r    [role] Display what role the dataset is set to.
   -v    [verbose] Display OS, loader, tap, and console port.
-  -s    [status] Display VMM status, if bhyve instance running, and if the rc
-        boot is set.
+  -s    [status] Display VMM status, if bhyve instance running, and if the
+        rcboot is set.
   -t    [template] Displays if guest is a template.
   -d    [description] Dispays description property.
 	-n    [notes] Dispays notes property.
@@ -1156,7 +1156,7 @@ __create() {
 	local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/guests/.defaults)"
 	local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/guests/.defaults)"
 	local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/guests/.defaults)"
-	local def_boot="$(zfs get -H -o value chyves:boot $prim_pool/chyves/guests/.defaults)"
+	local def_rcboot="$(zfs get -H -o value chyves:rcboot $prim_pool/chyves/guests/.defaults)"
 	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
@@ -1181,7 +1181,7 @@ __create() {
 	zfs set chyves:tap=tap$tap $pool/chyves/guests/$name
 	zfs set chyves:con=nmdm$con $pool/chyves/guests/$name
 	zfs set chyves:persist=$def_persist $pool/chyves/guests/$name
-	zfs set chyves:boot=$def_boot $pool/chyves/guests/$name
+	zfs set chyves:rcboot=$def_rcboot $pool/chyves/guests/$name
 	zfs set chyves:loader=$def_loader $pool/chyves/guests/$name
 	zfs set chyves:os=$def_os $pool/chyves/guests/$name
 	zfs set chyves:description="$description" $pool/chyves/guests/$name
