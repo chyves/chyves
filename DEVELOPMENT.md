@@ -9,7 +9,7 @@ Spaces are used in documents where whitespace is important to how the document i
 
 Tabs are used in scripts where counting the number of spaces becomes tedious. The internal conversation should _never_ be "Is it two or three spaces after an `if` statement?". It is a tab, every time.
 
- @EpiJunkie recommends if you are not a `vi`/`vim`/`emacs` veteran to check out GitHub's [Atom](https://atom.io/) editor with the `atom-sync` package configured. The combination of the two, make developing from a comfortable desktop environment easy and the `atom-sync` package will sync the files to the development box each time a file is updated on either end. The Atom editor also visually displays tabs (referred to as 'hard tab') as double spaces (referred to as 'soft tabs') for an easier read while still following the prescribed whitespace nomenclature.
+ [@EpiJunkie](https://github.com/EpiJunkie) recommends if you are not a `vi`/`vim`/`emacs` veteran to check out GitHub's [Atom](https://atom.io/) editor and configure the `atom-sync` package configured. He suggests the combination of the two make developing from a comfortable desktop environment easy and the `atom-sync` package will sync the files to the development box each time a file is updated on either end. The Atom editor also visually displays tabs (referred to as 'hard tab') as double spaces (referred to as 'soft tabs') for an easier read while still following the prescribed whitespace nomenclature.
 
 #### Unusual code
 This section covers code that is commonly used with an explanation of what it does.
@@ -28,7 +28,7 @@ fi
 ````
 
 #### Commonly used pipe sections
-To lift a term from [pipecut](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwi1x62r7r3MAhXFm4MKHfgxD64QtwIIHTAA&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DZfMIA9dNdfc&usg=AFQjCNG3vwDqZHav12H4HdJfcA2PxqH34A&sig2=EestGn0PuNWkYvfkboiOFg), below are commonly used "pipe sections" to manipulate text for a desire output.
+To lift a term from [pipecut](https://code.google.com/archive/p/pipecut/), below are commonly used "pipe sections" to manipulate text for a desire output.
 
 
 #### Script indexed vs. function indexed
