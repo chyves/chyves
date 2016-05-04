@@ -28,7 +28,7 @@ root@bhost:/home/user/chyves-master # make install
 ````
 
 ### Dependencies
-`bhyve` and `chyves` will run on a base installation, however kernel modules are required that are not loaded by default. There are also certain applications that enchance their capabilities. `chyves` checks for these components and exits if not detected.
+`bhyve` and `chyves` will run on a base installation, however kernel modules are required that are not loaded by default. There are also certain applications that enhance their capabilities. `chyves` checks for these components and exits if not detected.
 
 Kernel Modules
 - `vmm` (Required to run the guests as this allocates the resources)
