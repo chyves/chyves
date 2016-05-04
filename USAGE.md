@@ -77,58 +77,7 @@ chyves_flags="kmod=1 net=em0"
 If you want more control over your setup, feel free to read the [handbook](https://www.freebsd.org/doc/en/books/handbook/virtualization-host-bhyve.html).
 
 
-**Usage**
-
-```
-chyves  
-
-version
-setup pool=[poolname] kmod=[0|1] net=[interface]
-list
-info [-d]
-isolist
-fwlist
-fetchiso [URL]
-cpiso [path]
-renameiso [ISO] [newname]
-rmiso [ISO]
-fetchfw [URL]
-cpfw [path]
-renamefw [firmware] [newname]
-rmfw [firmware]
-create [name] [size]
-install [name] [ISO]
-load [name] [path/to/bootdisk]
-boot [name] [runmode] [pcidevices]
-start [name] [-s | -a]
-stop [name]
-forcekill [name]
-scram
-destroy [name]
-rename [name] [newname]
-delete [-f] [name]
-set [name] [prop1=value] [prop2=value]...
-get [name] [prop]
-rmpci [-f] [name] [pcidev:N]
-getall [name]
-add [name] [size]
-remove [-f] [name] [diskN]
-resize [name] [diskN] [size]
-disks [name]
-snap [name]@[snapshotname]
-roll [name]@[snapshotname]
-clone [name] [clonename]
-export [name]
-snaplist
-taplist
-activetaps
-conlist
-console [name]
-conreset
-help
-```
-
-**General Usage**
+**Usage Examples**
 
 List all guests created with:
 
