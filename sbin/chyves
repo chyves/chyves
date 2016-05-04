@@ -34,6 +34,7 @@ _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:da
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 _FORBIDDEN_GUEST_NAMES=".defaults|reorder"
+
 ##### More global variables set in __preflight_check #####
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
@@ -99,7 +100,7 @@ __preflight_check() {
 
 	# Variables that need functions loaded:
 	_PRIMARY_POOL=$( __get_primary_pool_name )
-	_DEVELOPER_MODE="$(zfs get -H -o value chyves:dev_mode $_prim_pool/chyves/.config )"
+	_DEVELOPER_MODE="$(zfs get -H -o value chyves:dev_mode $_PRIMARY_POOL/chyves/.config )"
 
 }
 
@@ -130,7 +131,7 @@ __verify_valid_pool() {
 	# $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
 	# -p      [primary] Validates the supplied pool has the primary role set
 	# -c      [chyves] Validates the supplied pool is setup for chyves
-	# -e      [escape] Escape from a normal fatal exit. Good for __setup().
+	# -e      [escape] Escape from a normal fatal exit. Good for __setup.
 
 	if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
 		# When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
@@ -636,6 +637,7 @@ __setup() {
 					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
 					zfs set chyves:os=freebsd $pool/chyves/guests/.defaults
 					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
+
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
 					zfs set chyves:dev_mode=off $pool/chyves/.config
