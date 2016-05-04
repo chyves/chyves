@@ -36,20 +36,19 @@ The Bourne shell indexes parameters at both the script level and at the function
 
 In the Bourne shell, each parameter is described as an incrementing number starting with the `script-name` being `[1]` in script level indexing. See the example below:
 ````
-chyves@bhost:~ # script-name "parameter 1" "parameter 2" "parameter 3" "parameter 4" ... "parameter 15"
-$0 = script-name "parameter 1" "parameter 2" "parameter 3" "parameter 4" ... "parameter 15"                       # $0 is another special variable
-$1 = script-name
-$2 = "parameter 1"
-$3 = "parameter 2"
+chyves@bhost:~ # script-name "parameter one" "parameter 2" "parameter 3" "parameter 4" ... "parameter 15"
+$0 = script-name
+$1 = "parameter one"
+$2 = "parameter 2"
 ...
-$9 = "parameter 8"
-$10 = "script-name0"
+$9 = "parameter 9"
+$10 = "parameter one0"
 ````
-Unfortunately `$10` is not referable this is due to the way that Bourne parse the variable. Bourne actually expands the variable to "script-name0" rather than "parameter 9".
+Unfortunately `$10` is not referable this is due to the way that Bourne parse the variable. Bourne actually expands the variable to "parameter0" rather than "parameter 10".
 
 The question then becomes: "How do we use more than nine parameters?" We can use the `shift` command to shift the parameters by a certain number of parameters. For example:
 ````
-chyves@bhost:~ # script-name "parameter 1" "parameter 2" "parameter 3" "parameter 4" ... "parameter 15"
+chyves@bhost:~ # script-name "parameter one" "parameter 2" "parameter 3" "parameter 4" ... "parameter 15"
 #!/bin/sh
 
 echo $1       # displays "script-name"
@@ -72,9 +71,11 @@ __function_name() {
 __function_name "parameter 1" "parameter 2" "parameter 3" ... "parameter 9"
 
 ````
-The reason why `chyves` prefers function indexed rather than script indexed is a matter of personal preference. In the lead developer's opinion, it makes debugging easier. All but two sub-functions use less than five parameters so it makes sense specify each parameter and restrict unwieldy situations. The two exceptions are the `chyves set` and `chyves create` subfunctions which have the script indexed positional parameter passed via "$@" to the function it can access all the parameters with the help of `shift`. In practice this mean that `chyves set` and `chyves create` are able to set an unlimited number of properties for guest(s).
+The reason why `chyves` project prefers function indexed rather than script indexed is a matter of personal preference. In the lead developer's opinion, it makes debugging easier. All but two sub-functions use less than five parameters so it makes sense specify each parameter and restrict unwieldy situations. The two exceptions are the `chyves set` and `chyves create` subfunctions which have the script indexed positional parameter passed via "$@" to access all the parameters with the help of `shift`. In practice this mean that `chyves set` and `chyves create` are able to set an unlimited number of properties for guest(s).
 
 #### Recommended reading:
+[FreeBSD man sh](https://www.freebsd.org/cgi/man.cgi?query=sh&sektion=&n=1)
+
 [Sh - the Bourne Shell -- Grymoire.com](http://www.grymoire.com/Unix/Sh.html)
 
 [Semantic Versioning 2.0.0 -- Semver.org](http://semver.org/)
