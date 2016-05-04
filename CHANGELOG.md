@@ -2,7 +2,7 @@
 
 Internal development.
 
-`chyves` is the pluralized, big endian alphabetic increment of `bhyve` but it most manages bhyve guests using ZFS, `nmdm`, `virtio`, `cu` and optionally `tmux` and `grub-bhyve`.
+`chyves` is the pluralized, big endian alphabetic increment of `bhyve`, it manages bhyve guests using ZFS, `nmdm`, `virtio`, `cu` and optionally `tmux` and `grub-bhyve` through the Bourne shell.
 
 ##### Changes made to fork from `iohyve`:
 
@@ -15,7 +15,7 @@ Internal development.
 ##### General enhancement and bug fixes:
 
 - Fixed various typos and expanded man page.
- - Added more explanation to the `chyves set` section for what each property influences.
+ - Created and expanded properties section. Bulk of section was moved from `set` section.
 
 - Updated `chyves help`.
  - Added a nomenclature syntax map.
@@ -116,7 +116,7 @@ Internal development.
 
 - Removed the ability to create additional guest disks on a different pool. This functionality was never implemented, impractical, is dangerous to leave. See [commit  85274ad](https://github.com/chyves/chyves/commit/85274adddd94d1280a658920101278720391ecdc) for removed code.
 
-- Changed default description to “Created on ```date``” for created guests and “Cloned on ```date``” for cloned guests.
+- Changed default description to `"Created on ``date``"` for created guests and `"Cloned on ``date``"` for cloned guests.
 
 - Added `chyves list .defaults` to display guest defaults for newly created guests.
 
@@ -178,6 +178,8 @@ Internal development.
 - Deprecated commands `chyves boot` and `chyves load` from users. These functions can still be called from developer mode.
 
 ##### Developer enhancements:
+
+- Created the DEVELOPMENT.md document to give code examples, guidance, terminology, and general best practice when submitting PRs. This is to maintain a certain
 
 - Added `make buildman` directive to `Makefile` in order to build man page file: `chyves.8`.
 
