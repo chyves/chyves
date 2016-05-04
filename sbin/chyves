@@ -291,7 +291,7 @@ __get_property_list() {
 __get_next_console() {
 	local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
 	if [ -z $conlast ]; then
-		echo "0"
+		zfs get -H  -t filesystem -o value chyves:console_start_offset $_PRIMARY_POOL/chyves/.config
 	else
 		echo "$(expr $conlast + 1)"
 	fi
@@ -301,7 +301,7 @@ __get_next_console() {
 __get_next_tap() {
 	local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
 	if [ -z $taplast ]; then
-		echo "0"
+		zfs get -H  -t filesystem -o value chyves:tap_start_offset $_PRIMARY_POOL/chyves/.config
 	else
 		echo "$(expr $taplast + 1)"
 	fi
@@ -639,6 +639,7 @@ __setup() {
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
 					zfs set chyves:dev_mode=off $pool/chyves/.config
+					zfs set chyves:console_start_offset=50 $pool/chyves/.config
 				fi
 
 				# If on FreeNAS do a couple of needed changes.
