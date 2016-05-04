@@ -634,7 +634,7 @@ __setup() {
 					zfs set chyves:persist=1 $pool/chyves/guests/.defaults
 					zfs set chyves:rcboot=0 $pool/chyves/guests/.defaults
 					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
-					zfs set chyves:os=default $pool/chyves/guests/.defaults
+					zfs set chyves:os=freebsd $pool/chyves/guests/.defaults
 					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
