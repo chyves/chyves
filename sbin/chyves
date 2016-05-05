@@ -660,6 +660,12 @@ __setup() {
 					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
 					zfs set chyves:os=freebsd $pool/chyves/guests/.defaults
 					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
+					zfs set chyves:disk_volmode=dev $pool/chyves/guests/.defaults
+					zfs set chyves:disk_volblocksize=512 $pool/chyves/guests/.defaults
+					zfs set chyves:disk_dedup=inherit $pool/chyves/guests/.defaults
+					zfs set chyves:disk_compression=inherit $pool/chyves/guests/.defaults
+					zfs set chyves:disk_primarycache=inherit $pool/chyves/guests/.defaults
+					zfs set chyves:disk_secondarycache=inherit $pool/chyves/guests/.defaults
 
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
