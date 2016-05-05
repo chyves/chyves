@@ -131,11 +131,14 @@ Global Configuration Properties:
               backup. Guests on these pools can not be started and are hidden
               from most subcommands. To display only these guests use:
               'chyves info -i'
-  dev_mode={off|on}
+  dev_mode={off|on|-xvn}
     Setting to "on" for the primary pool activates the following developer
     features:
     Displays the full bhyve command used to start a guest.
-    Allows for functions to be called direct from the command line.
+    Allows for functions to be called direct from the command line using "chyves
+    dev". Using the -xvn flags instead of the word "on" will use Bourne's "set"
+    command to turn on special option flags during "chyves dev" execution. These
+    flags can be used individually (-x|-v|-n) or combined (-xv). See sh(1).
   pool_version={pool-version}
     This is not a user settable property. This property indicates the
     the current version of the chyves pool. A check is ran before
