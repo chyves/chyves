@@ -640,7 +640,7 @@ __setup() {
 			local val="$(echo $arg | cut -d '=' -f2)"
 			if [ "${prop}" = "pool" ]; then
 				local pool="$val"
-				__verify_valid_pool -ce "$val"
+				__verify_valid_pool "$val" -ce
 				echo "Setting up chyves pool..."
 				zfs create $pool/chyves
 				zfs create $pool/chyves/guests
