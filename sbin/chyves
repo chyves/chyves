@@ -133,23 +133,27 @@ __verify_valid_pool() {
 	# -c      [chyves] Validates the supplied pool is setup for chyves
 	# -e      [escape] Escape from a normal fatal exit. Good for __setup.
 
-	if [ -n "$(zfs list -H $_name_to_check | grep -v "dataset does not exist" )" ]; then
+	# Check to see if pool exists
+	zfs list -H $_name_to_check > /dev/null 2>&1
+	if [ $? ]; then
 		# When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
 
 		# Check to see if the pool is in the primary dataset_role
-		if [ -n "$(echo $_flags | grep 'p')" ] && [ "$(zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
-			if [ -n "$(echo $_flags | grep 'e')" ]; then
-			else
-				__fault_detected_exit "${_name_to_check} is not a primary pool."
+		if [ -n "$(echo $_flags | grep 'p')" ]; then
+			if [ "$( zfs get -H -o value chyves:dataset_role $_name_to_check/chyves/.config )" != "primary" ]; then
+				if [ -n "$(echo $_flags | grep 'e')" ]; then
+				else
+					__fault_detected_exit "${_name_to_check} is not a primary pool."
+				fi
 			fi
-		fi
-
 		# Check to see if the pool has been setup for chyves
-		if [ -n "$(echo $_flags | grep 'c')" ] && [ -z "$(zfs list -H $_name_to_check/chyves | grep -v "dataset does not exist" )" ]; then
+		zfs list -H $_name_to_check/chyves > /dev/null 2>&1
+		elif [ $? ] && [ -n "$(echo $_flags | grep 'c')" ]; then
 			if [ -n "$(echo $_flags | grep 'e')" ]; then
-			else
-				__fault_detected_exit "${_name_to_check} has not been setup with chyves."
+				__fault_detected_exit "${_name_to_check} has been setup with chyves."
 			fi
+		else
+			__fault_detected_exit "${_name_to_check} has not been setup with chyves."
 		fi
 	else
 		if [ -n "$(echo $_flags | grep 'e')" ]; then
