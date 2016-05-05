@@ -373,6 +373,29 @@ __create_device_map() {
 	printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
 }
 
+# Creates string used to create ZFS volume for disks
+__create_zvol_disk_options_string() {
+
+	# Get values from .defaults
+	local def_disk_volmode="$(zfs get -H -o value chyves:disk_volmode $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_disk_volblocksize="$(zfs get -H -o value chyves:disk_volblocksize $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_disk_dedup="$(zfs get -H -o value chyves:disk_dedup $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_disk_compression="$(zfs get -H -o value chyves:disk_compression $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_disk_primarycache="$(zfs get -H -o value chyves:disk_primarycache $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_disk_secondarycache="$(zfs get -H -o value chyves:disk_secondarycache $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local _disk_options
+
+	# Compile a variable string to be used in the ZFS volume creation
+	[ "${def_disk_volmode}" != "inherit" ] && local _disk_options="-o volmode=$def_disk_volmode"
+	[ "${def_disk_volblocksize}" != "inherit" ] && local _disk_options="$_disk_options -o volblocksize=$def_disk_volblocksize"
+	[ "${def_disk_dedup}" != "inherit" ] && local _disk_options="$_disk_options -o dedup=$def_disk_dedup"
+	[ "${def_disk_compression}" != "inherit" ] && local _disk_options="$_disk_options -o compression=$def_disk_compression"
+	[ "${def_disk_primarycache}" != "inherit" ] && local _disk_options="$_disk_options -o primarycache=$def_disk_primarycache"
+	[ "${def_disk_secondarycache}" != "inherit" ] && local _disk_options="$_disk_options -o secondarycache=$def_disk_secondarycache"
+
+	echo "$_disk_options"
+}
+
 #  get|set chyves: properties
 __multi_chyves_zfs_property() {
 	local _action=$1        # get|set
