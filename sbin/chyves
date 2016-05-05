@@ -114,7 +114,7 @@ __fault_detected_exit() {
 
 # See whether given command is readonly
 # and therefore doesn't need root credentials
-__readonly_cmd () {
+__readonly_cmd() {
     case "$1" in
         help|-h|get|getall|info|list|version) echo "0"
             ;;
