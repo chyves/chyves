@@ -240,6 +240,21 @@ __verify_binary_available() {
 	fi
 }
 
+# Verifies the number of parameters and exits if met or exceeded
+__verify_number_of_arguments() {
+	local _number_of_minimum_parameters=$1        # Minimum number of parameters
+	local _number_of_supplied_parameters=$2       # As counted by "$#"
+	local _number_of_maximum_parameters=$3        # (Optional) Maximum number of parameters
+
+	# While $3 is optional, it does need a value if not set.
+	[ -z "${_number_of_maximum_parameters}" ] && local _number_of_maximum_parameters=$_number_of_supplied_parameters
+
+	if [ "${_number_of_supplied_parameters}" -lt "${_number_of_minimum_parameters}" ] || [ "${_number_of_supplied_parameters}" -gt "${_number_of_maximum_parameters}" ]; then
+		__help
+		__fault_detected_exit "Incorrect number of arguments used. Please see above for correct syntax."
+	fi
+}
+
 # Checks to see if on FreeNAS
 # The web UI references this file to display the version
 __check_if_freenas() {
@@ -473,21 +488,6 @@ __display_rcboot_priority() {
 		echo "YES ($_rcboot_property)"
 	else
 		echo "NO"
-	fi
-}
-
-# Verifies the number of parameters and exits if met or exceeded
-__verify_number_of_arguments() {
-	local _number_of_minimum_parameters=$1        # Minimum number of parameters
-	local _number_of_supplied_parameters=$2       # As counted by "$#"
-	local _number_of_maximum_parameters=$3        # (Optional) Maximum number of parameters
-
-	# While $3 is optional, it does need a value if not set.
-	[ -z "${_number_of_maximum_parameters}" ] && local _number_of_maximum_parameters=$_number_of_supplied_parameters
-
-	if [ "${_number_of_supplied_parameters}" -lt "${_number_of_minimum_parameters}" ] || [ "${_number_of_supplied_parameters}" -gt "${_number_of_maximum_parameters}" ]; then
-		__help
-		__fault_detected_exit "Incorrect number of arguments used. Please see above for correct syntax."
 	fi
 }
 
