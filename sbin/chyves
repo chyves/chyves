@@ -1151,20 +1151,18 @@ __create() {
 	local pool="$3"
 	__verify_valid_pool "$pool" -c
 	local description=$( echo "Created on $(date | sed -e 's/ /_/g')" )
-	# Gets primary pool
-	local prim_pool=$_PRIMARY_POOL
 
 	# Get default values as set by .defaults on primary pool
-	local def_size="$(zfs get -H -o value chyves:size $prim_pool/chyves/guests/.defaults)"
-	local def_cpu="$(zfs get -H -o value chyves:cpu $prim_pool/chyves/guests/.defaults)"
-	local def_ram="$(zfs get -H -o value chyves:ram $prim_pool/chyves/guests/.defaults)"
-	local def_persist="$(zfs get -H -o value chyves:persist $prim_pool/chyves/guests/.defaults)"
-	local def_rcboot="$(zfs get -H -o value chyves:rcboot $prim_pool/chyves/guests/.defaults)"
-	local def_loader="$(zfs get -H -o value chyves:loader $prim_pool/chyves/guests/.defaults)"
-	local def_os="$(zfs get -H -o value chyves:os $prim_pool/chyves/guests/.defaults)"
-	local def_bargs="$(zfs get -H -o value chyves:bargs $prim_pool/chyves/guests/.defaults)"
 	local tap="$( __get_next_tap )"
 	local con="$( __get_next_console )"
+	local def_size="$(zfs get -H -o value chyves:size $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_cpu="$(zfs get -H -o value chyves:cpu $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_ram="$(zfs get -H -o value chyves:ram $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_persist="$(zfs get -H -o value chyves:persist $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_rcboot="$(zfs get -H -o value chyves:rcboot $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_loader="$(zfs get -H -o value chyves:loader $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_os="$(zfs get -H -o value chyves:os $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local def_bargs="$(zfs get -H -o value chyves:bargs $_PRIMARY_POOL/chyves/guests/.defaults)"
 
 	# If size not declared in command line, use .default's
 	if [ -z $size ]; then
@@ -1173,7 +1171,7 @@ __create() {
 
 	# If [pool] not set use primary pool
 	if [ -z "${pool}" ]; then
-		local pool="${prim_pool}"
+		local pool="${_PRIMARY_POOL}"
 	fi
 
 	echo "Creating $name..."
