@@ -1153,8 +1153,6 @@ __create() {
 	local description=$( echo "Created on $(date | sed -e 's/ /_/g')" )
 
 	# Get default values as set by .defaults on primary pool
-	local tap="$( __get_next_tap )"
-	local con="$( __get_next_console )"
 	local def_size="$(zfs get -H -o value chyves:size $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_cpu="$(zfs get -H -o value chyves:cpu $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_ram="$(zfs get -H -o value chyves:ram $_PRIMARY_POOL/chyves/guests/.defaults)"
@@ -1163,6 +1161,8 @@ __create() {
 	local def_loader="$(zfs get -H -o value chyves:loader $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local _next_tap="$( __get_next_tap )"
+	local _next_con="$( __get_next_console )"
 
 	# If size not declared in command line, use .default's
 	if [ -z $size ]; then
@@ -1179,8 +1179,8 @@ __create() {
 	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
 	zfs set chyves:ram=$def_ram $pool/chyves/guests/$name
 	zfs set chyves:cpu=$def_cpu $pool/chyves/guests/$name
-	zfs set chyves:tap=tap$tap $pool/chyves/guests/$name
-	zfs set chyves:con=nmdm$con $pool/chyves/guests/$name
+	zfs set chyves:tap=tap$_next_tap $pool/chyves/guests/$name
+	zfs set chyves:con=nmdm$_next_con $pool/chyves/guests/$name
 	zfs set chyves:persist=$def_persist $pool/chyves/guests/$name
 	zfs set chyves:rcboot=$def_rcboot $pool/chyves/guests/$name
 	zfs set chyves:loader=$def_loader $pool/chyves/guests/$name
