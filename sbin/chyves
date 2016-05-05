@@ -1184,6 +1184,7 @@ __create() {
 	local def_loader="$(zfs get -H -o value chyves:loader $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_os="$(zfs get -H -o value chyves:os $_PRIMARY_POOL/chyves/guests/.defaults)"
 	local def_bargs="$(zfs get -H -o value chyves:bargs $_PRIMARY_POOL/chyves/guests/.defaults)"
+	local _disk_options="$( __create_zvol_disk_options_string )"
 	local _next_tap="$( __get_next_tap )"
 	local _next_con="$( __get_next_console )"
 
@@ -1199,7 +1200,7 @@ __create() {
 
 	echo "Creating $name..."
 	zfs create $pool/chyves/guests/$name
-	zfs create -V $size -o volmode=dev $pool/chyves/guests/$name/disk0
+	zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
 	zfs set chyves:ram=$def_ram $pool/chyves/guests/$name
 	zfs set chyves:cpu=$def_cpu $pool/chyves/guests/$name
 	zfs set chyves:tap=tap$_next_tap $pool/chyves/guests/$name
