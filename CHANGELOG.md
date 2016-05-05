@@ -190,9 +190,10 @@ Internal development.
  - Using tabs is now the standard for scripts, this makes it easier to edit from a command line text editor. This is to prevent the internal conversation: "Is it two or three spaces after an `if` statement?". The answer is it is a tab every time.
 
 
-- Added "DEVELOPER MODE" changing the value of property "dev_mode" to "on" actives these features:
+- Added "DEVELOPER MODE" changing the value of property "dev_mode" from "off" to either [on|-xvn] actives these features:
   - Display the full `bhyve` command used to start the guests just before executing the same command. This is done in `__boot`, `__start_` and `__uefi`.
   - Allow functions and commands to be called straight from the command line with `chyves dev`. Examples of how this would be used:
     - `chyves dev __version` executes the `__version()` function.
     - `chyves dev __list tap active`
     - `chyves dev "echo $That_tricksy_hobbit_variable"`
+  - Using the [`-xvn`] flag(s) instead of the word "on" use the Bourne shell special operation flags. The `-x` shows each ling before it executes. The `-v` flag shows each line as it executes. The `-n` flag reads and populates the variables but does not execute the commands.

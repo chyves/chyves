@@ -613,8 +613,10 @@ __parse_cmd () {
     help|-h)  __help
               exit
     ;;
-    dev)      [ "$_DEVELOPER_MODE" != "on" ] && __fault_detected_exit "Developer mode not on, if desired turn on by running 'chyves set .config primary dev_mode=on'"
+    dev)      # [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode not on, if desired turn on by running 'chyves set .config primary dev_mode=on'"
+              [ "$_DEVELOPER_MODE" != "on" ] && set "$_DEVELOPER_MODE"
               $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
+              [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
               exit
     ;;
   esac
@@ -1247,7 +1249,7 @@ __install() {
 			# Prepare and start guest
 			pci="$(__prepare_guest $name) ahci-cd,/chyves/ISO/$iso/$iso"
 			local pci_args=$(__get_bhyve_cmd "$pci" )
-			[ "$_DEVELOPER_MODE" = "on" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
+			[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
 			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
 		else
 			echo "Guest is already running."
@@ -1396,7 +1398,7 @@ __boot() {
 		while [ $runstate = "1" ]
 		do
 			__load "$name" "/dev/zvol/$dataset/disk0"
-			[ "$_DEVELOPER_MODE" = "on" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
+			[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
 			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
 			local vmpid=$!
 			wait $vmpid
@@ -1536,7 +1538,7 @@ __uefi() {
 		# Check to make sure guest isn't running
 		if [ -z "$( __check_bhyve_process_running )" ]; then
 			# The good stuff...
-			if [ "$_DEVELOPER_MODE" = "on" ]; then
+			if [ "$_DEVELOPER_MODE" != "off" ]; then
 			echo "bhyve -c $cpu $bargs -m $ram "
 			echo "        -s 0,hostbridge "
 			echo "        -s 3,ahci-cd,/chyves/ISO/$media/$media "
