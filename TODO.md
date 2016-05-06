@@ -6,11 +6,13 @@ Add ability to use commas with guest names for things like `chyves create`, `chy
 - This does make `__verify_valid_guest` a little complicated
 
 Create a variable section of commonly used `grep` pipes to increase readability. Prefix `_GREP_action`.
+- Do not think this is going to work. Preliminary tests did not work.
 
 Add `conreset` for individual guests in addition to all.
 - Poll assigned guest con name
 
 Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
+- Change to global variables with `_guest_$var` variables.
 
 Modify the check for which dataset version is in use.
 - This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
@@ -21,9 +23,6 @@ Add `__verify_console_unused` function
 - Get guest name
 - Get guest console
 - `ps -aux | grep $console`
-
-Fix `__setup` so that a pool that is already setup does not clobber itself.
-- `__verify_valid_pool` can be modified with a flag to not exit
 
 Create handling for configuring `.config`.
 - <strike>`chyves list .config` and `chyves list .config`</strike>
@@ -38,12 +37,6 @@ Write `__reorder_consoles` function
 <strike>FreeNAS verification out of setup and into a function.</strike>
 - Will be used elsewhere to tell user to configure tunables
 - Write code to `grep` FreeNAS config file and see if the tunables are actually set. (This would be another function)
-
-Add check for `set` for properties in `.defaults` that way a property can not be set that does not get pulled in for guests.
-- Create variable with list of approved variables
-
-Checks for more than one dataset with `.default`, `ISO`, and `Firmware` dataset on system.
-- Use `wc -l`
 
 Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
 
