@@ -177,7 +177,7 @@ __verify_valid_guest() {
 	# -s      [start] Exits if guest is a template or on an offline pool
 
 	# Check to see if pool has chyves setup on it.
-	__verify_valid_pool $_pool -c
+	__verify_valid_pool "$_pool" "-c"
 
 	# Check to see if guest name used more than once
 	if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
@@ -309,8 +309,8 @@ __get_primary_pool_name() {
 #  Get all chyves properties that are set on the system
 __get_property_list() {
 	local _flags="$1"
-	# $null   Get a list of properties
-	# -a      [all] Get a list of all properties including .defaults
+	# $null   Get a list of guest properties
+	# -a      [all] Get a list of all guest properties including .defaults
 	# -d      [defaults] Get a list of .defaults only properties
 
 	if [ "${_flags}" = "-a" ]; then
@@ -442,7 +442,7 @@ __multi_chyves_zfs_property() {
 	# Null out value when "-" used
 	[ "${_guest}" = "-" ] && local _guest=""
 
-	# If the guest value is populated, prepend a "/" - This is for .config compatibility
+	# If the guest variable is populated, prepend a "/" - This is for .config compatibility
 	[ -n "${_guest}" ] && local _guest="/$_guest"
 
 	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
@@ -1673,7 +1673,7 @@ __set() {
 			local name="$arg"
 		fi
 
-		# Need to skip guest name iteration
+		# Need to skip when a guest name is detected
 		[ "${arg}" = "${name}" ] && continue
 
 		local prop="$(echo $arg | cut -d '=' -f1)"
