@@ -740,6 +740,7 @@ __setup() {
 					echo "Setting up .config properties on primary pool..."
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
 					zfs set chyves:dev_mode=off $pool/chyves/.config
+					zfs set chyves:restrict_new_property_names=on $pool/chyves/.config
 					zfs set chyves:console_start_offset=50 $pool/chyves/.config
 					zfs set chyves:tap_start_offset=50 $pool/chyves/.config
 					zfs set chyves:accept_non_standard_vlan_name=off $pool/chyves/.config
