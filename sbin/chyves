@@ -722,6 +722,8 @@ __setup() {
 					zfs create $pool/chyves/guests/.defaults
 					zfs set chyves:size=8G $pool/chyves/guests/.defaults
 					zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
+					zfs set chyves:bridge=bridge0 $pool/chyves/guests/.defaults
+					zfs set chyves:network_type=bridge $pool/chyves/guests/.defaults
 					zfs set chyves:ram=256M $pool/chyves/guests/.defaults
 					zfs set chyves:persist=1 $pool/chyves/guests/.defaults
 					zfs set chyves:rcboot=0 $pool/chyves/guests/.defaults
@@ -739,6 +741,8 @@ __setup() {
 					zfs set chyves:dataset_role=primary $pool/chyves/.config
 					zfs set chyves:dev_mode=off $pool/chyves/.config
 					zfs set chyves:console_start_offset=50 $pool/chyves/.config
+					zfs set chyves:tap_start_offset=50 $pool/chyves/.config
+					zfs set chyves:accept_non_standard_vlan_name=off $pool/chyves/.config
 				fi
 
 				# If on FreeNAS do a couple of needed changes.
@@ -786,6 +790,8 @@ __setup() {
 					sysctl net.link.tap.up_on_open=1
 					ifconfig bridge0 create descr "chyves-bridge"
 					ifconfig bridge0 addm $val
+					local _prim_pool=$( __get_primary_pool_name )
+					zfs set chyves:bridge0_phy_attach $_prim_pool/chyves/guests/.defaults
 					ifconfig bridge0 up
 				else
 					echo "bridge0 is already enabled on this machine..."
