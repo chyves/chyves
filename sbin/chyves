@@ -830,7 +830,10 @@ __list() {
 
 		# List properties set in .defaults
 	elif [ "${output_type}" = ".defaults" ]; then
-			__get all .defaults
+			(
+				echo -e "Properties:\tdefaults:"
+				zfs get -H -r -t filesystem -o name,property,value all | grep chyves/guests/.defaults | grep chyves: | sed -e 's/chyves://g' | cut -f2-
+			) | sort -k1  | column -t
 
 	# List processes
 	elif [ "${output_type}" = "processes" ]; then
