@@ -101,6 +101,7 @@ __preflight_check() {
 	# Variables that need functions loaded:
 	_PRIMARY_POOL=$( __get_primary_pool_name )
 	_DEVELOPER_MODE="$(zfs get -H -o value chyves:dev_mode $_PRIMARY_POOL/chyves/.config )"
+	_RESTRICT_NEW_PROPERTY_NAMES="$(zfs get -H -o value chyves:restrict_new_property_names $_PRIMARY_POOL/chyves/.config )"
 
 }
 
