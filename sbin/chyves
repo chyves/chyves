@@ -1696,6 +1696,7 @@ __set() {
 	[ -n "$( echo "$name" | grep '=' )" ] && local name="$2" && echo "The correct syntax is 'chyves set $3 $2', correcting syntax for temporary backwards compatibility."
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
+	echo "Setting properties for guest: $name"
 	shift 1
 	for arg in "$@"; do
 
@@ -1706,6 +1707,7 @@ __set() {
 			local name="$arg"
 			local pool="$( __get_pool_for_guest "$name" )"
 			__verify_valid_guest "$name" "$pool"
+			echo "Switching to setting properties for guest: $name"
 		fi
 
 		# Need to skip when a guest name is detected
@@ -1719,6 +1721,7 @@ __set() {
 		[ $prop = "bargs" ] && local val="$(echo $val | cut -d '"' -f2 | sed -e 's/ /_/g')"
 
 		# Use function to set ZFS property
+		echo "Setting property \"$prop\" with a value of \"$val\""
 		__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
 
 		# Needed for multi-guest set support
