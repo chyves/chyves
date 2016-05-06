@@ -304,7 +304,18 @@ __get_primary_pool_name() {
 
 #  Get all chyves properties that are set on the system
 __get_property_list() {
-	echo "$( zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq )"
+	local _flags="$1"
+	# $null   Get a list of properties
+	# -a      [all] Get a list of all properties including .defaults
+	# -d      [defaults] Get a list of .defaults only properties
+
+	if [ "${_flags}" = "-a" ]; then
+		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+	elif [ "${_flags}" = "-d" ]; then
+		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep .defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+	else
+		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep -v .defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+	fi
 }
 
 # Return the value of the next console to use
