@@ -829,12 +829,12 @@ __list() {
 
 		if [ -n "${_pool}" ]; then
 			(
-			echo -e "Property\t Value"
+			echo -e "Property:\t Value:"
 			zfs get -r -t filesystem -o property,value all $_pool/chyves/.config | grep chyves: | sed -e 's/chyves://g'
 			) | column -t
 		else
 			(
-			echo -e "Dataset\t Property\t Value"
+			echo -e "Dataset:\t Property:\t Value:"
 			zfs get -r -t filesystem -o name,property,value all | grep chyves/.config | grep chyves: | sed -e 's/chyves://g' | sed -e 's/\/chyves\/\.config//g'
 			) | column -t
 		fi
