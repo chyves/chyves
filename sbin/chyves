@@ -312,11 +312,14 @@ __get_property_list() {
 	# $null   Get a list of guest properties
 	# -a      [all] Get a list of all guest properties including .defaults
 	# -d      [defaults] Get a list of .defaults only properties
+	# -c      [config] Get a list of .config only properties
 
 	if [ "${_flags}" = "-a" ]; then
 		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
 	elif [ "${_flags}" = "-d" ]; then
 		zfs get -r -H -t filesystem -o name,property all $_PRIMARY_POOL/chyves/guests/.defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+	elif [ "${_flags}" = "-c" ]; then
+		zfs get -r -H -t filesystem -o name,property all $_PRIMARY_POOL/chyves/.config | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
 	else
 		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep -v .defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
 	fi
