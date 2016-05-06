@@ -148,13 +148,16 @@ __verify_valid_pool() {
 			fi
 
 		# Check to see if the pool has been setup for chyves
-		zfs list -H $_name_to_check/chyves > /dev/null 2>&1
-		elif [ $? ] && [ -n "$(echo $_flags | grep 'c')" ]; then
-			if [ -n "$(echo $_flags | grep 'e')" ]; then
-				__fault_detected_exit "${_name_to_check} has been setup with chyves."
+		elif [ -n "$(echo $_flags | grep 'c')" ]; then
+
+			zfs list -H ${_name_to_check}/chyves > /dev/null 2>&1
+			if [ $? ]; then  # Can not use && due to way Bourne evals $?
+				if [ -n "$(echo $_flags | grep 'e')" ]; then
+					__fault_detected_exit "${_name_to_check} has been setup with chyves."
+				fi
+			else
+				__fault_detected_exit "${_name_to_check} has not been setup with chyves."
 			fi
-		else
-			__fault_detected_exit "${_name_to_check} has not been setup with chyves."
 		fi
 	else
 		if [ -n "$(echo $_flags | grep 'e')" ]; then
