@@ -451,12 +451,43 @@ __multi_chyves_zfs_property() {
 	# Set _pool to the primary pool name when "primary" is used in the _pool name variable.
 	[ "${_pool}" = "primary" ] && local _pool=$_PRIMARY_POOL
 
-	if [ "${_action}" = "set" ]; then
-		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
-	elif [ "${_action}" = "get" ]; then
+	# Which action? get / set
+	if [ "${_action}" = "get" ]; then
 		zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
-	else
-		__fault_detected_exit "Unrecoginized action: '$_action'"
+	elif [ "${_action}" = "set" ]; then
+
+		# If new property restrition is on, see if a new property name is being supplied.
+		if [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "${_action}" = "set" ]; then
+
+			local _valid_properties=$( __get_property_list )
+			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep). Creation of new properties turned off with 'restrict_new_property_names' in .config"
+			fi
+		fi
+
+		# Do not ever allow for setting new .defaults properties, to prevent confusion
+		if [ "$_guest" = ".defaults" ]; then
+
+			local _valid_properties=$( __get_property_list -d )
+			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .defaults not possible."
+			fi
+		fi
+
+		# Do not ever allow for setting new .config properties, to prevent confusion
+		if [ "$_resource" = ".config" ]; then
+
+			local _valid_properties=$( __get_property_list -c )
+			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .config not possible."
+			fi
+		fi
+
+		# Made it this far, set the value for the property.
+		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
 	fi
 }
 
