@@ -1993,16 +1993,15 @@ chyves
   roll <name>[@<snapshotname>]
   clone [-c | -r] <name> <clonename>
   export <name>
-  console <name> -t
+  console <name> [-t]
   conreset
   help
 
 Syntax nomenclature:
- subcommand       - Text without brackets are assumed to be required, "list" in
-                    this case.
+ subcommand       - Text without brackets are assumed to be required.
  [optional]       - An optional field
  [optional|list]  - An optional list, valid if not used
- {require|list}   - A require list where one option much be used
+ {require|list}   - A require list where one option must be used
  <user-input>     - User supplied input field. Required when not contain in [ ]
  [-abcdefg]       - An optional field but must start with a "-" and followed by
                     any combination, in any order. Eg. "-gca" is valid.

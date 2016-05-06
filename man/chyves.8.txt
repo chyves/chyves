@@ -48,9 +48,8 @@ chyves help
 SYNTAX NOMENCLATURE:
 The following syntax nomenclature is used to signify when parameter is require
 or optional and also to indicate.
- list             - Text without brackets are assumed to be required, "list" in
-                    this case. These are typically sub commands.
- {require|list}   - A require list where one option much be used. '|' separate
+ list             - Text without brackets are required.
+ {require|list}   - A require list where one option must be used. '|' separate
                     options.
  [optional]       - An optional field
  [optional|list]  - An optional list, valid if not used. '|' separate options
