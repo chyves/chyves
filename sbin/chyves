@@ -135,7 +135,7 @@ __verify_valid_pool() {
 
 	# Check to see if pool exists
 	zfs list -H $_name_to_check > /dev/null 2>&1
-	if [ $? ]; then
+	if [ $? ]; then  # Can not use && due to way Bourne evals $?
 		# When a bad pool name is used the ZFS error message: "cannot open 'zroot': dataset does not exist" is displayed. However it is not "seen" by the evaluating if statement.
 
 		# Check to see if the pool is in the primary dataset_role
@@ -146,6 +146,7 @@ __verify_valid_pool() {
 					__fault_detected_exit "${_name_to_check} is not a primary pool."
 				fi
 			fi
+
 		# Check to see if the pool has been setup for chyves
 		zfs list -H $_name_to_check/chyves > /dev/null 2>&1
 		elif [ $? ] && [ -n "$(echo $_flags | grep 'c')" ]; then
