@@ -458,7 +458,14 @@ __multi_chyves_zfs_property() {
 
 	# Which action? get / set
 	if [ "${_action}" = "get" ]; then
-		zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
+
+		# If CPU feature "UG" is missing limit to one CPU
+		if [ "$_property" = "cpu" ] && [ "${_CPU_MISSING_UG}" ]; then
+			echo "1"
+		else
+			zfs get -H -o value chyves:$_property $_pool/chyves/${_resource}${_guest}
+		fi
+
 	elif [ "${_action}" = "set" ]; then
 
 		# If new property restrition is on, see if a new property name is being supplied.
