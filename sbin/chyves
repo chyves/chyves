@@ -1576,10 +1576,10 @@ __start() {
 	 __get_cpu_section_from_dmesg
 	 __fault_detected_exit "Missing CPU feature UG, can only start guests with os=freebsd."
 	elif [ $loader = "uefi" ]; then
-		__uefi "$name" "null.iso"
 		exit
 	elif [ $loader = "grub-bhyve" ]; then
 		__verify_binary_available "grub-bhyve"
+		__uefi "$name"
 	fi
 
 	# Check to make sure guest isn't running
@@ -1603,7 +1603,7 @@ __start() {
 # This is experimental, use with caution.
 __uefi() {
 	local name="$1"
-	local media="$2"
+	local media="${2-null.iso}"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
