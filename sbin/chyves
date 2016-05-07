@@ -1497,7 +1497,7 @@ __boot() {
 	# Set install prop
 	__multi_chyves_zfs_property "set" "install" "$pool" "guests" "$name" "no"
 	# Generate list of bhyve -s commands for all devices
-	local pci_args=$(__get_bhyve_cmd "$pci" )
+	local pci_args=$( __get_bhyve_cmd "$pci" )
 	# Handle the starting of the guest inside a spawned subshell so the guest
 	# can be restarted automatically if the guest reboots or crashes
 	local runstate="1"
@@ -1599,7 +1599,7 @@ __start() {
 			*)   runmode="1"    # persist - persists until guest is powering off
 			;;
 		esac
-		echo "Starting $name... (Takes 15 seconds for FreeBSD guests)"
+		echo "Starting $name..."
 		# Prepare and boot guest
 		pci="$(__prepare_guest $name)"
 		__boot "$name" "$runmode" "$pci"
