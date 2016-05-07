@@ -498,6 +498,9 @@ __multi_chyves_zfs_property() {
 			fi
 		fi
 
+		# Do not exceed bhyve CPU capability
+		[ "$_property" = "cpu" ] && [ "$_value" -gt "16" ] && local _value="16" && echo "bhyve has a 16 CPU core limit. Setting cpu=16"
+
 		# Made it this far, set the value for the property.
 		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
 	fi
