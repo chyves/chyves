@@ -559,6 +559,25 @@ __convert_list_to_grep_string() {
 	fi
 }
 
+# Load guest parameters to global variables
+__load_guest_parameters() {
+	local _guest="$1"
+	local _pool="$( __get_pool_for_guest "$_guest" )"
+
+	_GP_bargs="$( __multi_chyves_zfs_property "get" "bargs" "$_pool" "guests" "$_guest" | sed -e 's/_/ /g' )"
+	_GP_con="$(__multi_chyves_zfs_property "get" "con" "$_pool" "guests" "$_guest" )"
+	_GP_cpu="$( __multi_chyves_zfs_property "get" "cpu" "$_pool" "guests" "$_guest" )"
+	_GP_fw="$( __multi_chyves_zfs_property "get" "fw" "$_pool" "guests" "$_guest" )"
+	_GP_loader="$( __multi_chyves_zfs_property "get" "loader" "$_pool" "guests" "$_guest" )"
+	_GP_os="$( __multi_chyves_zfs_property "get" "os" "$_pool" "guests" "$_guest" )"
+	_GP_persist="$( __multi_chyves_zfs_property "get" "persist" "$_pool" "guests" "$_guest" )"
+	_GP_ram="$( __multi_chyves_zfs_property "get" "ram" "$_pool" "guests" "$_guest" )"
+	_GP_tap="$( __multi_chyves_zfs_property "get" "tap" "$_pool" "guests" "$_guest" )"
+	_GP_uuid="$( __multi_chyves_zfs_property "get" "uuid" "$_pool" "guests" "$_guest" )"
+
+	_GP_disk0_sector="$( zfs get -H -o value volblocksize "$_pool/chyves/guests/${_guest}/disk0" )"
+}
+
 # Process command line
 __parse_cmd () {
   case "$1" in
