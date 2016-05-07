@@ -1224,8 +1224,8 @@ __resource_functions() {
 
 		# Local file copies only.
 		else
-			echo "Creating ZFS dataset: $_prim_pool/chyves/$_resource_name/$_folder_name"
-			zfs create $_prim_pool/chyves/$_resource_name/$_folder_name
+			echo "Creating ZFS dataset: $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name"
+			zfs create $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name
 			echo "Copying $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/"
 			cp $_URL /chyves/$_resource_name/$_folder_name
 		fi
