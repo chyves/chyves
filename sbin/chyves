@@ -732,6 +732,7 @@ __setup() {
 					zfs set mountpoint="/chyves" $pool/chyves
 					zfs create $pool/chyves/ISO
 					zfs create $pool/chyves/Firmware
+
 					echo "Setting up .defaults dataset and properties on primary pool..."
 					zfs create $pool/chyves/guests/.defaults
 					zfs set chyves:size=8G $pool/chyves/guests/.defaults
@@ -758,6 +759,15 @@ __setup() {
 					zfs set chyves:console_start_offset=50 $pool/chyves/.config
 					zfs set chyves:tap_start_offset=50 $pool/chyves/.config
 					zfs set chyves:accept_non_standard_vlan_name=off $pool/chyves/.config
+
+					echo "Creating null.iso and importing..."
+					touch /tmp/null.iso
+					if [ -e /tmp/null.iso ]; then
+						echo "importing null.iso into ISO resources..."
+						__resource_functions iso fetch /tmp/null.iso
+					fi
+
+					echo "Done setting up primary pool: $pool"
 				fi
 
 				# If on FreeNAS do a couple of needed changes.
