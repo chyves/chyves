@@ -1059,8 +1059,8 @@ EOT
 			fi
 
 			# Poll remaining variables for common section
-			local cpu="$( zfs get -H -o value chyves:cpu $pool/chyves/guests/$g )"
-			local ram="$( zfs get -H -o value chyves:ram $pool/chyves/guests/$g )"
+			local cpu="$( __multi_chyves_zfs_property "get" "cpu" "$pool" "guests" "$g" )"
+			local ram="$( __multi_chyves_zfs_property "get" "ram" "$pool" "guests" "$g" )"
 
 			# Print common section (guest, size, cpu, raml)
 			printf "%s^%s^%s^%s^%s" "$g" "$size" "$cpu" "$ram" "$pool"
@@ -1324,7 +1324,7 @@ __install() {
 		if [ -z "$( __check_bhyve_process_running )" ]; then
 			local ram="$(zfs get -H -o value chyves:ram $dataset)"
 			local con="$(zfs get -H -o value chyves:con $dataset)"
-			local cpu="$( __get_liar_cpu_value $dataset )"
+			local cpu="$( __multi_chyves_zfs_property "get" "cpu" "$_pool" "guests" "$_guest" )"
 			local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
 			local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 			local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
@@ -1476,7 +1476,7 @@ __boot() {
 	local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
 	local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
 	# Set install prop
-	zfs set chyves:install=no $dataset
+	__multi_chyves_zfs_property "set" "install" "$pool" "guests" "$name" "no"
 	# Generate list of bhyve -s commands for all devices
 	local pci_args=$(__get_bhyve_cmd "$pci" )
 	# Handle the starting of the guest inside a spawned subshell so the guest
