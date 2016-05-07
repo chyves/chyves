@@ -389,18 +389,6 @@ __get_path_for_guest_dataset() {
 	echo "$_path"
 }
 
-# Get CPU count but lie if the "UG" CPU feature is missing.
-__get_liar_cpu_value() {
-	local $dataset=$1
-
-	 # If CPU feature "UG" is missing limit to one CPU
-	 if [ "${_CPU_MISSING_UG}" ]; then
-		 echo "1"
-	 else
-		 zfs get -H -o value chyves:cpu $dataset
-	 fi
- }
-
  # Pulls CPU section from boot dmesg
  __get_cpu_section_from_dmesg() {
 	 cat /var/run/dmesg.boot | grep -B 100 "real memory" | grep -v "real memory" | grep -A 20 "CPU:"
