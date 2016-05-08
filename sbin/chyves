@@ -189,7 +189,7 @@ __verify_valid_guest() {
 	# Checks to run when validating unused guest name for create/clone/etc
 	if [ -z "$_pool" ]; then
 		[ -n  "$( echo "$_guest_to_check" | grep -E "$_FORBIDDEN_GUEST_NAMES" )" ] && __fault_detected_exit "\"$_guest_to_check\" name is forbidden."
-		if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | wc -l )" -gt "0" ]; then
+		if [ "$(zfs list -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | wc -l )" -gt "0" ]; then
 			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
 	else
@@ -463,30 +463,30 @@ __multi_chyves_zfs_property() {
 	elif [ "${_action}" = "set" ]; then
 
 		# If new property restrition is on, see if a new property name is being supplied.
-		if [ "${_action}" = "set" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "$_NUMBER_OF_ALL_GUESTS" -gt "0" ]; then
-			local _valid_properties=$( __get_property_list -a )
-			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+		if [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "$_NUMBER_OF_ALL_GUESTS" -gt "0" ]; then
 
-			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep). Creation of new properties turned off with 'restrict_new_property_names' in .config"
-			fi
-		fi
+			# Do not ever allow for setting new .defaults properties, to prevent confusion (except for setup)
+			if [ "$_guest" = ".defaults" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "primary-pool-initial-setup" ]; then
+				local _valid_properties=$( __get_property_list -d )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .defaults not possible."
+				fi
 
-		# Do not ever allow for setting new .defaults properties, to prevent confusion (except for setup)
-		if [ "$_guest" = ".defaults" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "primary-pool-initial-setup" ]; then
-			local _valid_properties=$( __get_property_list -d )
-			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
-			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .defaults not possible."
-			fi
-		fi
+			# Do not ever allow for setting new .config properties, to prevent confusion
+			elif [ "$_resource" = ".config" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "primary-pool-initial-setup" ]; then
+				local _valid_properties=$( __get_property_list -c )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .config not possible."
+				fi
 
-		# Do not ever allow for setting new .config properties, to prevent confusion
-		if [ "$_resource" = ".config" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "primary-pool-initial-setup" ]; then
-			local _valid_properties=$( __get_property_list -c )
-			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
-			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-				__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .config not possible."
+			else
+				local _valid_properties=$( __get_property_list -a )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep). Creation of new properties turned off with 'restrict_new_property_names' in .config"
+				fi
 			fi
 		fi
 
@@ -494,6 +494,7 @@ __multi_chyves_zfs_property() {
 		[ "$_property" = "cpu" ] && [ "$_value" -gt "16" ] && local _value="16" && echo "bhyve has a 16 CPU core limit. Setting cpu=16"
 
 		# Made it this far, set the value for the property.
+		echo "Setting \"${_property}\" to value: \"${_value}\" for ${_resource}${_guest}"
 		zfs set chyves:${_property}="${_value}" $_pool/chyves/${_resource}${_guest}
 	fi
 }
@@ -1747,10 +1748,14 @@ __set() {
 	shift 1
 	for arg in "$@"; do
 
+		# Needed for multi-guest set support
+		local _count=$( expr $_count + 1 )
+
 		# Allows for setting multiple guests properties in one command.
 		# As soon as the fourth parameter, the next guest could be specified.
 		# Eg: chyves set ram=1G guest1 guest2 ram=3G
-		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "3" ]; then
+		#  parameter 1   2      3      4      5
+		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "2" ]; then
 			local name="$arg"
 			if [ "$name" != ".config" ]; then
 				local pool="$( __get_pool_for_guest "$name" )"
@@ -1773,9 +1778,6 @@ __set() {
 		else
 			__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
 		fi
-
-		# Needed for multi-guest set support
-		local _count=$( expr $_count + 1 )
 	done
 }
 
