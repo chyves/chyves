@@ -1511,23 +1511,14 @@ __load() {
 # Boot guest
 __boot() {
 	local name="$1"
-	local pool="$( __get_pool_for_guest "$name" )"
-	__verify_valid_guest "$name" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
-	__verify_all_kernel_modules
-	# runmode (runonce/persist)
-	#   0 = once
-	#   1 = persist regular (stop if guest is powering off)
-	#   2 = always persist (start again even if guest is powering off)
 	local runmode="$2"
 	local pci="$3"
-	local ram="$(zfs get -H -o value chyves:ram $dataset)"
-	local con="$(zfs get -H -o value chyves:con $dataset)"
-	local cpu="$( __get_liar_cpu_value $dataset )"
-	local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
-	local persist="$(zfs get -H -o value chyves:persist $dataset)"
-	local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
-	local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+	__verify_all_kernel_modules
+	__load_guest_parameters $name
+	local dataset="${pool}/chyves/guests/${name}"
+
 	# Set install prop
 	__multi_chyves_zfs_property "set" "install" "$pool" "guests" "$name" "no"
 	# Generate list of bhyve -s commands for all devices
@@ -1539,8 +1530,8 @@ __boot() {
 		while [ $runstate = "1" ]
 		do
 			__load "$name" "/dev/zvol/$dataset/disk0"
-			[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
-			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
+			[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name"
+			bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name &
 			local vmpid=$!
 			wait $vmpid
 			vmrc=$?
@@ -1551,7 +1542,7 @@ __boot() {
 				# VM has been powered off
 				runstate="0"
 			else
-				if [ $(zfs get -H -o value chyves:persist $dataset) != 1 ]; then
+				if [ "$_GP_persist" != 1 ]; then
 					runstate="0"
 				fi
 			fi
@@ -1559,7 +1550,7 @@ __boot() {
 		bhyvectl --destroy --vm=chy-$name
 		# Resetting the flag so that a vm which we stopped by abusing zfs set/get
 		# as as an IPC mechanism is persistent again next time we start it
-		if [ ! -z $persist ]; then
+		if [ ! -z $_GP_persist ]; then
 			zfs set chyves:persist="$persist" $dataset
 		fi
 	) &
