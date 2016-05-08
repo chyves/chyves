@@ -972,7 +972,6 @@ __list() {
 			) | column -t
 		fi
 
-		# List properties set in .defaults
 	# List pools and roles
 	elif [ "${output_type}" = "pools" ]; then
 		local _pools=$( __get_pool_names -a )
@@ -984,11 +983,10 @@ __list() {
 			done
 		) | sort -k1 | column -ts^
 
+	# List properties set in .defaults
 	elif [ "${output_type}" = ".defaults" ]; then
-			(
-				echo -e "Properties:\tdefaults:"
-				zfs get -H -r -t filesystem -o name,property,value all | grep chyves/guests/.defaults | grep chyves: | sed -e 's/chyves://g' | cut -f2-
-			) | sort -k1  | column -t
+			echo -e "Properties:\t     defaults:"
+			zfs get -r -t filesystem -o property,value all $_PRIMARY_POOL/chyves/guests/.defaults | grep chyves: | sed -e 's/chyves://g' | sort -k1
 
 	# List processes
 	elif [ "${output_type}" = "processes" ]; then
