@@ -679,8 +679,8 @@ __parse_cmd () {
               __resource_functions "guest" "rename" "$3" "$4"
               exit
     ;;
-    delete)   __verify_number_of_arguments "3" "$#" "3"
-              __resource_functions "guest" "delete" "$3"
+    delete)   __verify_number_of_arguments "2" "$#" "2"
+              __resource_functions "guest" "delete" "$2"
               exit
     ;;
     set)      __verify_number_of_arguments "3" "$#"           # Technically unlimited number of properties can be set.
