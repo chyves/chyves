@@ -1768,9 +1768,11 @@ __set() {
 		# Eg: chyves set ram=1G guest1 guest2 ram=3G
 		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "3" ]; then
 			local name="$arg"
-			local pool="$( __get_pool_for_guest "$name" )"
-			__verify_valid_guest "$name" "$pool"
-			echo "Switching to setting properties for guest: $name"
+			if [ "$name" != ".config" ]; then
+				local pool="$( __get_pool_for_guest "$name" )"
+				__verify_valid_guest "$name" "$pool"
+				echo "Switching to setting properties for guest: $name"
+			fi
 		fi
 
 		# Need to skip when a guest name is detected
@@ -1785,7 +1787,11 @@ __set() {
 
 		# Use function to set ZFS property
 		echo "Setting property \"$prop\" with a value of \"$val\""
-		__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
+		if [ "$name" = ".config" ]; then
+			__multi_chyves_zfs_property "set" "$prop" "primary" ".config" "-" "$val"
+		else
+			__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
+		fi
 
 		# Needed for multi-guest set support
 		local _count=$( expr $_count + 1 )
