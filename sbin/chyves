@@ -35,7 +35,7 @@ _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:da
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 _NUMBER_OF_ALL_GUESTS=$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -v .defaults | wc -l )
-_FORBIDDEN_GUEST_NAMES=".defaults|reorder"
+_FORBIDDEN_GUEST_NAMES=".defaults|reorder|reset"
 
 ##### More global variables set in __preflight_check #####
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
