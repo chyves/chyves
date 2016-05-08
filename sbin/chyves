@@ -576,19 +576,28 @@ __convert_list_to_grep_string() {
 __load_guest_parameters() {
 	local _guest="$1"
 	local _pool="$( __get_pool_for_guest "$_guest" )"
+	_GP_parameters_loaded=1
 
-	_GP_bargs="$( __multi_chyves_zfs_property "get" "bargs" "$_pool" "guests" "$_guest" | sed -e 's/_/ /g' )"
-	_GP_con="$(__multi_chyves_zfs_property "get" "con" "$_pool" "guests" "$_guest" )"
-	_GP_cpu="$( __multi_chyves_zfs_property "get" "cpu" "$_pool" "guests" "$_guest" )"
-	_GP_fw="$( __multi_chyves_zfs_property "get" "fw" "$_pool" "guests" "$_guest" )"
-	_GP_loader="$( __multi_chyves_zfs_property "get" "loader" "$_pool" "guests" "$_guest" )"
-	_GP_os="$( __multi_chyves_zfs_property "get" "os" "$_pool" "guests" "$_guest" )"
-	_GP_persist="$( __multi_chyves_zfs_property "get" "persist" "$_pool" "guests" "$_guest" )"
-	_GP_ram="$( __multi_chyves_zfs_property "get" "ram" "$_pool" "guests" "$_guest" )"
-	_GP_tap="$( __multi_chyves_zfs_property "get" "tap" "$_pool" "guests" "$_guest" )"
-	_GP_uuid="$( __multi_chyves_zfs_property "get" "uuid" "$_pool" "guests" "$_guest" )"
+	# GP = Guest Parameter
+	# Parameters held in ZFS user properties:
+	_GP_bargs="$( __multi_chyves_zfs_property    "get" "bargs"    "$_pool" "guests" "$_guest" )"
+	_GP_bridges="$( __multi_chyves_zfs_property  "get" "bridges"  "$_pool" "guests" "$_guest" )"
+	_GP_con="$(__multi_chyves_zfs_property       "get" "con"      "$_pool" "guests" "$_guest" )"
+	_GP_cpu="$( __multi_chyves_zfs_property      "get" "cpu"      "$_pool" "guests" "$_guest" )"
+	_GP_fw="$( __multi_chyves_zfs_property       "get" "fw"       "$_pool" "guests" "$_guest" )"
+	_GP_loader="$( __multi_chyves_zfs_property   "get" "loader"   "$_pool" "guests" "$_guest" )"
+	_GP_os="$( __multi_chyves_zfs_property       "get" "os"       "$_pool" "guests" "$_guest" )"
+	_GP_persist="$( __multi_chyves_zfs_property  "get" "persist"  "$_pool" "guests" "$_guest" )"
+	_GP_ram="$( __multi_chyves_zfs_property      "get" "ram"      "$_pool" "guests" "$_guest" )"
+	_GP_rcboot="$( __multi_chyves_zfs_property   "get" "rcboot"   "$_pool" "guests" "$_guest" )"
+	_GP_tap="$( __multi_chyves_zfs_property      "get" "tap"      "$_pool" "guests" "$_guest" )"
+	_GP_uuid="$( __multi_chyves_zfs_property     "get" "uuid"     "$_pool" "guests" "$_guest" )"
 
-	_GP_disk0_sector="$( zfs get -H -o value volblocksize "$_pool/chyves/guests/${_guest}/disk0" )"
+	# Other parameters
+	_GP_path="$( __get_path_for_guest_dataset "$_guest" "$_pool" )"
+	_GP_disk0_blocksize="$( zfs get -H -o value volblocksize "$_pool/chyves/guests/${_guest}/disk0" )"
+}
+
 }
 
 # Process command line
