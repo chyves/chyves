@@ -181,21 +181,30 @@ __verify_valid_guest() {
 	# $null   [no flag used] Validates the supplied pool is in fact on the supplied ZFS pool
 	# -s      [start] Exits if guest is a template or on an offline pool
 
-	# Check to see if pool has chyves setup on it.
-	__verify_valid_pool "$_pool" "-c"
-
 	# Check to see if guest name used more than once
-	if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check " | grep -E -v "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
-		__fault_detected_exit "More than one \"$_guest_to_check\" exists on system within active pools and guests, fix it!"
+	if [ "$(zfs list -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING" | wc -l )" -gt "1" ]; then
+		__fault_detected_exit "More than one \"$_guest_to_check\" exists on system within active pools and guests."
 	fi
 
-	if [ ! -n "$(zfs list -H $_pool/chyves/guests/$_guest_to_check | grep -v "dataset does not exist" | grep -v "No such file or directory" )" ]; then
-		__fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
-	fi
+	# Checks to run when validating unused guest name for create/clone/etc
+	if [ -z "$_pool" ]; then
+		[ -n  "$( echo "$_guest_to_check" | grep -E "$_FORBIDDEN_GUEST_NAMES" )" ] && __fault_detected_exit "\"$_guest_to_check\" name is forbidden."
+		if [ "$(zfs list -r -H -t filesystem -o name | grep "chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | wc -l )" -gt "0" ]; then
+			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
+		fi
+	else
+		# Check to see if pool has chyves setup on it.
+		__verify_valid_pool "$_pool" "-c"
 
-	# Exits if guest is a template or on an offline pool.
-	if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -E -v "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
-		__fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
+		# Check if valid guest name and pool given.
+		if [ ! -n "$(zfs list -H $_pool/chyves/guests/$_guest_to_check | grep -v "dataset does not exist" | grep -v "No such file or directory" )" ]; then
+			__fault_detected_exit "Invalid guest name (${_guest_to_check}) supplied."
+		fi
+
+		# Exits if guest is a template or on an offline pool.
+		if [ -n "$(echo $_flags | grep 's')" ] && [ -z "$(zfs list -r -H -t filesystem -o name | grep "$_pool/chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" )" ]; then
+			__fault_detected_exit "$_guest_to_check is either a template or contained within a chyves dataset where the dataset_role is set to 'offline'."
+		fi
 	fi
 }
 
