@@ -1340,46 +1340,43 @@ __create() {
 	local name="$1"
 	local size="$2"
 	local pool="$3"
-	__verify_valid_pool "$pool" -c
-	local description=$( echo "Created on $(date | sed -e 's/ /_/g')" )
-
-	# Get default values as set by .defaults on primary pool
-	local def_size="$(zfs get -H -o value chyves:size $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_cpu="$(zfs get -H -o value chyves:cpu $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_ram="$(zfs get -H -o value chyves:ram $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_persist="$(zfs get -H -o value chyves:persist $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_rcboot="$(zfs get -H -o value chyves:rcboot $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_loader="$(zfs get -H -o value chyves:loader $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_os="$(zfs get -H -o value chyves:os $_PRIMARY_POOL/chyves/guests/.defaults)"
-	local def_bargs="$(zfs get -H -o value chyves:bargs $_PRIMARY_POOL/chyves/guests/.defaults)"
+	__verify_valid_guest "$name"
+	__load_guest_default_parameters
+	local creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
 	local _disk_options="$( __create_zvol_disk_options_string )"
 	local _next_tap="$( __get_next_tap )"
 	local _next_con="$( __get_next_console )"
 
 	# If size not declared in command line, use .default's
-	if [ -z $size ]; then
-		local size="$def_size"
-	fi
+	[ -z $size ] && local size="$_GDP_size"
 
-	# If [pool] not set use primary pool
+	# Check on pool
 	if [ -z "${pool}" ]; then
 		local pool="${_PRIMARY_POOL}"
+	else
+		__verify_valid_pool "$pool" -c
 	fi
 
 	echo "Creating $name..."
 	zfs create $pool/chyves/guests/$name
 	zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
-	zfs set chyves:ram=$def_ram $pool/chyves/guests/$name
-	zfs set chyves:cpu=$def_cpu $pool/chyves/guests/$name
-	zfs set chyves:tap=tap$_next_tap $pool/chyves/guests/$name
-	zfs set chyves:con=nmdm$_next_con $pool/chyves/guests/$name
-	zfs set chyves:persist=$def_persist $pool/chyves/guests/$name
-	zfs set chyves:rcboot=$def_rcboot $pool/chyves/guests/$name
-	zfs set chyves:loader=$def_loader $pool/chyves/guests/$name
-	zfs set chyves:os=$def_os $pool/chyves/guests/$name
-	zfs set chyves:description="$description" $pool/chyves/guests/$name
-	zfs set chyves:bargs=$def_bargs $pool/chyves/guests/$name
-	zfs set chyves:uuid=$_UUID_GENERAL_USE $pool/chyves/guests/$name
+	__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
+	__multi_chyves_zfs_property "set" "bridges"     "$pool" "guests" "$name" "$_GDP_bridges"
+	__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
+	__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
+	__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
+	__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
+	__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
+	__multi_chyves_zfs_property "set" "persist"     "$pool" "guests" "$name" "$_GDP_persist"
+	__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
+	__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
+
+	__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "nmdm$_next_con"
+	__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
+	__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
+	__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
+	__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "tap$_next_tap"
+	__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GENERAL_USE"
 }
 
 # Install guest
