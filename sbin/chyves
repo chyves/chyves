@@ -1597,21 +1597,20 @@ __start() {
 	__verify_valid_pool "$pool"
 	__verify_valid_guest "$name" "$pool" -s
 	__verify_all_kernel_modules
+	__load_guest_parameters
 	local dataset="$pool/chyves/guests/$name"
 	local pci=""
 	local runmode="1"
-	local loader="$(zfs get -H -o value chyves:loader $dataset)"
-	local _os="$(zfs get -H -o value chyves:os $dataset)"
 
 	# Check for special handling.
-	if [ "${_CPU_MISSING_UG}" ] && [ "${_os}" != "freebsd" ]; then
+	if [ "${_CPU_MISSING_UG}" ] && [ "${_GP_os}" != "freebsd" ]; then
 	 __get_cpu_section_from_dmesg
 	 __fault_detected_exit "Missing CPU feature UG, can only start guests with os=freebsd."
-	elif [ $loader = "uefi" ]; then
-		exit
-	elif [ $loader = "grub-bhyve" ]; then
+	elif [ $_GP_loader = "grub-bhyve" ]; then
 		__verify_binary_available "grub-bhyve"
+	elif [ $_GP_loader = "uefi" ]; then
 		__uefi "$name"
+		exit
 	fi
 
 	# Check to make sure guest isn't running
