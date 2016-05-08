@@ -2095,7 +2095,7 @@ cat << 'EOT'
 chyves
   version
   setup pool=<pool> kmod=<0|1> net=<interface-name>
-  list [iso|firmwares|snapshots|.config|.defaults|processes|<property-name>]
+  list [iso|firmwares|snapshots|.config|.defaults|pools|processes|<property-name>]
   list tap active
   list .config [<pool>|primary]
   list processes [<name>]
