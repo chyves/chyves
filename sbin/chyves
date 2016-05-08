@@ -1386,33 +1386,23 @@ __install() {
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
-	local dataset="$pool/chyves/guests/$name"
-	# Check if guest exists
-	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
-			local ram="$(zfs get -H -o value chyves:ram $dataset)"
-			local con="$(zfs get -H -o value chyves:con $dataset)"
-			local cpu="$( __multi_chyves_zfs_property "get" "cpu" "$_pool" "guests" "$_guest" )"
-			local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
-			local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
-			local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
+	__load_guest_parameters $name
 
-			echo "Installing $name..."
-			# Set install prop
-			zfs set chyves:install=yes $pool/chyves/guests/$name
-			# Load from CD
-			__load "$name" "/chyves/ISO/$iso/$iso"
-			# Prepare and start guest
-			pci="$(__prepare_guest $name) ahci-cd,/chyves/ISO/$iso/$iso"
-			local pci_args=$(__get_bhyve_cmd "$pci" )
-			[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name"
-			bhyve -c $cpu $bargs -U $uuid -m $ram $pci_args -lcom1,/dev/${con}A chy-$name &
-		else
-			echo "Guest is already running."
-		fi
+	# Check to make sure guest isn't running
+	if [ -z "$( __check_bhyve_process_running )" ]; then
+
+		echo "Installing $name..."
+		# Set install prop
+		__multi_chyves_zfs_property "set" "cpu" "$pool" "guests" "$name" "yes"
+		# Load from CD
+		__load "$name" "/chyves/ISO/$iso/$iso"
+		# Prepare and start guest
+		pci="$(__prepare_guest $name) ahci-cd,/chyves/ISO/$iso/$iso"
+		local pci_args=$(__get_bhyve_cmd "$pci" )
+		[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name"
+		bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name &
 	else
-		echo "Not a valid guest name"
+		echo "Guest is already running."
 	fi
 }
 
