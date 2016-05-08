@@ -942,6 +942,17 @@ __list() {
 		fi
 
 		# List properties set in .defaults
+	# List pools and roles
+	elif [ "${output_type}" = "pools" ]; then
+		local _pools=$( __get_pool_names -a )
+		(
+			printf "%s^%s\n" "Pool:" "Role:"
+			for _pool in $_pools; do
+				local _dataset_role=$( zfs get -H -o value chyves:dataset_role $_pool/chyves/.config )
+				printf "%s^%s\n" "$_pool" "$_dataset_role"
+			done
+		) | sort -k1 | column -ts^
+
 	elif [ "${output_type}" = ".defaults" ]; then
 			(
 				echo -e "Properties:\tdefaults:"
