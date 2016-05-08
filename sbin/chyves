@@ -1782,9 +1782,6 @@ __set() {
 		local prop="$(echo $arg | cut -d '=' -f1)"
 		local val="$(echo $arg | cut -d '=' -f2)"
 
-		# Convert " " spaces to "_" for bargs - This handling can be removed from all the code with the use of double quotes
-		[ $prop = "bargs" ] && local val="$(echo $val | cut -d '"' -f2 | sed -e 's/ /_/g')"
-
 		# Use function to set ZFS property
 		echo "Setting property \"$prop\" with a value of \"$val\""
 		if [ "$name" = ".config" ]; then
