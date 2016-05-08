@@ -1638,65 +1638,49 @@ __uefi() {
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
+	__load_guest_parameters
 	[ "${_CPU_MISSING_UG}" ] && __get_cpu_section_from_dmesg && __fault_detected_exit "This CPU lacks the 'UG' feature of EPT. UEFI guests are disabled."
 	local dataset="${pool}/chyves/guests/${name}"
-	local ram="$(zfs get -H -o value chyves:ram $dataset)"
-	local con="$(zfs get -H -o value chyves:con $dataset)"
-	local cpu="$(zfs get -H -o value chyves:cpu $dataset)"
-	local fw="$(zfs get -H -o value chyves:fw $dataset)"
-	local tap="$(zfs get -H -o value chyves:tap $dataset)"
-	local uuid="$(zfs get -H -o value chyves:uuid $dataset)"
-	local bargs="$(zfs get -H -o value chyves:bargs $dataset | sed -e 's/_/ /g')"
-	local pool="$(zfs list -H -t volume -o name | grep chyves/guests/$name | cut -d '/' -f1)"
+
 	# Create tap if needed
 	# check to see if tap is already created before attempting to create new tap interface
-	local tapif="$(ifconfig -l | tr ' ' '\n' | grep -F -w $tap)"
+	local tapif="$(ifconfig -l | tr ' ' '\n' | grep -F -w $_GP_tap)"
 	if [ -z $tapif ]; then
 		# create tap interface
-		ifconfig $tap create descr "chyves-$name"
-		ifconfig bridge0 addm $tap
+		ifconfig $_GP_tap create descr "chyves-$name"
+		ifconfig bridge0 addm $_GP_tap
 	fi
-	# Make sure everything is in order...
-	if [ $fw = '-' ]; then
-		echo "You must set a firmware file property to use UEFI..."
+
+	# Check if firmware is set for guest
+	[ $_GP_fw = '-' ] && __fault_detected_exit "You must set a firmware file property to use UEFI..."
+
+	# Check to make sure guest isn't running
+	[ -n "$( __check_bhyve_process_running )" ] && __fault_detected_exit "$name is already running."
+
+	# Print the command to start the UEFI guest
+	if [ "$_DEVELOPER_MODE" != "off" ]; then
+	echo "bhyve -c $_GP_cpu $_GP_bargs -m $_GP_ram "
+	echo "        -s 0,hostbridge "
+	echo "        -s 3,ahci-cd,/chyves/ISO/$media/$media "
+	echo "        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=$_GP_disk0_blocksize "
+	echo "        -s 10,virtio-net,$_GP_tap "
+	echo "        -s 31,lpc "
+	echo "        -l com1,/dev/${_GP_con}A "
+	echo "        -l bootrom,/chyves/Firmware/$_GP_fw/$_GP_fw "
+	echo "        -U $_GP_uuid "
+	echo "        chy-$name"
 	fi
-	if [ -z $media ]; then
-		echo "You must enter at least a zero byte ISO for some OSs..."
-		echo "EX: chyves uefi winguest null.iso"
-	fi
-	# Check if guest exists
-	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
-			# The good stuff...
-			if [ "$_DEVELOPER_MODE" != "off" ]; then
-			echo "bhyve -c $cpu $bargs -m $ram "
-			echo "        -s 0,hostbridge "
-			echo "        -s 3,ahci-cd,/chyves/ISO/$media/$media "
-			echo "        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=512 "
-			echo "        -s 10,virtio-net,$tap "
-			echo "        -s 31,lpc "
-			echo "        -l com1,/dev/${con}A "
-			echo "        -l bootrom,/chyves/Firmware/$fw/$fw "
-			echo "        -U $uuid "
-			echo "        chy-$name"
-			fi
-			bhyve -c $cpu $bargs -m $ram \
-			        -s 0,hostbridge \
-			        -s 3,ahci-cd,/chyves/ISO/$media/$media \
-			        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=512 \
-			        -s 10,virtio-net,$tap \
-			        -s 31,lpc \
-			        -l com1,/dev/${con}A \
-			        -l bootrom,/chyves/Firmware/$fw/$fw \
-			        -U $uuid \
-			        chy-$name &
-		else
-			echo "Guest is already running."
-		fi
-	else
-		echo "Not a valid guest name"
-	fi
+
+	bhyve -c $_GP_cpu $_GP_bargs -m $_GP_ram \
+	        -s 0,hostbridge \
+	        -s 3,ahci-cd,/chyves/ISO/$media/$media \
+	        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=$_GP_disk0_blocksize \
+	        -s 10,virtio-net,$_GP_tap \
+	        -s 31,lpc \
+	        -l com1,/dev/${_GP_con}A \
+	        -l bootrom,/chyves/Firmware/$_GP_fw/$_GP_fw \
+	        -U $_GP_uuid \
+	        chy-$name &
 }
 
 # Gracefully stop a guest
