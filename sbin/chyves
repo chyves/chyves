@@ -29,6 +29,7 @@ _VERSION=0.0.0                        # Example: v11.6.25 - XXX.YY.ZZZ
 _VERSION_LONG="v0.0.0 2016/04/00"     # Example: v11.6.25 2021/12/31
 _VERSION_INT="00000000"               # Example: 01106025 XXXYYZZZ
 _UUID_GENERAL_USE="$(/bin/uuidgen)"
+_UUID_GUEST_USE="$(/bin/uuidgen)"
 _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
 _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
@@ -286,6 +287,11 @@ __check_if_freenas() {
 			echo 1
 		fi
 	fi
+}
+
+# Set new UUID in _UUID_GUEST_USE
+__set_new_uuid_guest_use() {
+	_UUID_GUEST_USE="$(/bin/uuidgen)"
 }
 
 # Gets pool names from ZFS with flag options for active/inactive
@@ -1362,6 +1368,7 @@ __create() {
 		local _next_tap="$( __get_next_tap )"
 		local _next_con="$( __get_next_console )"
 		__verify_valid_guest "$name"
+		__set_new_uuid_guest_use
 
 		echo "Creating $name..."
 		echo "Creating dataset on $pool"
@@ -1385,7 +1392,7 @@ __create() {
 		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "tap$_next_tap"
-		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GENERAL_USE"
+		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
 	done
 }
 
