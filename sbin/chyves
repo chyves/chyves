@@ -307,8 +307,10 @@ __get_pool_for_guest() {
 # Get primary pool name
 __get_primary_pool_name() {
 	local _var="$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
-	__verify_valid_pool "$_var" "-p"
-	echo "${_var}"
+	if [ -n "$_var" ]; then
+		__verify_valid_pool "$_var" "-p"
+		echo "${_var}"
+	fi
 }
 
 #  Get all chyves properties that are set on the system
