@@ -1988,15 +1988,15 @@ __rollguest() {
 __cloneguest() {
 	local flag="$1"  # Only -r used to replicate, -c is arbitrary
 	local name="$2"
-	local cname="$3"
+	local clones="$3"
 	local _dst_pool="$4"
 	local _src_pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$_src_pool"
-	__verify_valid_guest "$cname"    # Exits if name in use.
-	local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
 
 	# Verify -c or -f flag used.
 	if [ "$flag" = "-c" ];then
+		echo "Using the cloning method (-c) is not recommended as the UUID, tap interface, and console interface remain the same. Dragons be ahead."
+		echo "It is recommended to use the replication method (-r) as these properties are regenerated."
 		local _clone_type="(clone-only)"
 	elif [ "$flag" = "-r" ]; then
 		local _clone_type="(replication)"
@@ -2011,36 +2011,53 @@ __cloneguest() {
 		__verify_valid_pool "_dst_pool" "-c"
 	fi
 
-	echo "Cloning $name to $cname"
-	echo "Taking snapshot on $_src_pool"
-	zfs snap -r $_src_pool/chyves/guests/$name@clone-as-$cname
-	echo "Using zfs send to send $name to $cname"
-	zfs send -R $_src_pool/chyves/guests/$name@clone-as-$cname | zfs recv $_dst_pool/chyves/guests/$cname
+	echo "Taking $name snapshot on $_src_pool name @chyves-clone-process-$_UUID_GENERAL_USE"
+	zfs snap -r $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
+
+	# Multi-guest support.
+	# Eg.: chyves clone goldenVM devteam1,devteam2,devteam3 dev-pool
+	for cname in `echo "$clones" | tr ',' ' '`
+	do
+		echo "Cloning $name to $cname"
+		echo "Verifing $cname is unused."
+		__verify_valid_guest "$cname"    # Exits if name in use.
+
+		echo "Using zfs send to send $name to $cname"
+		zfs send -R $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$cname
+
+		echo "Setting creation stamp on $cname..."
+		local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
+		__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
+
+		# Change con, tap, and UUID properties if -r is used
+		if [ "$flag" = "-r" ]; then
+			echo "Setting new properties as part of replication..."
+			echo "Generating new UUID"
+			__set_new_uuid_guest_use
+			echo "Grabbing next unused tap interface"
+			local _tap="$( __get_next_tap )"
+			echo "Grabbing next unused console interface"
+			local _con="$( __get_next_console )"
+			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "tap$_tap"
+			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "nmdm$_con"
+			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
+		fi
+		echo "Cloning $_clone_type from $name to $cname complete."
+	done
+
 	echo "Deleting snapshot on $_src_pool"
-	zfs destroy -rR $_src_pool/chyves/guests/$name@clone-as-$cname
-	if [ $? ]; then
-		echo "Sucessfully deleted snapshot for clone."
+	if [ -z "$_src_pool" ]; then
+		__fault_detected_exit "Something went wrong, \$_src_pool variable is empty. Aborting before running zfs destroy command. Please report to the chyves developers."
 	else
-		echo "Unsuccessfully deleted snapshot on $_src_pool"
-		echo "To delete, run this manually: zfs destroy -rR $_src_pool/chyves/guests/$name@clone-as-$cname"
+		zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
+		if [ "$?" = 0 ]; then
+			echo "Sucessfully deleted snapshot for clone."
+		else
+			echo "Unsuccessfully deleted snapshot on $_src_pool"
+			echo "To delete, run this manually: zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE"
+		fi
 	fi
-
-	echo "Setting creation stamp on $cname..."
-	__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
-
-	# Change con, tap, and UUID properties if -r is used
-	if [ "$flag" = "-r" ]; then
-		echo "Setting new properties as part of replication..."
-		local _tap="$( __get_next_tap )"
-		local _con="$( __get_next_console )"
-		echo "Setting new tap interface..."
-		__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "tap$_tap"
-		echo "Setting new con..."
-		__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "nmdm$_con"
-		echo "Setting new UUID..."
-		__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GENERAL_USE"
-	fi
-	echo "Cloning $_clone_type of $name to $cname complete."
+	echo "Sucessfully cloned $name to $clones."
 }
 
 # Export Guest
