@@ -736,51 +736,57 @@ __setup() {
 			local val="$(echo $arg | cut -d '=' -f2)"
 			if [ "${prop}" = "pool" ]; then
 				local pool="$val"
-				__verify_valid_pool "$val" -ce
+				__verify_valid_pool "$val" -cn
 				echo "Setting up chyves pool..."
 				zfs create $pool/chyves
 				zfs create $pool/chyves/guests
 				zfs create $pool/chyves/.config
 				zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
 				# a chyves pool is already setup, setup secondary pool.
-				if [ -d /chyves/ISO ]; then
+				if [ -n "$_PRIMARY_POOL" ]; then
 					echo "Secondary pool set up..."
 					zfs set mountpoint="/chyves/$pool" $pool/chyves
 					zfs set chyves:dataset_role=secondary $pool/chyves/.config
 				# chyves is not set up yet, setup primary pool.
 				else
-					zfs set mountpoint="/chyves" $pool/chyves
-					zfs create $pool/chyves/ISO
-					zfs create $pool/chyves/Firmware
+					_PRIMARY_POOL=$pool
+					_RESTRICT_NEW_PROPERTY_NAMES="primary-pool-initial-setup"
+					zfs set mountpoint="/chyves" $_PRIMARY_POOL/chyves
+					zfs create $_PRIMARY_POOL/chyves/ISO
+					zfs create $_PRIMARY_POOL/chyves/Firmware
 
 					echo "Setting up .defaults dataset and properties on primary pool..."
-					zfs create $pool/chyves/guests/.defaults
-					zfs set chyves:size=8G $pool/chyves/guests/.defaults
-					zfs set chyves:cpu=1 $pool/chyves/guests/.defaults
-					zfs set chyves:bridge=bridge0 $pool/chyves/guests/.defaults
-					zfs set chyves:network_type=bridge $pool/chyves/guests/.defaults
-					zfs set chyves:ram=256M $pool/chyves/guests/.defaults
-					zfs set chyves:persist=1 $pool/chyves/guests/.defaults
-					zfs set chyves:rcboot=0 $pool/chyves/guests/.defaults
-					zfs set chyves:loader=bhyveload $pool/chyves/guests/.defaults
-					zfs set chyves:os=freebsd $pool/chyves/guests/.defaults
-					zfs set chyves:bargs=-A_-H_-P $pool/chyves/guests/.defaults
-					zfs set chyves:disk_volmode=dev $pool/chyves/guests/.defaults
-					zfs set chyves:disk_volblocksize=512 $pool/chyves/guests/.defaults
-					zfs set chyves:disk_dedup=inherit $pool/chyves/guests/.defaults
-					zfs set chyves:disk_compression=inherit $pool/chyves/guests/.defaults
-					zfs set chyves:disk_primarycache=inherit $pool/chyves/guests/.defaults
-					zfs set chyves:disk_secondarycache=inherit $pool/chyves/guests/.defaults
+					zfs create $_PRIMARY_POOL/chyves/guests/.defaults
+					__multi_chyves_zfs_property "set" "bargs"         "primary" "guests" ".defaults" "-A -H -P"
+					__multi_chyves_zfs_property "set" "bridges"       "primary" "guests" ".defaults" "bridge0"
+					__multi_chyves_zfs_property "set" "cpu"           "primary" "guests" ".defaults" "1"
+					__multi_chyves_zfs_property "set" "fw"            "primary" "guests" ".defaults" "-"
+					__multi_chyves_zfs_property "set" "guest_role"    "primary" "guests" ".defaults" "active"
+					__multi_chyves_zfs_property "set" "network_type"  "primary" "guests" ".defaults" "bridge"
+					__multi_chyves_zfs_property "set" "loader"        "primary" "guests" ".defaults" "bhyveload"
+					__multi_chyves_zfs_property "set" "os"            "primary" "guests" ".defaults" "freebsd"
+					__multi_chyves_zfs_property "set" "persist"       "primary" "guests" ".defaults" "1"
+					__multi_chyves_zfs_property "set" "ram"           "primary" "guests" ".defaults" "256M"
+					__multi_chyves_zfs_property "set" "rcboot"        "primary" "guests" ".defaults" "0"
+					__multi_chyves_zfs_property "set" "size"          "primary" "guests" ".defaults" "8G"
+
+					__multi_chyves_zfs_property "set" "disk_volmode"         "primary" "guests" ".defaults" "dev"
+					__multi_chyves_zfs_property "set" "disk_volblocksize"    "primary" "guests" ".defaults" "512"
+					__multi_chyves_zfs_property "set" "disk_dedup"           "primary" "guests" ".defaults" "inherit"
+					__multi_chyves_zfs_property "set" "disk_compression"     "primary" "guests" ".defaults" "inherit"
+					__multi_chyves_zfs_property "set" "disk_primarycache"    "primary" "guests" ".defaults" "inherit"
+					__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
 
 					echo "Setting up .config properties on primary pool..."
-					zfs set chyves:dataset_role=primary $pool/chyves/.config
-					zfs set chyves:dev_mode=off $pool/chyves/.config
-					zfs set chyves:restrict_new_property_names=on $pool/chyves/.config
-					zfs set chyves:console_start_offset=50 $pool/chyves/.config
-					zfs set chyves:tap_start_offset=50 $pool/chyves/.config
-					zfs set chyves:accept_non_standard_vlan_name=off $pool/chyves/.config
+					__multi_chyves_zfs_property "set" "accept_non_standard_vlan_name"  "primary" ".config" "-" "off"
+					__multi_chyves_zfs_property "set" "console_start_offset"           "primary" ".config" "-" "50"
+					__multi_chyves_zfs_property "set" "dataset_role"                   "primary" ".config" "-" "primary"
+					__multi_chyves_zfs_property "set" "dev_mode"                       "primary" ".config" "-" "off"
+					__multi_chyves_zfs_property "set" "log_mode"                       "primary" ".config" "-" "on"
+					__multi_chyves_zfs_property "set" "restrict_new_property_names"    "primary" ".config" "-" "on"
+					__multi_chyves_zfs_property "set" "tap_start_offset"               "primary" ".config" "-" "50"
 
-					echo "Creating null.iso and importing..."
+					echo "Creating null.iso for UEFI use..."
 					touch /tmp/null.iso
 					if [ -e /tmp/null.iso ]; then
 						echo "importing null.iso into ISO resources..."
