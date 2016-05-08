@@ -598,6 +598,31 @@ __load_guest_parameters() {
 	_GP_disk0_blocksize="$( zfs get -H -o value volblocksize "$_pool/chyves/guests/${_guest}/disk0" )"
 }
 
+# Loads .defaults parameters to global variables
+__load_guest_default_parameters() {
+	_GDP_parameters_loaded=1
+
+	# GDP = Guest Default Parameter
+	# Parameters held in ZFS user properties:
+	_GDP_bargs="$( __multi_chyves_zfs_property      "get" "bargs"      "primary" "guests" ".defaults" )"
+	_GDP_bridges="$( __multi_chyves_zfs_property    "get" "bridges"    "primary" "guests" ".defaults" )"
+	_GDP_cpu="$( __multi_chyves_zfs_property        "get" "cpu"        "primary" "guests" ".defaults" )"
+	_GDP_fw="$( __multi_chyves_zfs_property         "get" "fw"         "primary" "guests" ".defaults" )"
+	_GDP_guest_role="$( __multi_chyves_zfs_property "get" "guest_role" "primary" "guests" ".defaults" )"
+	_GDP_loader="$( __multi_chyves_zfs_property     "get" "loader"     "primary" "guests" ".defaults" )"
+	_GDP_os="$( __multi_chyves_zfs_property         "get" "os"         "primary" "guests" ".defaults" )"
+	_GDP_persist="$( __multi_chyves_zfs_property    "get" "persist"    "primary" "guests" ".defaults" )"
+	_GDP_ram="$( __multi_chyves_zfs_property        "get" "ram"        "primary" "guests" ".defaults" )"
+	_GDP_rcboot="$( __multi_chyves_zfs_property     "get" "rcboot"     "primary" "guests" ".defaults" )"
+	_GDP_size="$( __multi_chyves_zfs_property       "get" "size"       "primary" "guests" ".defaults" )"
+
+	# Get _disk specific properties
+	_GDP_disk_volmode="$( __multi_chyves_zfs_property         "get" "disk_volmode"        "primary" "guests" ".defaults" )"
+	_GDP_disk_volblocksize="$( __multi_chyves_zfs_property    "get" "disk_volblocksize"   "primary" "guests" ".defaults" )"
+	_GDP_disk_dedup="$( __multi_chyves_zfs_property           "get" "disk_dedup"          "primary" "guests" ".defaults" )"
+	_GDP_disk_compression="$( __multi_chyves_zfs_property     "get" "disk_compression"    "primary" "guests" ".defaults" )"
+	_GDP_disk_primarycache="$( __multi_chyves_zfs_property    "get" "disk_primarycache"   "primary" "guests" ".defaults" )"
+	_GDP_disk_secondarycache="$( __multi_chyves_zfs_property  "get" "disk_secondarycache" "primary" "guests" ".defaults" )"
 }
 
 # Process command line
