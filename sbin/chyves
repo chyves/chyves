@@ -1764,9 +1764,9 @@ __set() {
 	for arg in "$@"; do
 
 		# Allows for setting multiple guests properties in one command.
-		# As soon as the third parameter, the next guest could be specified.
+		# As soon as the fourth parameter, the next guest could be specified.
 		# Eg: chyves set ram=1G guest1 guest2 ram=3G
-		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "2" ]; then
+		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "3" ]; then
 			local name="$arg"
 			local pool="$( __get_pool_for_guest "$name" )"
 			__verify_valid_guest "$name" "$pool"
