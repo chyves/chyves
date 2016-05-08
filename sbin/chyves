@@ -1428,100 +1428,94 @@ __load() {
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
 	__verify_all_kernel_modules
-	local _path="$( __get_path_for_guest_dataset "$name" "$pool" )"
+	__load_guest_parameters $name
 	local dataset="${pool}/chyves/guests/${name}"
 	local disk="${pool}/chyves/guests/${name}/disk0"
-	local ram="$(zfs get -H -o value chyves:ram $dataset)"
-	local con="$(zfs get -H -o value chyves:con $dataset)"
-	local loader="$(zfs get -H -o value chyves:loader $dataset)"
 	local install="$(zfs get -H -o value chyves:install $dataset)"
-	local os="$(zfs get -H -o value chyves:os $dataset)"
 	local autogrub="$(zfs get -H -o value chyves:autogrub $dataset)"
-	local bargexist="$(zfs get -H -o value chyves:bargs $dataset)"
-	local bargs="$(echo $bargexist | sed -e 's/_/ /g')"
-	#Testing if -S is in the bargs settings. If then pass -S to bhyveload.
+	# Testing if -S is in the bargs settings. If then pass -S to bhyveload.
 	local test_for_wire_memory="-S"
-	case $bargs in
+	case $_GP_bargs in
 		*${test_for_wire_memory}*) local wire_memory="-S" ;;
 		*) local wire_memory="" ;;
 	esac
-	if [ $loader = "grub-bhyve" ]; then
+	if [ $_GP_loader = "grub-bhyve" ]; then
 		__verify_binary_available "grub-bhyve"
 		if [ $install = "yes" ]; then
-			if [ $os = "openbsd59" ]; then
+			if [ $_GP_os = "openbsd59" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "openbsd58" ]; then
+				printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "openbsd58" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "openbsd57" ]; then
+				printf 'kopenbsd -h com0 (cd0)/5.8/amd64/bsd.rd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "openbsd57" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "netbsd" ]; then
+				printf 'kopenbsd -h com0 (cd0)/5.7/amd64/bsd.rd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "netbsd" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "debian" ]; then
+				printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "debian" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0  -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "d8lvm" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r cd0  -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "d8lvm" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "centos6" ] || [ $os = "centos7" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r cd0 -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "centos6" ] || [ $os = "centos7" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "arch" ]; then
+				printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "arch" ]; then
 				__create_device_map "$_path" "$disk" "$media"
 				printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > $_path/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "gentoo" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "gentoo" ]; then
 				__create_device_map "$_path" "$disk" "$media"
 				printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
-				grub-bhyve $wire_memory -m $_path/device.map -r host -d $_path -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m $_path/device.map -r host -d $_path -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "custom" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
 			else
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r cd0 -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r cd0 -c /dev/${_GP_con}A -M $_GP_ram chy-$name
 			fi
 		elif [ $install = "no" ]; then
-			if [ $os = "openbsd59" ]; then
+			if [ $_GP_os = "openbsd59" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "openbsd58" ]; then
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "openbsd58" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "openbsd57" ]; then
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "openbsd57" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "netbsd" ]; then
+				printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "netbsd" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_path}/grub.cfg
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "debian" ]; then
+				printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_GP_path}/grub.cfg
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "debian" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "d8lvm" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "d8lvm" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "centos6" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "centos6" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "centos7" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -d /grub -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "centos7" ]; then
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -d /grub2 -c /dev/${con}A -M $ram chy-$name
-			elif [ $os = "custom" ]; then
-				grub-bhyve $wire_memory -m ${_path}/device.map -r host -d ${_path} -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -d /grub2 -c /dev/${_GP_con}A -M $_GP_ram chy-$name
+			elif [ $_GP_os = "custom" ]; then
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$name
 			else
 				__create_device_map "$_path" "$disk" "$media"
-				grub-bhyve $wire_memory -m ${_path}/device.map -r hd0,msdos1 -c /dev/${con}A -M $ram chy-$name
+				grub-bhyve $wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -c /dev/${_GP_con}A -M $_GP_ram chy-$name
 			fi
 		fi
 	else
