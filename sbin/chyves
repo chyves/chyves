@@ -393,10 +393,10 @@ __get_path_for_guest_dataset() {
 	echo "$_path"
 }
 
- # Pulls CPU section from boot dmesg
- __get_cpu_section_from_dmesg() {
-	 cat /var/run/dmesg.boot | grep -B 100 "real memory" | grep -v "real memory" | grep -A 20 "CPU:"
- }
+# Pulls CPU section from boot dmesg
+__get_cpu_section_from_dmesg() {
+	cat /var/run/dmesg.boot | grep -B 100 "real memory" | grep -v "real memory" | grep -A 20 "CPU:"
+}
 
 # Builds the device map file
 __create_device_map() {
