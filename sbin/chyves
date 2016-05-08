@@ -1338,15 +1338,12 @@ __resource_functions() {
 
 # Create guest
 __create() {
-	local name="$1"
+	local guests="$1"
 	local size="$2"
 	local pool="$3"
-	__verify_valid_guest "$name"
 	__load_guest_default_parameters
 	local creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
 	local _disk_options="$( __create_zvol_disk_options_string )"
-	local _next_tap="$( __get_next_tap )"
-	local _next_con="$( __get_next_console )"
 
 	# If size not declared in command line, use .default's
 	[ -z $size ] && local size="$_GDP_size"
@@ -1358,26 +1355,38 @@ __create() {
 		__verify_valid_pool "$pool" -c
 	fi
 
-	echo "Creating $name..."
-	zfs create $pool/chyves/guests/$name
-	zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
-	__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
-	__multi_chyves_zfs_property "set" "bridges"     "$pool" "guests" "$name" "$_GDP_bridges"
-	__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
-	__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
-	__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
-	__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
-	__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
-	__multi_chyves_zfs_property "set" "persist"     "$pool" "guests" "$name" "$_GDP_persist"
-	__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
-	__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
+	# Multi-guest support.
+	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
+	for name in `echo "$guests" | tr ',' ' '`
+	do
+		local _next_tap="$( __get_next_tap )"
+		local _next_con="$( __get_next_console )"
+		__verify_valid_guest "$name"
 
-	__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "nmdm$_next_con"
-	__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
-	__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
-	__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
-	__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "tap$_next_tap"
-	__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GENERAL_USE"
+		echo "Creating $name..."
+		echo "Creating dataset on $pool"
+		zfs create $pool/chyves/guests/$name
+		echo "Creating $size disk0 with options: $_disk_options"
+		zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
+		echo "Creating properties:"
+		__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
+		__multi_chyves_zfs_property "set" "bridges"     "$pool" "guests" "$name" "$_GDP_bridges"
+		__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
+		__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
+		__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
+		__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
+		__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
+		__multi_chyves_zfs_property "set" "persist"     "$pool" "guests" "$name" "$_GDP_persist"
+		__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
+		__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
+
+		__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "nmdm$_next_con"
+		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
+		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
+		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
+		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "tap$_next_tap"
+		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GENERAL_USE"
+	done
 }
 
 # Install guest
