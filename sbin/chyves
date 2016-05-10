@@ -102,6 +102,7 @@ __preflight_check() {
 
 	# Variables that need functions loaded:
 	_PRIMARY_POOL=$( __get_primary_pool_name )
+	_NUMBER_OF_ACTIVE_POOLS=$( zfs get -H -o name -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING" | wc -l )
 	if [ -z "$_PRIMARY_POOL" ]; then
 		echo "Run setup to install chyves dataset on a pool."
 		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup pool=<ZFS-pool-name>\""
