@@ -1801,21 +1801,26 @@ __set() {
 	done
 }
 
-# Get ZFS props
+# User interface to get chyves properties
 __get() {
 	local prop="$1"
-	local name="$2"
-	local pool="$( __get_pool_for_guest "$name" )"
-	__verify_valid_guest "$name" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
+	local guests="$2"
 
-	if [ "$prop" = "all" ]; then
-		echo "Getting all $name's chyves properties..."
-		zfs get -o property,value all $dataset | grep chyves: | sort | sed -e 's/chyves://g'
-	else
-		echo "Getting $name's property \"$prop\"..."
-		zfs get -H -o value chyves:$prop $dataset
-	fi
+	# Multi-guest support.
+	# Eg.: chyves get cpu guest1,guest2,guest3
+	for name in `echo "$guests" | tr ',' ' '`
+	do
+		local pool="$( __get_pool_for_guest "$name" )"
+		__verify_valid_guest "$name" "$pool"
+
+		if [ "$prop" = "all" ]; then
+			echo "Getting all $name's chyves properties..."
+			zfs get -o property,value all ${pool}/chyves/guests/${name} | grep chyves: | sort | sed -e 's/chyves://g'
+		else
+			echo "Getting $name's property \"$prop\"..."
+			__multi_chyves_zfs_property "get" "$prop" "$pool" "guests" "$name"
+		fi
+	done
 }
 
 # Remove a PCIDEV property
