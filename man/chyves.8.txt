@@ -4,7 +4,8 @@ chyves(8) - bhyve(8) front end manager version 0.0.0
 SYNOPSIS
 chyves version
 chyves setup pool=<pool> kmod=<0|1> net=<interface-name>
-chyves list [iso|firmwares|snapshots|.config|.defaults|processes|<property-name>]
+chyves list [null|iso|firmwares|snapshots|.config|.defaults|pools|processes|
+             <property-name>]
 chyves list tap active
 chyves list .config [<pool>|primary]
 chyves list processes [<name>]
@@ -39,7 +40,7 @@ chyves resize [name] [diskN] [size]
 chyves disks [name]
 chyves snap <name>[@<snapshotname>]
 chyves roll <name>[@<snapshotname>]
-chyves clone [-c | -r] <name> <clonename>
+chyves clone {-c|-r} <name> <clonename>
 chyves export <name>
 chyves console <name> [-t]
 chyves conreset
@@ -88,9 +89,19 @@ per system, only the primary dataset contains the ISO and firmware resources,
 and  only the primary pool contains the guests/.default dataset which is
 referenced when setting properties for new guests. The primary pool is also is
 where new guests are created when the [pool] argument is not specified with
-chyves create. All other active pools need to be set as in the "secondary" role.
-Pools set to the "offline" role are left untouched and is a good role to put a
-local replicated backup.
+chyves create. All other active pools are set to the "secondary" role. Pools set
+to the "offline" role are left untouched and is a good role to put a local
+replicated backup. The primary pool is critical to the operation of chyves.
+Without a primary pool set only the "setup" sub-command is allowed to run. The
+first pool to be setup on the system is the primary pool.
+
+Multi-guest support is the ability to specify multiple guest names that are
+comma separate for a sub-command. Not all sub-commands have this functionality
+but the ones that do, allow for rapid execution of the same command over many
+guests, this can be incredibly helpful for a fleet of VMs. The following
+sub-commands support multi-guest and are provided with a complex example below:
+  chyves clone goldenVM devteam1,devteam2,devteam3 dev-pool
+  chyves create g1,g2,g3 8G ssd-pool
 
 PROPERTIES
 One of the hallmarks of iocage, iohyve, and chyves is storing guests parameters
@@ -104,12 +115,11 @@ Global Configuration Properties:
   separated storage types (eg: SSD, HD, NVMe), and OS plus storage
   configurations. With multiple pools it becomes necessary to have roles for
   each pool. This is facilitated through the use of a dataset called '.config'
-  where global and pool specific properties are stored. These are properties
-  exists on the pool at '$pool/chyves/.config'.
+  where global and pool specific properties are stored.
 
   Single pool configurations are still supported and there is no loss in
-  functionality. For single pool configurations the pool is set to the primary
-  role.
+  functionality. As the first pool is always set as the primary pool no changes
+	are unique for single pool configurations.
 
   Usage: chyves get .config {primary|<pool>} <property>
   Usage: chyves set .config {primary|<pool>} <property>=<value>
@@ -160,6 +170,8 @@ Global Configuration Properties:
     Setting to "on" disables vlan verification checks. This needs to be turned
     on when interface vlans names do not follow the "vlan{n}" naming
     nomenclature.
+  bridge_phy_attach
+    This property is initially set with "chyves setup net=<interface-name>"
 
 Guest Properties:
   These are properties used by chyves to specify the parameters to pass to bhyve
@@ -249,6 +261,8 @@ Guest Properties:
     for complete list of flag options. Not to be changed unless directed. For
     complete list of flags used by chyves when starting a specific guest, turn
     on global configuration "dev_mode" to "on".
+  fw=<firmware-resource-name>
+    Firmware file loaded to boot UEFI guests.
   persist={0|1|2}
     Used to indicate how to handle when the bhyve process ends.
     [0] - Leave powered off when bhyve process closes
@@ -257,31 +271,35 @@ Guest Properties:
     [2] - Always attempt to reboot.
 
 Default Guest Properties:
-  These properties are referenced when creating new guests. The properties
-  prefixed by 'disk_' are not recommended to be changed, you are likely to
-  chainsaw your foot off and then massacre a nearby litter of kitten/puppies
-  in the process. The guest section of properties have the same purpose as
-  described in "Guest Properties" section above unless otherwise noted. Below
-  are the defaults on a new installation of chyves for reference.
+  These properties are referenced when creating new guests. The guest section of
+  properties have the same purpose as described in "Guest Properties" section
+  above, unless otherwise noted. Below are the defaults values on a fresh
+  installation of chyves for reference.
 
-  size=8G
-    Used during setup when the size field is omitted.
-  default_bridge=bridge0
-  bridge_phy_attach
-    This property is initially set with "chyves setup net=<interface-name>"
-  ram=256M
+  bargs-A_-H_-P
   cpu=1
-  persist=1
-  rcboot=0
+  bridges=bridge0
   loader=bhyveload
   os=freebsd
-  bargs-A_-H_-P
-  disk_volmode=dev
-  disk_volblocksize=512
-  disk_dedup=inherit
-  disk_compression=inherit
-  disk_primarycache=inherit
-  disk_secondarycache=inherit
+  persist=1
+  ram=256M
+  rcboot=0
+  size=8G
+    Used during setup when the size field is omitted. No longer a guest
+    property. The ZFS property "usedbychildren" is used to determine size now.
+
+  These default disk properties are direct ZFS values used to create disks for
+  the guest. These properties are not recommended to be changed, you are liable
+  to chainsaw your foot off and then massacre a nearby litter of kitten/puppies
+  in the process. You have been warned. The value "inherit" will inherit the
+  value set by the (*grand)parents. See zfs(8) on settable values but remember,
+  think of the kittens and puppies.
+    disk_volmode=dev
+    disk_volblocksize=512
+    disk_dedup=inherit
+    disk_compression=inherit
+    disk_primarycache=inherit
+    disk_secondarycache=inherit
 
 OPTIONS
 version     Prints the current running version of chyves
@@ -301,83 +319,99 @@ list        Displays information about on general guest info with the no
             and "con" will display configured consoles.
 
             $null       Lists properties about the guests and their disks
-            using flags OS, Loader, and Description in a per pool table.
-            to control level of output. Fields include CPU count, RAM, Disk
-            Size, Pool, OS, Loader, Tap, Console, VMM status, Running status,
-            rcboot flag, and the description.
+                        using flags OS, Loader, and Description in a per pool
+                        table.
 
             iso         Lists the ISO resources.
 
-            firmwares   Lists the Firmware resources.
+            firmwares   Lists the firmware resources.
 
             snapshots   Lists all of the snapshots for all the guests. Does not
                         show snapshots of disks (they are there, though).
 
-            tap         Lists all of the network taps taken by chyves guests
-                        This will list taps that are not active as well. Using
-                        the argument chyves list tap active displays only
-                        active taps.
+            .config     Lists all the .config properties for all the chyves
+                        pools.
 
-            con         Lists all of the nullmodem consoles taken by chyves
-                        guests.
+            .config [<pool-name>|primary] List all the config properties for a
+                        chyves pool. The word "primary" can be used instead of
+                        the primary pool's name.
 
-            info        Lists all the guests along with their RAM, CPU, Size,
-                        OS, Loader, and Description (if -d is passed).
+            pools       Lists all the pools and their roles. Helpful when no
+                        guests have been created.
 
-fetchiso    Fetches installation ISO or install image and creates a
-            dataset for it.
-            Usage: 'chyves fetchiso [URL]' where [URL] is the HTTP or FTP
-            URL to fetchiso from the internet.
+            processes   Lists all the processes *hyve processes.
 
-cpiso       Copies installation ISO or install image from your host and
-            creates a dataset for it.
-            Usage: 'chyves cpiso [path]' where [path] is the full path to
-            ISO file on the host machine.
+            processes [<name>] Lists all the processes *hyve processes for a
+                        guest.
 
-renameiso   Renames an ISO
-            Usage: 'chyves renameiso [ISO] [newname]' where [ISO] is the
-            name of the ISO you would like to rename. [newname]
-            is a new name.
+            <guest-property> List the property given for all the guests. See
+                        "Guest Properties" section above for a list
 
-rmiso       Removes installed ISO from /chyves/ISO
-            Usage: 'chyves rmiso [ISO]' where [ISO] is the name of the ISO
-            you would like to delete.
+            tap active  List all the tap interfaces from /dev/tap*
 
-fetchfw     Fetches firmware and creates a dataset for it.
-            Usage: 'chyves fetchfw [URL]' where [URL] is the HTTP or FTP URL
-            to fetch from the internet.
+info        Lists all the guests along with their RAM, CPU, Size,
+            OS, Loader, and Description (if -d is passed). To control level of
+            output flags are used. Fields include CPU
+            count, RAM, Disk Size, Pool, OS, Loader, Tap, Console,
+            VMM status, Running status, rcboot flag, and the
+            description.
 
-cpfw        Copies firmware from your host and creates a dataset for it.
-            Usage: 'chyves cpfw [path]' where [path] is the full path to
-            firmware file on the host machine.
+iso         Handles ISO resources.
 
-renamefw    Renames a Firmware
-            Usage: 'chyves renamefw [firmware] [newname]' where [firmware]
-            is the name of the firmware you would like to rename.
-            [newname] is a new name.
+            import      chyves iso import {URL|<local-path-to-iso>}
+                        Imports an ISO resource into chyves. Either a local or
+                        remote source can be give. Remote sources can be from
+                        http or ftp. The user is prompted for a file hash when
+                        a remote source is given. After the download completes
+                        the file hash is compared with what is actually hashed.
+                        MD5, SHA1, SHA256, and SHA512 are currently supported.
+                        If the hashes mis-match then the user is prompted to
+                        optionally delete the file. If no hash is supplied, the
+                        user is heckled.
 
-rmfw        Removes installed firmware from /chyves/Firmware
-            Usage: 'chyves rmfw [firmware]' where [firmware] is the name of
-            the firmware you would like to delete.
+                        Supplied ISO resources can be compressed with current
+                        support for files ending in .xz and .gz. Upon import
+                        these files are extracted.
+
+            rename      chyves iso rename {ISO-name} <desired-name>
+                        Rename an ISO resource.
+
+            delete      chyves iso delete {ISO-name}
+                        Delete an ISO resource.
+
+            list        chyve iso list
+                        List available ISO resources.
+
+firmware    Handles firmware resources.
+
+            import      chyves iso import {URL|<local-path-to-iso>}
+                        Imports a firmware resource into chyves. Either a local
+                        or remote source can be give. Remote sources can be from
+                        http or ftp.
+
+            rename      chyves firmware rename {firmware-name} <desired-name>
+                        Rename an firmware resource.
+
+            delete      chyves firmware delete {firmware-name}
+                        Delete an firmware resource.
+
+            list        chyve firmware list
+                        List available firmware resources.
 
 create      Creates new guest.
-            Usage: 'chyves create {name} [size] [pool]' where {name} is
-            the name you would like to use, [size] is the size of the
-            virtual block device in '16G' format where the capital G
-            signifies gigabytes, [pool] is the pool to create the guest on.
+            Usage: 'chyves create {name} [size] [pool]' where {name} is the name
+            you would like to use, [size] is the size of the virtual block
+            device in '16G' format where the capital 'G' signifies gigabytes,
+            and [pool] is the pool to create the guest on. The pool is defaulted
+            to the primary pool if not given. If [size] is not supplied the
+            guest default, 'size', is used.
 
 install     Loads and boots into ISO for guest installation.
-            Usage: 'chyves install [name] [ISO]' where [name] is the name
-            of the guest, and [ISO] is the name of the ISO you would
-            like to boot from in the form of: 'install.iso'
+            Usage: 'chyves install {name} {ISO}' where {name} is the name of the
+            guest, and {ISO} is the name of the ISO resource you would like to
+            boot from in the form of: 'install.iso'
 
-load        Loads the guest operating system bootloader and resources.
-            Usage: 'chyves load [name] [ISO]'
-            where [name]is the name of the guest operating system.
-            [bootimg] is the path to the boot medium
-
-
-start       Starts the guest operating system. (Combines load & boot)
+start       Starts the guest.
             Usage: 'chyves start [name] [-s | -a]'
             where [name] is the name of the guest operating system.
             [-s] will cause the guest to be started once
@@ -465,13 +499,15 @@ roll        Rollback guest to a snapshot.
             name of the guest and [snapshot] is what you would
             like to name the snapshot.
 
-clone       Clone a guest. Note that this will clone all of the properties.
+clone       Clone a guest.
+            This does not clone in the ZFS sense of the word.
             If you want to use the clone and the original guest at the
-            same time you will need to change the tap and nmdm properties
-            or use the -r option to have chyves do this for you
-            Usage: 'chyves clone [-c | -r] [name] [clonename]' where [name]
-            is the name of the guest and [clonename] is what you would
-            like to name the new clone.
+            same time you will need to change the tap, con, and UUID properties
+            or use the -r option to have chyves do this for you.
+            Usage: 'chyves clone {-c|-r} {name} {clonename} [pool]' where {name}
+            is the name of the guest and {clonename} is what you would
+            like to name the new clone, and [pool] is optinally the destination
+            pool for the clone.
 
 export      Export a guest with all of it's properties and disks to a
             GZip'd tarball. Property file is in a ucl-type format.
@@ -496,9 +532,10 @@ console     Consoles into a guest operating system. Utilizes nmdm(4) and
 
 conreset    Kills all running instances of "cu".
 
-dev         Allows for command to be called direct from command line when
-            developing for chyves. Requires the dev_mode=on to be globally set
-            on the primary pool on '.config'.
+dev         Allows for a function to be called direct from command line when
+            developing for chyves. Requires dev_mode to be set with something
+            other than "off". This is globally set on the primary pool on
+            '.config'. See "Global Configuration Properties" section above.
             Usage: 'chyves dev [<function>|<command>] "param1" ... "param7"'
             The parameters are function indexed and only seven parameters
             are possible due to the way Bourne addresses parameter[10].
@@ -514,25 +551,25 @@ Example of a multi-pool dataset hierarchy:
   prim_pool/chyves/guests/
                   /guests/.defaults
                   /.config
-                           chyves:pool_role=primary
+                           pool_role=primary
                   /ISO
                   /Firmware
   secd_pool/chyves/guests
                   /.config
-                          chyves:pool_role=secondary
+                          pool_role=secondary
   anther_pl/chyves/guests
                   /.config
-                          chyves:pool_role=secondary
+                          pool_role=secondary
   offlinePL/chyves/guests
                   /.config
-                          chyves:pool_role=offline
+                          pool_role=offline
 
 Example of a single pool dataset hierarchy:
 
   zroot/chyves/guests
               /guests/.defaults
               /.config
-                      chyves:pool_role=primary
+                      pool_role=primary
               /ISO
               /Firmware
 
@@ -544,33 +581,33 @@ Fetch FreeBSD install ISO for later:
 
   chyves iso fetch ftp://ftp.freebsd.org/.../FreeBSD-10.2-RELEASE-amd64.iso
 
-Create a new FreeBSD guest named bsdguest with an 8 Gigabyte virtual HDD:
+Create a new FreeBSD guest named bguest with an 8 Gigabyte virtual HDD:
 
-  chyves create bsdguest 8G
+  chyves create bguest 8G
 
 List ISO's:
 
   chyves list iso
 
-Install the FreeBSD guest bsdguest:
+Install the FreeBSD guest bguest:
 
-  chyves install bsdguest FreeBSD-10.2-RELEASE-amd64.iso
+  chyves install bguest FreeBSD-10.2-RELEASE-amd64.iso
 
 Console into the installation:
 
-  chyves console bsdguest
+  chyves console bguest
 
 Once installation is done, exit console (~~.) and destroy guest:
 
-  chyves destroy bsdguest
+  chyves destroy bguest
 
 Now that the guest is installed, it can be started like usual:
 
-  chyves start bsdguest
+  chyves start bguest
 
 Some guest os's can be gracefully stopped:
 
-  chyves stop bsdguest
+  chyves stop bguest
 
 List all guests created with:
 
@@ -578,31 +615,46 @@ List all guests created with:
 
 You can change guest properties by using set:
 
-  chyves set bsdguest ram=512M
-  chyves set bsdguest cpu=1
-  chyves set bsdguest tap=tap0
-  chyves set bsdguest con=nmdm0
+  chyves set ram=512M bguest
+  chyves set cpu=1  bguest
+  chyves set tap=tap0  bguest
+  chyves set con=nmdm0 bguest
+
+You can also change multiple properties for one guest in one command by:
+
+  chyves set ram=512M bguest cpu=1 tap=tap0 con=nmdm0
+
+Or change multiple guests property in one command by:
+
+  chyves set ram=512M bguest,bguest2,bguest3 cpu=1 tap=tap0 con=nmdm0
+
+And even change multiple guests and multiple properties in one command by:
+
+  chyves set ram=512M bguest,bguest2,bguest3 cpu=1 bguest4 tap=tap0 con=nmdm0
+
+In the above example this changes the ram to 512M and cpu to 1 for bguest,
+bguest2, and bguest3. Then on bguest4, tap is set to tap0 and con to nmdm0.
 
 Get a specific guest property:
 
-  chyves get ram bsdguest
+  chyves get ram bguest
 
 Get all guest properties:
 
-  chyves get all bsdguest
+  chyves get all bguest
 
 Install and run a Debian guest:
 
   chyves create debianvm 8G
-  chyves set debianvm loader=grub-bhyve os=debian
+  chyves set loader=grub-bhyve debianvm os=debian
   chyves install debianvm deb8.1-net.iso
   chyves start debianvm
 
 Take a snapshot of a guest:
 
-  chyves snap bsdguest@beforeupdate
+  chyves snap bguest@beforeupdate
   chyves list snapshots
-  chyves roll bsdguest@beforeupdate
+  chyves roll bguest@beforeupdate
 
 Make an independent clone of a guest:
 
