@@ -132,6 +132,17 @@ __readonly_cmd() {
     esac
 }
 
+# Verify I/O MMU (iommu) for guests using PCI passthrough
+__verify_iommu_capable() {
+	local _acpidump=$( acpidump -t | grep DMAR )
+
+	# CPU missing DMAR are not VT-d capable.
+	if [ -z "$_acpidump" ]; then
+		__get_cpu_section_from_dmesg
+		__fault_detected_exit "CPU missing I/O MMU capability or is disabled in the BIOS. \nPCI Passthrough requires I/O MMU to function. \nPlease check your CPU manufacture's spec page for your CPU. \nI/O MMU is called AMD-Vi for AMD CPUs and VT-d for Intel CPUs."
+	fi
+}
+
 # Validates if a given pool name exists.
 __verify_valid_pool() {
 	local _name_to_check="$1"
