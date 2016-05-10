@@ -751,6 +751,9 @@ __parse_cmd () {
               [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
               exit
     ;;
+    *)        __help
+              __fault_detected_exit "Unrecognized command: $1. See above for list of correct sub-commands."
+    ;;
   esac
 }
 
