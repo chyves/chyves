@@ -2012,7 +2012,7 @@ __cloneguest() {
 	if [ -z "$_dst_pool" ]; then
 		local _dst_pool=$_src_pool
 	else
-		__verify_valid_pool "_dst_pool" "-c"
+		__verify_valid_pool "$_dst_pool" "-c"
 	fi
 
 	echo "Taking $name snapshot on $_src_pool name @chyves-clone-process-$_UUID_GENERAL_USE"
