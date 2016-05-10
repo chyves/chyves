@@ -477,7 +477,7 @@ __multi_chyves_zfs_property() {
 				local _valid_properties=$( __get_property_list -d )
 				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
 				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .defaults not possible."
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. \nCreating new properties for .defaults is not possible."
 				fi
 
 			# Do not ever allow for setting new .config properties, to prevent confusion
@@ -485,14 +485,14 @@ __multi_chyves_zfs_property() {
 				local _valid_properties=$( __get_property_list -c )
 				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
 				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. Creating new properties for .config not possible."
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep) pool. \nCreating new properties for .config is not possible."
 				fi
 
 			else
 				local _valid_properties=$( __get_property_list -a )
 				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
 				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep). Creation of new properties turned off with 'restrict_new_property_names' in .config"
+					__fault_detected_exit "${_property} is not a a defined property ($_string_to_grep). \nCreation of new properties turned off with 'restrict_new_property_names' in .config"
 				fi
 			fi
 		fi
