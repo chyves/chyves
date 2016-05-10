@@ -1553,8 +1553,15 @@ __boot() {
 
 	# Set install prop
 	__multi_chyves_zfs_property "set" "install" "$pool" "guests" "$name" "no"
+
 	# Generate list of bhyve -s commands for all devices
 	local pci_args=$( __get_bhyve_cmd "$pci" )
+
+	# Verify VT-d capable CPU when using using PCI passthrough
+	if [ -n "$(echo "$pci_args" | grep '=passthrough,' )" ]; then
+		__verify_iommu_capable
+	fi
+
 	# Handle the starting of the guest inside a spawned subshell so the guest
 	# can be restarted automatically if the guest reboots or crashes
 	local runstate="1"
