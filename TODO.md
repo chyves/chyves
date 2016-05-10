@@ -8,31 +8,39 @@ Add ability to use commas with guest names for things like `chyves create`, `chy
 Create a variable section of commonly used `grep` pipes to increase readability. Prefix `_GREP_action`.
 - Do not think this is going to work. Preliminary tests did not work.
 
-Add `conreset` for individual guests in addition to all.
-- Poll assigned guest con name
+- Console changes
+  - Add `conreset` for individual guests in addition to all.
+     - Poll assigned guest con name
+  - Write `__reorder_consoles` function
+   - Will reorder all the console numbers
+   - All guests must be stopped
+   - <strike>Settable offset to start at.<strike>
+   - This will increase compatibility on systems using multiple bhyve management tools
+  - Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
+   - Check if `tmux` is installed (use `__verify_binary_available`)
+   - Check if guest is valid
+   - Check is `cu` is opened for guest already (shared)
+  - Console numbers are never reused. Always increment but can run reorder
+  -Add `__verify_console_unused` function
+    - Get guest name
+    - Get guest console
+    - `ps -aux | grep $console`
 
 Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
 - Change to global variables with `_guest_$var` variables.
+- Preliminary tests with `sh` do no work, `bash` does work. 
+
+Input formatting for size and ram properties
+- Function to be called __verify_byte_nomenclature
 
 Modify the check for which dataset version is in use.
 - This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
 - A warning will be required for version that do make changes that are not backwards compatible.
 - A range might be necessary.
 
-Add `__verify_console_unused` function
-- Get guest name
-- Get guest console
-- `ps -aux | grep $console`
-
 Create handling for configuring `.config`.
 - <strike>`chyves list .config` and `chyves list .config`</strike>
 - Syntax for set will be `chyves set .config [pool] property`
-
-Write `__reorder_consoles` function
-- Will reorder all the console numbers
-- All guests must be stopped
-- Settable offset to start at.
-- This will increase compatibility on systems using multiple bhyve management tools
 
 <strike>FreeNAS verification out of setup and into a function.</strike>
 - Will be used elsewhere to tell user to configure tunables
@@ -43,17 +51,13 @@ Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to functi
 Restructured command layout to have less sub-commands.
 - `remove` for `remove` `rmiso` `rmfw` `rmpci`
 
-Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
-- Check if `tmux` is installed (use `__verify_binary_available`)
-- Check if guest is valid
-- Check is `cu` is opened for guest already (shared)
-
 #### Changes requiring meticulous testing:
 
 Consolidate or rewrite `__start` and `__uefi`
 - Possibly `__boot` and `__load` as well.
 
 Change networking handling
+- tap was currently written for multiples but then failed to implement it
 - Use `chyves:bridge` property to guests
  - Handling so that multiple bridges can used
  - Requirement:
@@ -68,13 +72,13 @@ Change networking handling
  - Addition or verification of `tap` membership of `bridge`
  - Verify sysctl
  - Verify all interfaces are `UP`
-- Add `.default` property for bridge
+- <strike>Add `.default` property for bridge<strike>
 - Write handling for simple systems to guess the the defaults
 
 #### Considerations:
 
 Logs?
-- Dual console with one being logged on startup? Is that possible.
+- Dual console with one being logged on startup? Is that possible?
 
 Thoughts on using $1 as a guest name for action???
 
