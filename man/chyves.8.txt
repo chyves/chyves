@@ -10,14 +10,14 @@ chyves list tap active
 chyves list .config [<pool>|primary]
 chyves list processes [<name>]
 chyves info [-rvstdnakgil|-h]
-chyves iso {list|fetch|rename|delete}
+chyves iso {list|import|rename|delete}
 chyves iso list
-chyves iso fetch {http-URL|ftp-URL|local-path}
+chyves iso import {http-URL|ftp-URL|local-path}
 chyves iso rename <oldname> <newname>
 chyves iso delete <name>
-chyves firmware {list|fetch|rename|delete}
+chyves firmware {list|import|rename|delete}
 chyves firmware list
-chyves firmware fetch {http-URL|ftp-URL|local-path}
+chyves firmware import {http-URL|ftp-URL|local-path}
 chyves firmware rename <oldname> <newname>
 chyves firmware delete <name>
 chyves create <name> [size] [pool]

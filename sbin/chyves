@@ -837,7 +837,7 @@ __setup() {
 					touch /tmp/null.iso
 					if [ -e /tmp/null.iso ]; then
 						echo "importing null.iso into ISO resources..."
-						__resource_functions iso fetch /tmp/null.iso
+						__resource_functions iso import /tmp/null.iso
 					fi
 
 					echo "Done setting up primary pool: $pool"
@@ -1220,7 +1220,7 @@ EOT
 	)
 }
 
-# Handles fetch, rename, delete, list for Firmware, ISO, and some guests resources
+# Handles import, rename, delete, list for Firmware, ISO, and some guests resources
 __resource_functions() {
 	local _function="$1"
 	local _subfunction="$2"
@@ -1239,7 +1239,7 @@ __resource_functions() {
 		local _resource_name="guests/$_arg4/disk$_arg5"
 	fi
 
-	if [ "$_subfunction" = "fetch" ]; then
+	if [ "$_subfunction" = "import" ]; then
 		local _URL=$_arg3
 		local _file_name="$(basename $_URL)"
 
@@ -2163,14 +2163,14 @@ chyves
   list .config [<pool>|primary]
   list processes [<name>]
   info [-rvstdnakgil|-h]
-  iso {list|fetch|rename|delete}
+  iso {list|import|rename|delete}
   iso list
-  iso fetch {http-URL|ftp-URL|local-path}
+  iso import {http-URL|ftp-URL|local-path}
   iso rename <oldname> <newname>
   iso delete <name>
-  firmware {list|fetch|rename|delete}
+  firmware {list|import|rename|delete}
   firmware list
-  firmware fetch {http-URL|ftp-URL|local-path}
+  firmware import {http-URL|ftp-URL|local-path}
   firmware rename <oldname> <newname>
   firmware delete <name>
   create <name> [size] [pool]
