@@ -1,5 +1,24 @@
 This early in the project, a map is not defined. However many goals are planned:
 
+Move to library files for use by `chyves-utils` for certain functions _but_ **maintain the commit history/blame**.
+- Copy `sbin/chyves` to each file in `lib/`, rename, then modify out lines.
+- Use `git diff --find-copies-harder` to catch changes.
+
+Rewrite script to not use `__get_pool_for_guest` direct into a variable. Or at least write a something that at least checks the guest name is valid. Invalid names are not correctly exited. stage1/stage2?
+
+Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the necessary checks as a lot of that code a repeated over and over.
+
+Rewrite to have a CPU manufacture variable. A Intel/AMD/* check, *=dragons.
+
+31 character limit for name.
+
+Rewrite IO MMU check for AMD? (svm?)
+- Verify AMD-Vi / IOMMU check method
+
+Put guest properties in `guests/bguest/.config`.
+
+Write in code for `__cloneguest` to actually support a real clone.
+
 Add ability to use commas with guest names for things like `chyves create`, `chyves set`, `chyves start`, `chyves stop`, `chyves forcekill` and maybe `chyves get`.
 - This would make rapid deploy of guests possible.
 - `for` loops
@@ -28,7 +47,7 @@ Create a variable section of commonly used `grep` pipes to increase readability.
 
 Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
 - Change to global variables with `_guest_$var` variables.
-- Preliminary tests with `sh` do no work, `bash` does work. 
+- Preliminary tests with `sh` do no work, `bash` does work.
 
 Input formatting for size and ram properties
 - Function to be called __verify_byte_nomenclature
