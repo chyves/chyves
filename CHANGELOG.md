@@ -59,21 +59,25 @@ Internal development.
  - This is dynamically determined so if a user manually sets a properties with `zfs` using a `chyves:` prefix this will display that property.
  - This can be helpful in installations where custom properties are set when more information is necessary.
 
+ - Expanded `chyves list pools` to display pool and their roles.
+
+ - Expanded `chyves list processes` to display all *hyve processes or just for one guest.
+
 - Deprecated the distinction of using `fetch` and `cp` for ISO and Firmware resources.
-  - Both are handled by the same function of `fetch`.
+  - Both are handled by the same function of `import`.
   - A regular expression is used to determine if the source starts with `http` or `ftp` and uses `fetch` to download the file. Otherwise `cp` is used.
 
 
 - Consolidated `fetchiso`, `cpiso,` `renameiso`, and `rmiso` into one function/command: `chyves iso` with the use of arguments. For example `chyves fetchiso` is replaced by `chyves iso fetch` and so forth.
- - Added hash check function for remotely fetched ISOs.
+ - Added hash check function for remotely imported ISOs.
    - Before the ISO is downloaded, the user is prompted for a hash. The following hashes are supported md5, sha1, sha256, and sha512.
    - After the file is downloaded the file is hashed, if the hashes match then "Hashes matched" is displayed. If the hashes do not match, the user is prompted to delete the file.
    - If no hash checksum is entered, the user is heckled into feeling bad about their life choices of supporting evil.
- - Added support to for `.gz` and `.xz` compressed iso images for both local and remote fetches.
+ - Added support to for `.gz` and `.xz` compressed iso images for both local and remote imports.
    - These formats are commonly used for pfSense and FreeBSD releases respectively. Now saving bandwidth costs for the projects is even easier.
 
 
-- Consolidated  `fetchfw`, `cpfw`, `renamefw`, and `rmfw` into one function/command: `chyves firmware` with the use of arguments. For example `chyves fetchfw` is replaced by `chyves firmware fetch` and so forth.
+- Consolidated  `fetchfw`, `cpfw`, `renamefw`, and `rmfw` into one function/command: `chyves firmware` with the use of arguments. For example `chyves fetchfw` is replaced by `chyves firmware import` and so forth.
 
 
 - Changed `get` command syntax to `chyves get [property] [name]`. This follows the syntax of `iocage`.
@@ -120,6 +124,12 @@ Internal development.
 
 - Added `chyves list .defaults` to display guest defaults for newly created guests.
 
+- `null.iso` is created and imported as an ISO resource with `chyves setup pool=<pool>` on the primary pool. `chyves` references this file when an ISO resource is not specified for `chyves uefi`  or during `chyves start` for guests with `loader=uefi`.
+
+- Some default properties can be set for ZFS specific parameters for guest disks can be set in `.defaults`.
+
+- Added multi-guest support for some sub-functions. Multi-guest support is the ability to specify multiple guests in one command. This includes `clone`, `get`, `set`
+
 ##### Internal code changes:
 
 
@@ -147,12 +157,15 @@ Internal development.
 - Added function `__verify_binary_available` to check if an executable is available on the system.
 
 - Added function `__multi_chyves_zfs_property` to get or set `chyves:` ZFS properties. Works with `.config`, `.defaults`, and guests.
+   - `__multi_chyves_zfs_property get` will return the value of "1" for the CPU core count when the `UG` CPU feature is missing on Intel CPUs to be compliant.
+   - `__multi_chyves_zfs_property set` will only set a value of "16" when a greater number is attempted to be set for the "cpu" guest property. This is to be compliant with `bhyve`'s limits.
+
+- Names longer than 31 characters are truncated to be compliant with `bhyve`'s limits as the name is used as the unique identifier.
 
 - Added function `__preflight_check` to run before any other code is to make sure the environment is safe for flight.
  - Added CPU feature check in this section.
    - The variable `_CPU_MISSING_UG` is set to "1" when the running on an Intel CPU that lacks the unrestricted guest `UG` feature is unavailable.
    - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
-   - Added function `__get_liar_cpu_value` to get CPU core count for guest but this function will lie if the `UG` CPU feature is missing on Intel CPUs.
    - `chyves` will only start guests with the `os` set as `freebsd` as further restriction when the CPU lacks `UG`.
 
 - Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
@@ -161,9 +174,9 @@ Internal development.
 
 - Added function `__check_if_freenas` to return nothing or "1" if on FreeNAS system.
 
-- Added function `__display_rcboot_priority` to display a human friendly "NO" or "YES (boot-priority-number)" when called.
+- Added function `__display_rcboot_priority` to display a human friendly "NO" or "YES ($boot-priority-number)" when called.
 
-- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES (bhyve-PID)" when called using the `-h` flag. If no flag is used then the bhyve PID is returned.
+- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES ($bhyve-PID)" when called using the `-h` flag. If no flag is used then the bhyve PID is returned.
 
 - Added function `__check_vmm_alocated` to display a human friendly "NO" or "YES" when called using the `-h` flag. If no flag is used then a "1" is returned.
 
@@ -176,6 +189,18 @@ Internal development.
 - Added variable `_PRIMARY_POOL` to global variables instead of polling `__get_primary_pool_name` more than once.
 
 - Deprecated commands `chyves boot` and `chyves load` from users. These functions can still be called from developer mode.
+
+- Added variable `_RESTRICT_NEW_PROPERTY_NAMES` to control whether `__multi_chyves_zfs_property` can create new property names.
+
+- Added variable `_NUMBER_OF_ALL_GUESTS` to count number of guests. All guests are in the count and this is specifically used to set the properties for the first guest when `_RESTRICT_NEW_PROPERTY_NAMES` is set to "on".
+
+- Added function `__load_guest_parameters` to load a guest's parameters into global variables.
+
+- Added function `__load_guest_default_parameters` to load guest defaults into global variables.
+
+- Deprecated the of using underscores for storing `bargs`.
+
+- Added variable `_NUMBER_OF_ACTIVE_POOLS`. Currently used in `__set` when setting properties for `.config`. When only one active pool is on the system, then the multiple `.config` property can be set, otherwise the [pool] field must be used and only property can be set at a time.
 
 ##### Developer enhancements:
 
