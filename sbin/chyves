@@ -1834,47 +1834,83 @@ __destroy() {
 	bhyvectl --destroy --vm=chy-$name
 }
 
-# Set ZFS properties
+# User interface to set chyves properties
 __set() {
-	local name="$3"
-	local _count=1 # Counter needed for setting multiple guests in one go.
-	[ -n "$( echo "$name" | grep '=' )" ] && local name="$2" && echo "The correct syntax is 'chyves set $3 $2', correcting syntax for temporary backwards compatibility."
-	local pool="$( __get_pool_for_guest "$name" )"
-	__verify_valid_guest "$name" "$pool"
-	echo "Setting properties for guest: $name"
-	shift 1
+	local _config_prop="$2"   # This is script indexed. Only used with .config.
+	local _name="$3"          # This is script indexed.
+	local _config_pool="$4"   # This is script indexed. Only used with .config when multiple active pools are present.
+
+	# If more than one active pool then only one .config paramenter can be set at a time.
+	if [ "$_name" = ".config" ] && [ "$_NUMBER_OF_ACTIVE_POOLS" -gt 1 ]; then
+		local prop="$(echo $_config_prop | cut -d '=' -f1)"
+		local val="$(echo $_config_prop | cut -d '=' -f2)"
+
+		# Needed because __verify_number_of_arguments does not catch this.
+		if [ -z "$_config_pool" ]; then
+			__fault_detected_exit "Need pool to set .config property when multiple active chyves pools are detected."
+		else
+			__verify_valid_pool "$_config_pool" -c
+		fi
+
+		echo "Only able to set one .config property at a time when more than one active pool is present."
+		__multi_chyves_zfs_property "set" "$prop" "$_config_pool" ".config" "-" "$val"
+		exit
+	fi
+
+	# Legacy command syntax support
+	if [ -z "$( echo "$2" | grep '=' )" ] && [ -n "$( echo "$3" | grep '=' )" ]; then
+		echo "[WARNING] The correct syntax is 'chyves set ${3} ${2}...', correcting syntax for temporary backwards compatibility. This will be deprecated at some point."
+	elif [ -n "$( echo "$2" | grep '=' )" ] && [ -n "$( echo "$3" | grep '=' )" ]; then
+		__help
+		__fault_detected_exit "Incorrect syntax used. See above for correct syntax"
+	else
+		# Needed to seed first iteration.
+		local guests="$_name"
+		# Kind of amusing how the new syntax is a little more complicated
+	fi
+
+	shift 1   # Keep from setting "set" as a property or using as a guest name.
 	for arg in "$@"; do
 
-		# Needed for multi-guest set support
-		local _count=$( expr $_count + 1 )
+		# Guest name detector
+		if [ -n "$( echo "$arg" | grep -v '=' )" ]; then
+			local guests="$arg"
 
-		# Allows for setting multiple guests properties in one command.
-		# As soon as the fourth parameter, the next guest could be specified.
-		# Eg: chyves set ram=1G guest1 guest2 ram=3G
-		#  parameter 1   2      3      4      5
-		if [ -n "$( echo "$arg" | grep -v '=' )" ] && [ "$_count" -gt "2" ]; then
-			local name="$arg"
-			if [ "$name" != ".config" ]; then
-				local pool="$( __get_pool_for_guest "$name" )"
-				__verify_valid_guest "$name" "$pool"
-				echo "Switching to setting properties for guest: $name"
+			# Skip remain loop as it is property specific.
+			continue
+		fi
+
+		# Multi-guest support.
+		# Eg.: chyves set cpu=8 guest1,guest2,guest3 ram=512M
+		for name in `echo "$guests" | tr ',' ' '`
+		do
+
+			[ "$name" = ".config" ] && [ "$_NUMBER_OF_ACTIVE_POOLS" -gt 1 ] && __fault_detected_exit ".config parameters must be set individually when multiple active pool are present. Correct syntax is: 'chyves set param=value .config pool-name'"
+
+			if [ "$name" != "$_lastguest" ]; then
+				if [ "$name" = ".config" ]; then
+					echo "Switching to setting properties for .config on: $_PRIMARY_POOL"
+				else
+					echo "Switching to setting properties for guest: $name"
+					local pool="$( __get_pool_for_guest "$name" )"
+					__verify_valid_guest "$name" "$pool"
+				fi
 			fi
-		fi
 
-		# Need to skip when a guest name is detected
-		[ "${arg}" = "${name}" ] && continue
+			# Parse property name and desired value from $arg (aka positional parameter)
+			local prop="$(echo $arg | cut -d '=' -f1)"
+			local val="$(echo $arg | cut -d '=' -f2)"
 
-		# Parse property name and desired value from $arg (aka positional parameter)
-		local prop="$(echo $arg | cut -d '=' -f1)"
-		local val="$(echo $arg | cut -d '=' -f2)"
+			# Use function to set ZFS property
+			if [ "$name" = ".config" ]; then
+				[ "$_NUMBER_OF_ACTIVE_POOLS" -eq 1 ] && __multi_chyves_zfs_property "set" "$prop" "primary" ".config" "-" "$val"
+			else
+				__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
+			fi
 
-		# Use function to set ZFS property
-		echo "Setting property \"$prop\" with a value of \"$val\""
-		if [ "$name" = ".config" ]; then
-			__multi_chyves_zfs_property "set" "$prop" "primary" ".config" "-" "$val"
-		else
-			__multi_chyves_zfs_property "set" "$prop" "$pool" "guests" "$name" "$val"
-		fi
+			# Used to save some cycles
+			local _lastguest=$name
+		done
 	done
 }
 
