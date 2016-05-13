@@ -836,6 +836,8 @@ __setup() {
 				zfs create $pool/chyves/guests
 				zfs create $pool/chyves/.config
 				zfs set chyves:pool_version=${_VERSION} $pool/chyves/.config
+				zfs set chyves:pool_version_int=${_VERSION_INT} $pool/chyves/.config
+				zfs set chyves:pool_version_long=${_VERSION_LONG} $pool/chyves/.config
 				# a chyves pool is already setup, setup secondary pool.
 				if [ -n "$_PRIMARY_POOL" ]; then
 					echo "Secondary pool set up..."
