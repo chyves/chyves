@@ -119,6 +119,12 @@ __preflight_check() {
 		_DEVELOPER_MODE="$( __multi_chyves_zfs_property                      "get" "dev_mode" "primary" ".config" )"
 		_ACCEPT_NON_STANDARD_VLAN_NAME="$( __multi_chyves_zfs_property       "get" "accept_non_standard_vlan_name" "primary" ".config" )"
 		_RESTRICT_NEW_PROPERTY_NAMES="$( __multi_chyves_zfs_property         "get" "restrict_new_property_names" "primary" ".config" )"
+		_CHECK_FOR_UPDATES=$( __multi_chyves_zfs_property                    "get" "check_for_updates"                    "primary" ".config" )
+		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS=$( __multi_chyves_zfs_property    "get" "check_for_updates_timeout_seconds"    "primary" ".config" )
+		_CHECK_FOR_UPDATES_LAST_CHECK=$( __multi_chyves_zfs_property         "get" "check_for_updates_last_check"         "primary" ".config" )
+		_CHECK_FOR_UPDATES_LAST_CHECK_STATUS=$( __multi_chyves_zfs_property  "get" "check_for_updates_last_check_status"  "primary" ".config" )
+		_CHECK_FOR_UPDATES_UNIQUE_ID=$( __multi_chyves_zfs_property          "get" "check_for_updates_unique_id"          "primary" ".config" )
+		_CHECK_FOR_UPDATES_URL="$_PROJECT_URL_GIT/raw/${_VERSION_BRANCH}/lib/chy-version"
 	fi
 }
 
@@ -306,6 +312,38 @@ __check_if_freenas() {
 		local OS=$( cat /etc/version | cut -d - -f1 )
 		if [ "$OS" = "FreeNAS" ]; then
 			echo 1
+		fi
+	fi
+}
+
+# Check for chyves updated
+__check_for_chyves_update() {
+	if [ "$_CHECK_FOR_UPDATES" != "off" ]; then
+		[ "$_CHECK_FOR_UPDATES" = "daily" ] && local _num_of_updays=1
+		[ "$_CHECK_FOR_UPDATES" = "monthly" ] && local _num_of_updays=30
+		[ "$_CHECK_FOR_UPDATES" = "always" ] && local _num_of_updays=0
+		[ -z "$_num_of_updays" ] && local _num_of_updays=7
+		local _check_again_date=`date -v -${_num_of_updays}d +"%Y%m%d"`
+
+		if [ "$_CHECK_FOR_UPDATES_LAST_CHECK_STATUS" -eq 1 ]; then
+			echo "NEWER VERSION of chyves available. Check $_PROJECT_URL_GIT/tree/$_VERSION_BRANCH"
+		elif [ "$_check_again_date" -ge "$_CHECK_FOR_UPDATES_LAST_CHECK" ]; then
+			echo "Checking for newer version of chyves on the $_VERSION_BRANCH branch from $_CHECK_FOR_UPDATES_URL."
+			local _fetched_version_library=$( fetch --timeout $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS --quiet -o - --user-agent="chyves $_VERSION_LONG ( $_OS $_OS_VERSION_DATE $_OS_VERSION_REL $_OS_VERSION_REV $_OS_VERSION_FREENAS ; ${_CHECK_FOR_UPDATES_UNIQUE_ID}; )" $_CHECK_FOR_UPDATES_URL )
+
+			if [ "$?" -eq 0 ]; then
+				local _grepped_version=$( echo "$_fetched_version_library" | grep '_VERSION_INT' | cut -d'"' -f1 )
+				echo "NEWER VERSION of chyves available. Check $_PROJECT_URL_GIT/tree/$_VERSION_BRANCH"
+				__multi_chyves_zfs_property "set" "check_for_updates_last_check" "primary" ".config" "-" "$_DATE_YMD"
+
+				if [ "$_grepped_version" -gt "$_VERSION_INT"]; then
+						__multi_chyves_zfs_property "set" "check_for_updates_last_check_status" "primary" ".config" "-" "1"
+				elif [ "$_grepped_version" -eq "$_VERSION_INT"]; then
+						__multi_chyves_zfs_property "set" "check_for_updates_last_check_status" "primary" ".config" "-" "0"
+				fi
+			else
+				echo "Unable to obtain current available version information from $_CHECK_FOR_UPDATES_URL after $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS seconds."
+			fi
 		fi
 	fi
 }
@@ -834,13 +872,18 @@ __setup() {
 					__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
 
 					echo "Setting up .config properties on primary pool..."
-					__multi_chyves_zfs_property "set" "accept_non_standard_vlan_name"  "primary" ".config" "-" "off"
-					__multi_chyves_zfs_property "set" "console_start_offset"           "primary" ".config" "-" "50"
-					__multi_chyves_zfs_property "set" "dataset_role"                   "primary" ".config" "-" "primary"
-					__multi_chyves_zfs_property "set" "dev_mode"                       "primary" ".config" "-" "off"
-					__multi_chyves_zfs_property "set" "log_mode"                       "primary" ".config" "-" "on"
-					__multi_chyves_zfs_property "set" "restrict_new_property_names"    "primary" ".config" "-" "on"
-					__multi_chyves_zfs_property "set" "tap_start_offset"               "primary" ".config" "-" "50"
+					__multi_chyves_zfs_property "set" "accept_non_standard_vlan_name"        "primary" ".config" "-" "off"
+					__multi_chyves_zfs_property "set" "console_start_offset"                 "primary" ".config" "-" "50"
+					__multi_chyves_zfs_property "set" "dataset_role"                         "primary" ".config" "-" "primary"
+					__multi_chyves_zfs_property "set" "dev_mode"                             "primary" ".config" "-" "off"
+					__multi_chyves_zfs_property "set" "log_mode"                             "primary" ".config" "-" "on"
+					__multi_chyves_zfs_property "set" "restrict_new_property_names"          "primary" ".config" "-" "on"
+					__multi_chyves_zfs_property "set" "tap_start_offset"                     "primary" ".config" "-" "50"
+					__multi_chyves_zfs_property "set" "check_for_updates"                    "primary" ".config" "-" "weekly"
+					__multi_chyves_zfs_property "set" "check_for_updates_timeout_seconds"    "primary" ".config" "-" "2"
+					__multi_chyves_zfs_property "set" "check_for_updates_last_check"         "primary" ".config" "-" "$_DATE_YMD"
+					__multi_chyves_zfs_property "set" "check_for_updates_last_check_status"  "primary" ".config" "-" "0"
+					__multi_chyves_zfs_property "set" "check_for_updates_unique_id"          "primary" ".config" "-" "$_UUID_GENERAL_USE"
 
 					echo "Creating null.iso for UEFI use..."
 					touch /tmp/null.iso
