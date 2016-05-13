@@ -28,6 +28,15 @@
 _VERSION=0.0.0                        # Example: v11.6.25 - XXX.YY.ZZZ
 _VERSION_LONG="v0.0.0 2016/04/00"     # Example: v11.6.25 2021/12/31
 _VERSION_INT="00000000"               # Example: 01106025 XXXYYZZZ
+_VERSION_BRANCH=master
+_OS=$( sysctl -n kern.ostype )
+_OS_VERSION_DATE=$( sysctl -n kern.osreldate )
+_OS_VERSION_FREENAS=$( [ -e "/etc/version" ] && cat /etc/version )
+_OS_VERSION_REL=$( sysctl -n kern.osrelease )
+_OS_VERSION_REV=$( sysctl -n kern.osrevision )
+_PROJECT_URL=http://chyves.org
+_PROJECT_URL_GIT="https://github.com/chyves/chyves"
+_DATE_YMD=$( date +"%Y%m%d" )
 _UUID_GENERAL_USE="$(/bin/uuidgen)"
 _UUID_GUEST_USE="$(/bin/uuidgen)"
 _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
@@ -107,10 +116,10 @@ __preflight_check() {
 		echo "Run setup to install chyves dataset on a pool."
 		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup pool=<ZFS-pool-name>\""
 	else
-		_DEVELOPER_MODE="$( __multi_chyves_zfs_property "get" "dev_mode" "primary" ".config" )"
-		_RESTRICT_NEW_PROPERTY_NAMES="$( __multi_chyves_zfs_property "get" "restrict_new_property_names" "primary" ".config" )"
+		_DEVELOPER_MODE="$( __multi_chyves_zfs_property                      "get" "dev_mode" "primary" ".config" )"
+		_ACCEPT_NON_STANDARD_VLAN_NAME="$( __multi_chyves_zfs_property       "get" "accept_non_standard_vlan_name" "primary" ".config" )"
+		_RESTRICT_NEW_PROPERTY_NAMES="$( __multi_chyves_zfs_property         "get" "restrict_new_property_names" "primary" ".config" )"
 	fi
-
 }
 
 # Function used to exit with a message.
