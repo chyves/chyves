@@ -860,7 +860,7 @@ __setup() {
 					__multi_chyves_zfs_property "set" "guest_role"    "primary" "guests" ".defaults" "active"
 					__multi_chyves_zfs_property "set" "network_type"  "primary" "guests" ".defaults" "bridge"
 					__multi_chyves_zfs_property "set" "loader"        "primary" "guests" ".defaults" "bhyveload"
-					__multi_chyves_zfs_property "set" "os"            "primary" "guests" ".defaults" "freebsd"
+					__multi_chyves_zfs_property "set" "os"            "primary" "guests" ".defaults" "default"
 					__multi_chyves_zfs_property "set" "persist"       "primary" "guests" ".defaults" "1"
 					__multi_chyves_zfs_property "set" "ram"           "primary" "guests" ".defaults" "256M"
 					__multi_chyves_zfs_property "set" "rcboot"        "primary" "guests" ".defaults" "0"
@@ -1696,9 +1696,9 @@ __start() {
 	local runmode="1"
 
 	# Check for special handling.
-	if [ "${_CPU_MISSING_UG}" ] && [ "${_GP_os}" != "freebsd" ]; then
+	if [ "${_CPU_MISSING_UG}" ] && [ "${_GP_loader}" != "bhyveload" ]; then
 	 __get_cpu_section_from_dmesg
-	 __fault_detected_exit "Missing CPU feature UG, can only start guests with os=freebsd."
+	 __fault_detected_exit "Missing CPU feature UG, can only start guests with loader=bhyveload."
 	elif [ $_GP_loader = "grub-bhyve" ]; then
 		__verify_binary_available "grub-bhyve"
 	elif [ $_GP_loader = "uefi" ]; then
