@@ -920,7 +920,7 @@ __setup() {
 						echo "chyves does not seem to be setup."
 					fi
 				fi
-          elif [ "${prop}" = "kmod" ]; then
+			elif [ "${prop}" = "kmod" ]; then
 				if [ "${val}" = "1" ]; then
 					echo "Loading kernel modules..."
 					__verify_all_kernel_modules -l
