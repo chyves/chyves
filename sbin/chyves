@@ -42,6 +42,7 @@ _UUID_GUEST_USE="$(/bin/uuidgen)"
 _OLD_VERSION_DATASETS="$(zfs get -H -o name,value -t filesystem -r chyves:pool_version | grep chyves/.config | grep -v "${_VERSION}" )"
 _OFFLINE_POOLS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "offline" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
 _TEMPLATE_GUESTS_GREP_STRING=$(zfs get -H -o name,value -t filesystem -r chyves:guest_role | grep "chyves/guests" | grep "template" | cut -d'/' -f1 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g')
+_FREEBSD_NET_DRIVERS_GREP_STRING='bxe[0-9]?[0-9]?$|de[0-9]?[0-9]?$|em[0-9]?[0-9]?$|igb[0-9]?[0-9]?$|ix[0-9]?[0-9]?$|ixv[0-9]?[0-9]?$|ixl[0-9]?[0-9]?$|ixlv[0-9]?[0-9]?$|le[0-9]?[0-9]?$|ti[0-9]?[0-9]?$|txp[0-9]?[0-9]?$|vx[0-9]?[0-9]?$|miibus[0-9]?[0-9]?$|ae[0-9]?[0-9]?$|age[0-9]?[0-9]?$|alc[0-9]?[0-9]?$|ale[0-9]?[0-9]?$|bce[0-9]?[0-9]?$|bfe[0-9]?[0-9]?$|bge[0-9]?[0-9]?$|cas[0-9]?[0-9]?$|dc[0-9]?[0-9]?$|et[0-9]?[0-9]?$|fxp[0-9]?[0-9]?$|gem[0-9]?[0-9]?$|hme[0-9]?[0-9]?$|jme[0-9]?[0-9]?$|lge[0-9]?[0-9]?$|msk[0-9]?[0-9]?$|nfe[0-9]?[0-9]?$|nge[0-9]?[0-9]?$|nve[0-9]?[0-9]?$|pcn[0-9]?[0-9]?$|re[0-9]?[0-9]?$|rl[0-9]?[0-9]?$|sf[0-9]?[0-9]?$|sge[0-9]?[0-9]?$|sis[0-9]?[0-9]?$|sk[0-9]?[0-9]?$|ste[0-9]?[0-9]?$|stge[0-9]?[0-9]?$|tl[0-9]?[0-9]?$|tx[0-9]?[0-9]?$|vge[0-9]?[0-9]?$|vr[0-9]?[0-9]?$|wb[0-9]?[0-9]?$|xl[0-9]?[0-9]?$|cs[0-9]?[0-9]?$|ed[0-9]?[0-9]?$|ex[0-9]?[0-9]?$|ep[0-9]?[0-9]?$|fe[0-9]?[0-9]?$|sn[0-9]?[0-9]?$|xe[0-9]?[0-9]?$|an[0-9]?[0-9]?$|ath[0-9]?[0-9]?$|ath_pci[0-9]?[0-9]?$|ath_hal[0-9]?[0-9]?$|bwi[0-9]?[0-9]?$|bwn[0-9]?[0-9]?$|ipw[0-9]?[0-9]?$|iwi[0-9]?[0-9]?$|iwn[0-9]?[0-9]?$|malo[0-9]?[0-9]?$|mwl[0-9]?[0-9]?$|ral[0-9]?[0-9]?$|wi[0-9]?[0-9]?$|wpi[0-9]?[0-9]?$'
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 _NUMBER_OF_ALL_GUESTS=$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -v .defaults | wc -l )
 _FORBIDDEN_GUEST_NAMES=".defaults|reorder|reset"
@@ -117,8 +118,8 @@ __preflight_check() {
 		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup pool=<ZFS-pool-name>\""
 	else
 		_DEVELOPER_MODE="$( __multi_chyves_zfs_property                      "get" "dev_mode" "primary" ".config" )"
-		_ACCEPT_NON_STANDARD_VLAN_NAME="$( __multi_chyves_zfs_property       "get" "accept_non_standard_vlan_name" "primary" ".config" )"
 		_RESTRICT_NEW_PROPERTY_NAMES="$( __multi_chyves_zfs_property         "get" "restrict_new_property_names" "primary" ".config" )"
+		_VLAN_IFACE_BASE_NAME="$( __multi_chyves_zfs_property                "get" "vlan_iface_base_name" "primary" ".config" )"
 		_CHECK_FOR_UPDATES=$( __multi_chyves_zfs_property                    "get" "check_for_updates"                    "primary" ".config" )
 		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS=$( __multi_chyves_zfs_property    "get" "check_for_updates_timeout_seconds"    "primary" ".config" )
 		_CHECK_FOR_UPDATES_LAST_CHECK=$( __multi_chyves_zfs_property         "get" "check_for_updates_last_check"         "primary" ".config" )
