@@ -1603,7 +1603,7 @@ __load() {
 			fi
 		fi
 	else
-		bhyveload $wire_memory -m $ram -d $media -c /dev/${con}A chy-$name
+		bhyveload $wire_memory -m $_GP_ram -d $media -c /dev/${_GP_con}A chy-$name
 	fi
 }
 
