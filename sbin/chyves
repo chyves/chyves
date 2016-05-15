@@ -1810,6 +1810,8 @@ __set() {
 	local _name="$3"          # This is script indexed.
 	local _config_pool="$4"   # This is script indexed. Only used with .config when multiple active pools are present.
 
+	[ "$_config_pool" = "primary" ] && local _config_pool="$_PRIMARY_POOL"
+
 	# If more than one active pool then only one .config paramenter can be set at a time.
 	if [ "$_name" = ".config" ] && [ "$_NUMBER_OF_ACTIVE_POOLS" -gt 1 ]; then
 		local prop="$(echo $_config_prop | cut -d '=' -f1)"
