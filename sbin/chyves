@@ -393,6 +393,21 @@ __get_primary_pool_name() {
 	fi
 }
 
+# Get guests name by supplied pid
+__get_guest_name_by_pid() {
+	local _pid="$1"
+
+	for _guest in `__get_guests_list`
+	do
+		local _this_guest_pid=$( __check_bhyve_process_running $_guest )
+		[ -z "$_this_guest_pid" ] && continue
+		if [ "$_pid" -eq "$_this_guest_pid" ]; then
+			_GUEST_name_by_pid="$_guest"
+			break
+		fi
+	done
+}
+
 #  Get all chyves properties that are set on the system
 __get_property_list() {
 	local _flags="$1"
