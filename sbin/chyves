@@ -111,7 +111,7 @@ __preflight_check() {
 	fi
 
 	# Variables that need functions loaded:
-	_PRIMARY_POOL=$( __get_primary_pool_name )
+	__get_primary_pool_name   # _PRIMARY_POOL
 	_NUMBER_OF_ACTIVE_POOLS=$( zfs get -H -o name -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING" | wc -l )
 	if [ -z "$_PRIMARY_POOL" ]; then
 		echo "Run setup to install chyves dataset on a pool."
@@ -387,10 +387,9 @@ __get_pool_for_guest() {
 
 # Get primary pool name
 __get_primary_pool_name() {
-	local _var="$(zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
-	if [ -n "$_var" ]; then
-		__verify_valid_pool "$_var" "-p"
-		echo "${_var}"
+	_PRIMARY_POOL="$( zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
+	if [ -n "$_PRIMARY_POOL" ]; then
+		__verify_valid_pool "$_PRIMARY_POOL" "-p"
 	fi
 }
 
