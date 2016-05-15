@@ -702,8 +702,8 @@ __parse_cmd () {
               __version
               exit
     ;;
-    setup)    __verify_number_of_arguments "2" "$#" "4"       # Needs to be switched over to function index rather than script index
-              __setup "$@"
+    setup)    __verify_number_of_arguments "2" "$#" "2"
+              __setup "$2"
               exit
     ;;
     list)     __verify_number_of_arguments "1" "$#" "3"
@@ -834,143 +834,106 @@ __version() {
 	echo "chyves ${_VERSION_LONG}"
 }
 
-# Setup chyves
+# Setup chyves on a dataset
 __setup() {
-	local args="$@"
-	for arg in $args; do
-		if [ "${arg}" != "setup" ]; then
-			local prop="$(echo $arg | cut -d '=' -f1)"
-			local val="$(echo $arg | cut -d '=' -f2)"
-			if [ "${prop}" = "pool" ]; then
-				local pool="$val"
-				__verify_valid_pool "$val" -cn
-				echo "Setting up chyves pool..."
-				zfs create $pool/chyves
-				zfs create $pool/chyves/guests
-				zfs create $pool/chyves/.config
-				zfs set chyves:pool_version="${_VERSION}" $pool/chyves/.config
-				zfs set chyves:pool_version_int="${_VERSION_INT}" $pool/chyves/.config
-				zfs set chyves:pool_version_long="${_VERSION_LONG}" $pool/chyves/.config
-				# a chyves pool is already setup, setup secondary pool.
-				if [ -n "$_PRIMARY_POOL" ]; then
-					echo "Secondary pool set up..."
-					zfs set mountpoint="/chyves/$pool" $pool/chyves
-					zfs set chyves:dataset_role=secondary $pool/chyves/.config
-				# chyves is not set up yet, setup primary pool.
-				else
-					_PRIMARY_POOL=$pool
-					_RESTRICT_NEW_PROPERTY_NAMES="primary-pool-initial-setup"
-					zfs set mountpoint="/chyves" $_PRIMARY_POOL/chyves
-					zfs create $_PRIMARY_POOL/chyves/ISO
-					zfs create $_PRIMARY_POOL/chyves/Firmware
+	local pool="$1"
+	__verify_valid_pool "$pool" -cn
+	echo "Setting up chyves on $pool..."
+	zfs create $pool/chyves
+	zfs create $pool/chyves/guests
+	zfs create $pool/chyves/.config
+	zfs set chyves:pool_version="${_VERSION}" $pool/chyves/.config
+	zfs set chyves:pool_version_int="${_VERSION_INT}" $pool/chyves/.config
+	zfs set chyves:pool_version_long="${_VERSION_LONG}" $pool/chyves/.config
 
-					echo "Setting up .defaults dataset and properties on primary pool..."
-					zfs create $_PRIMARY_POOL/chyves/guests/.defaults
-					__multi_chyves_zfs_property "set" "bargs"         "primary" "guests" ".defaults" "-A -H -P"
-					__multi_chyves_zfs_property "set" "bridges"       "primary" "guests" ".defaults" "bridge0"
-					__multi_chyves_zfs_property "set" "cpu"           "primary" "guests" ".defaults" "1"
-					__multi_chyves_zfs_property "set" "fw"            "primary" "guests" ".defaults" "-"
-					__multi_chyves_zfs_property "set" "guest_role"    "primary" "guests" ".defaults" "active"
-					__multi_chyves_zfs_property "set" "network_type"  "primary" "guests" ".defaults" "bridge"
-					__multi_chyves_zfs_property "set" "loader"        "primary" "guests" ".defaults" "bhyveload"
-					__multi_chyves_zfs_property "set" "os"            "primary" "guests" ".defaults" "default"
-					__multi_chyves_zfs_property "set" "persist"       "primary" "guests" ".defaults" "1"
-					__multi_chyves_zfs_property "set" "ram"           "primary" "guests" ".defaults" "256M"
-					__multi_chyves_zfs_property "set" "rcboot"        "primary" "guests" ".defaults" "0"
-					__multi_chyves_zfs_property "set" "size"          "primary" "guests" ".defaults" "8G"
+	# A chyves pool is already setup, so setup as secondary pool.
+	if [ -n "$_PRIMARY_POOL" ]; then
+		echo "Secondary pool set up..."
+		zfs set mountpoint="/chyves/$pool" $pool/chyves
+		zfs set chyves:dataset_role=secondary $pool/chyves/.config
 
-					__multi_chyves_zfs_property "set" "disk_volmode"         "primary" "guests" ".defaults" "dev"
-					__multi_chyves_zfs_property "set" "disk_volblocksize"    "primary" "guests" ".defaults" "512"
-					__multi_chyves_zfs_property "set" "disk_dedup"           "primary" "guests" ".defaults" "inherit"
-					__multi_chyves_zfs_property "set" "disk_compression"     "primary" "guests" ".defaults" "inherit"
-					__multi_chyves_zfs_property "set" "disk_primarycache"    "primary" "guests" ".defaults" "inherit"
-					__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
+	# chyves is not set up yet, setup primary pool.
+	else
+		_PRIMARY_POOL=$pool
+		_RESTRICT_NEW_PROPERTY_NAMES="primary-pool-initial-setup"
+		zfs set mountpoint="/chyves" $_PRIMARY_POOL/chyves
+		zfs create $_PRIMARY_POOL/chyves/ISO
+		zfs create $_PRIMARY_POOL/chyves/Firmware
 
-					echo "Setting up .config properties on primary pool..."
-					__multi_chyves_zfs_property "set" "accept_non_standard_vlan_name"        "primary" ".config" "-" "off"
-					__multi_chyves_zfs_property "set" "console_start_offset"                 "primary" ".config" "-" "50"
-					__multi_chyves_zfs_property "set" "dataset_role"                         "primary" ".config" "-" "primary"
-					__multi_chyves_zfs_property "set" "dev_mode"                             "primary" ".config" "-" "off"
-					__multi_chyves_zfs_property "set" "log_mode"                             "primary" ".config" "-" "on"
-					__multi_chyves_zfs_property "set" "restrict_new_property_names"          "primary" ".config" "-" "on"
-					__multi_chyves_zfs_property "set" "tap_start_offset"                     "primary" ".config" "-" "50"
-					__multi_chyves_zfs_property "set" "check_for_updates"                    "primary" ".config" "-" "weekly"
-					__multi_chyves_zfs_property "set" "check_for_updates_timeout_seconds"    "primary" ".config" "-" "2"
-					__multi_chyves_zfs_property "set" "check_for_updates_last_check"         "primary" ".config" "-" "$_DATE_YMD"
-					__multi_chyves_zfs_property "set" "check_for_updates_last_check_status"  "primary" ".config" "-" "0"
-					__multi_chyves_zfs_property "set" "check_for_updates_unique_id"          "primary" ".config" "-" "$_UUID_GENERAL_USE"
+		echo "Setting up .defaults dataset and properties on primary pool..."
+		zfs create $_PRIMARY_POOL/chyves/guests/.defaults
+		__multi_chyves_zfs_property "set" "bargs"         "primary" "guests" ".defaults" "-A -H -P"
+		__multi_chyves_zfs_property "set" "bridge"        "primary" "guests" ".defaults" "bridge0"
+		__multi_chyves_zfs_property "set" "clone"         "primary" "guests" ".defaults" "-"
+		__multi_chyves_zfs_property "set" "clone_assc"    "primary" "guests" ".defaults" "-"
+		__multi_chyves_zfs_property "set" "cpu"           "primary" "guests" ".defaults" "1"
+		__multi_chyves_zfs_property "set" "fw"            "primary" "guests" ".defaults" "-"
+		__multi_chyves_zfs_property "set" "guest_role"    "primary" "guests" ".defaults" "active"
+		__multi_chyves_zfs_property "set" "loader"        "primary" "guests" ".defaults" "bhyveload"
+		__multi_chyves_zfs_property "set" "network_type"  "primary" "guests" ".defaults" "bridge"
+		__multi_chyves_zfs_property "set" "os"            "primary" "guests" ".defaults" "default"
+		__multi_chyves_zfs_property "set" "persist"       "primary" "guests" ".defaults" "1"
+		__multi_chyves_zfs_property "set" "ram"           "primary" "guests" ".defaults" "256M"
+		__multi_chyves_zfs_property "set" "rcboot"        "primary" "guests" ".defaults" "0"
+		__multi_chyves_zfs_property "set" "size"          "primary" "guests" ".defaults" "8G"
 
-					echo "Creating null.iso for UEFI use..."
-					touch /tmp/null.iso
-					if [ -e /tmp/null.iso ]; then
-						echo "importing null.iso into ISO resources..."
-						__resource_functions iso import /tmp/null.iso
-					fi
+		__multi_chyves_zfs_property "set" "disk_volmode"         "primary" "guests" ".defaults" "dev"
+		__multi_chyves_zfs_property "set" "disk_volblocksize"    "primary" "guests" ".defaults" "512"
+		__multi_chyves_zfs_property "set" "disk_dedup"           "primary" "guests" ".defaults" "inherit"
+		__multi_chyves_zfs_property "set" "disk_compression"     "primary" "guests" ".defaults" "inherit"
+		__multi_chyves_zfs_property "set" "disk_primarycache"    "primary" "guests" ".defaults" "inherit"
+		__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
 
-					echo "Done setting up primary pool: $pool"
-				fi
+		echo "Setting up .config properties on primary pool..."
+		__multi_chyves_zfs_property "set" "console_start_offset"                 "primary" ".config" "-" "50"
+		__multi_chyves_zfs_property "set" "dataset_role"                         "primary" ".config" "-" "primary"
+		__multi_chyves_zfs_property "set" "dev_mode"                             "primary" ".config" "-" "on"
+		__multi_chyves_zfs_property "set" "log_mode"                             "primary" ".config" "-" "on"
+		__multi_chyves_zfs_property "set" "restrict_new_property_names"          "primary" ".config" "-" "on"
+		__multi_chyves_zfs_property "set" "tap_start_offset"                     "primary" ".config" "-" "50"
+		__multi_chyves_zfs_property "set" "tap_up_by_default"                    "primary" ".config" "-" "yes"        # net.link.tap.up_on_open
+		__multi_chyves_zfs_property "set" "vlan_iface_base_name"                 "primary" ".config" "-" "vlan"
+		__multi_chyves_zfs_property "set" "check_for_updates"                    "primary" ".config" "-" "weekly"
+		__multi_chyves_zfs_property "set" "check_for_updates_timeout_seconds"    "primary" ".config" "-" "2"
+		__multi_chyves_zfs_property "set" "check_for_updates_last_check"         "primary" ".config" "-" "$_DATE_YMD"
+		__multi_chyves_zfs_property "set" "check_for_updates_last_check_status"  "primary" ".config" "-" "0"
+		__multi_chyves_zfs_property "set" "check_for_updates_unique_id"          "primary" ".config" "-" "$_UUID_GENERAL_USE"
 
-				# If on FreeNAS do a couple of needed changes.
-				if [ "$( __check_if_freenas )" ]; then
-					echo "On FreeNAS installation."
-					echo "Checking for symbolic link to /chyves from /mnt/chyves..."
-					if [ -d /mnt/chyves ]; then
-						if [ ! -e /chyves ]; then
-							ln -s /mnt/chyves /chyves
-							if [ -L /chyves ]; then
-								echo "Symbolic link to /chyves from /mnt/chyves successfully created."
-							else
-								echo "Failed to create symbolic link."
-								echo "Please manually do so by running the following as root:"
-								echo "# ln -s /mnt/chyves /chyves"
-							fi
-						elif [ -L /chyves ]; then
-							echo "Symbolic link to /chyves already exists."
-						fi
-					elif [ "$val" = "freenas-boot" ] && [ -d /chyves ]; then
-						echo "Symbolic link not needed. /chyves exists."
-						echo "chyves is installed on the freenas-boot pool."
-						echo "This is not recommended configuration."
-					else
-						echo "chyves does not seem to be setup."
-					fi
-				fi
-			elif [ "${prop}" = "kmod" ]; then
-				if [ "${val}" = "1" ]; then
-					echo "Loading kernel modules..."
-					__verify_all_kernel_modules -l
-				elif [ "${val}" = "2" ]; then
-					echo "Attempting to unloading kernel modules..."
-					__verify_all_kernel_modules -u
-				else
-					echo "Improper syntax"
-					echo "kmod=0 do nothing"
-					echo "kmod=1 to load modules"
-					echo "kmod=2 to unload modules"
-				fi
-			elif [ "${prop}" = "net" ]; then
-				local bridgeif="$('ifconfig' -l | grep -F "bridge0 " | cut -c1)"
-				if [ -z "${bridgeif}" ]; then
-					echo "Seting up bridge0 on $val..."
-					sysctl net.link.tap.up_on_open=1
-					ifconfig bridge0 create descr "chyves-bridge"
-					ifconfig bridge0 addm $val
-					local _prim_pool=$( __get_primary_pool_name )
-					zfs set chyves:bridge0_phy_attach $_prim_pool/chyves/guests/.defaults
-					ifconfig bridge0 up
-				else
-					echo "bridge0 is already enabled on this machine..."
-					local sysctlexist="$(sysctl net.link.tap.up_on_open | grep 1 | cut -c1)"
-					if [ -z "${sysctlexist}" ]; then
-						echo "Setting up correct sysctl value..."
-						sysctl net.link.tap.up_on_open=1
-					else
-						echo "sysctl already setup properly as well..."
-					fi
-				fi
-			fi
+		echo "Creating null.iso for UEFI use..."
+		touch /tmp/null.iso
+		if [ -e /tmp/null.iso ]; then
+			echo "importing null.iso into ISO resources..."
+			__resource_functions iso import /tmp/null.iso
 		fi
-	done
+
+		echo "Done setting up primary pool: $pool"
+	fi
+
+	# If on FreeNAS do a couple of needed changes.
+	if [ "$( __check_if_freenas )" ]; then
+		echo "On FreeNAS installation."
+		echo "Checking for symbolic link to /chyves from /mnt/chyves..."
+		if [ -d /mnt/chyves ]; then
+			if [ ! -e /chyves ]; then
+				ln -s /mnt/chyves /chyves
+				if [ -L /chyves ]; then
+					echo "Symbolic link to /chyves from /mnt/chyves successfully created."
+				else
+					echo "Failed to create symbolic link."
+					echo "Please manually do so by running the following as root:"
+					echo "# ln -s /mnt/chyves /chyves"
+				fi
+			elif [ -L /chyves ]; then
+				echo "Symbolic link to /chyves already exists."
+			fi
+		elif [ "$val" = "freenas-boot" ] && [ -d /chyves ]; then
+			echo "Symbolic link not needed. /chyves exists."
+			echo "chyves is installed on the freenas-boot pool."
+			echo "This is not recommended configuration."
+		else
+			echo "chyves does not seem to be setup."
+		fi
+	fi
 }
 
 # Outputs PCI device string for bhyve command
