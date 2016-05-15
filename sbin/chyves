@@ -1454,7 +1454,7 @@ __install() {
 
 		echo "Installing $name..."
 		# Set install prop
-		__multi_chyves_zfs_property "set" "cpu" "$pool" "guests" "$name" "yes"
+		__multi_chyves_zfs_property "set" "install" "$pool" "guests" "$name" "yes"
 		# Load from CD
 		__load "$name" "/chyves/ISO/$iso/$iso"
 		# Prepare and start guest
