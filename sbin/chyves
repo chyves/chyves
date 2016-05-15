@@ -691,7 +691,6 @@ __load_guest_default_parameters() {
 	# GDP = Guest Default Parameter
 	# Parameters held in ZFS user properties:
 	_GDP_bargs="$( __multi_chyves_zfs_property      "get" "bargs"      "primary" "guests" ".defaults" )"
-	_GDP_bridge="$( __multi_chyves_zfs_property     "get" "bridge"     "primary" "guests" ".defaults" )"
 	_GDP_cpu="$( __multi_chyves_zfs_property        "get" "cpu"        "primary" "guests" ".defaults" )"
 	_GDP_fw="$( __multi_chyves_zfs_property         "get" "fw"         "primary" "guests" ".defaults" )"
 	_GDP_guest_role="$( __multi_chyves_zfs_property "get" "guest_role" "primary" "guests" ".defaults" )"
@@ -1438,7 +1437,6 @@ __create() {
 		zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
 		echo "Creating properties:"
 		__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
-		__multi_chyves_zfs_property "set" "bridges"     "$pool" "guests" "$name" "$_GDP_bridges"
 		__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
 		__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
 		__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
