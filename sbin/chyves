@@ -336,7 +336,7 @@ __check_for_chyves_update() {
 			echo "NEWER VERSION of chyves available. Check $_PROJECT_URL_GIT/tree/$_VERSION_BRANCH"
 		elif [ "$_check_again_date" -ge "$_CHECK_FOR_UPDATES_LAST_CHECK" ]; then
 			echo "Checking for newer version of chyves on the $_VERSION_BRANCH branch from $_CHECK_FOR_UPDATES_URL."
-			local _fetched_version_library=$( fetch --timeout $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS --quiet -o - --user-agent="chyves $_VERSION_LONG ( $_OS $_OS_VERSION_DATE $_OS_VERSION_REL $_OS_VERSION_REV $_OS_VERSION_FREENAS ; ${_CHECK_FOR_UPDATES_UNIQUE_ID}; )" $_CHECK_FOR_UPDATES_URL )
+			local _fetched_version_library=$( fetch --timeout $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS --quiet -o - --user-agent="chyves $_VERSION_LONG ( $_OS $_OS_VERSION_REL $_OS_VERSION_DATE $_OS_VERSION_REV $_OS_VERSION_FREENAS ; ${_CHECK_FOR_UPDATES_UNIQUE_ID}; )" $_CHECK_FOR_UPDATES_URL )
 
 			if [ "$?" -eq 0 ]; then
 				local _grepped_version=$( echo "$_fetched_version_library" | grep '_VERSION_INT' | cut -d'"' -f1 )
