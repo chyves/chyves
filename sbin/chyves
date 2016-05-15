@@ -596,7 +596,7 @@ __check_bhyve_process_running() {
 	local _flags=$2
 	local _bhyve_process_running=$( pgrep -fx "bhyve: chy-$_guest" )
 	# Valid flags are:
-	# null    Return nothing or a 1
+	# null    Return nothing or the PID
 	# -h      [human] for a "YES (pid)" or "NO" indicator
 
 	if [ "$_flags" = "-h" ]; then
@@ -605,7 +605,7 @@ __check_bhyve_process_running() {
 		else
 			echo "NO"
 		fi
-	elif [ -e "$_bhyve_process_running" ]; then
+	elif [ -n "$_bhyve_process_running" ]; then
 		echo "$_bhyve_process_running"
 	fi
 }
@@ -1450,7 +1450,7 @@ __install() {
 	__load_guest_parameters $name
 
 	# Check to make sure guest isn't running
-	if [ -z "$( __check_bhyve_process_running )" ]; then
+	if [ -z "$( __check_bhyve_process_running $name )" ]; then
 
 		echo "Installing $name..."
 		# Set install prop
@@ -1682,7 +1682,7 @@ __start() {
 	fi
 
 	# Check to make sure guest isn't running
-	if [ -z "$( __check_bhyve_process_running )" ]; then
+	if [ -z "$( __check_bhyve_process_running $name )" ]; then
 		case "$flag" in
 			-s)  runmode="0"    # single - start only once
 			;;
@@ -1723,7 +1723,7 @@ __uefi() {
 	[ $_GP_fw = '-' ] && __fault_detected_exit "You must set a firmware file property to use UEFI..."
 
 	# Check to make sure guest isn't running
-	[ -n "$( __check_bhyve_process_running )" ] && __fault_detected_exit "$name is already running."
+	[ -n "$( __check_bhyve_process_running $name )" ] && __fault_detected_exit "$name is already running."
 
 	# Print the command to start the UEFI guest
 	if [ "$_DEVELOPER_MODE" != "off" ]; then
@@ -2018,7 +2018,7 @@ __resize(){
 	echo "Resizing $disk to $size"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
+		if [ -z "$( __check_bhyve_process_running $name )" ]; then
 			zfs set volsize=$size $pool/chyves/guests/$name/$disk
 		else
 			echo "Please stop the guest first"
@@ -2065,7 +2065,7 @@ __rollguest() {
 	echo "Rolling back to $fullsnap"
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
+		if [ -z "$( __check_bhyve_process_running $name )" ]; then
 			zfs rollback -rR $pool/chyves/guests/$fullsnap
 			for disk in $disklist ; do
 				zfs rollback -rR $pool/chyves/guests/$name/$disk@$snap
@@ -2163,7 +2163,7 @@ __exportguest() {
 	echo "Exporting $name. Note this may take some time depending on the size."
 	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
 		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running )" ]; then
+		if [ -z "$( __check_bhyve_process_running $name )" ]; then
 			# Create /tmp/chyves/guests/$name
 			echo "Creating temp directory..."
 			mkdir -p /tmp/chyves/guests/$name
