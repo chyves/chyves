@@ -1841,7 +1841,7 @@ __set() {
 			__verify_valid_pool "$_config_pool" -c
 		fi
 
-		echo "Only able to set one .config property at a time when more than one active pool is present."
+		echo "[WARNING] Only able to set one .config property at a time when more than one active pool is present."
 		__multi_chyves_zfs_property "set" "$prop" "$_config_pool" ".config" "-" "$val"
 		exit
 	fi
