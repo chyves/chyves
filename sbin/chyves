@@ -559,10 +559,12 @@ __multi_chyves_zfs_property() {
 					__fault_detected_exit "${_property} is not a defined property ($_string_to_grep) pool. \nCreating new properties for .defaults is not possible."
 				fi
 
-			# Do not ever allow for setting new .config properties, to prevent confusion
+			# Do not ever allow for setting new .config properties except bridge{n}_phy_attach and bridge{n}_tap_members, this is to prevent confusion.
+			# $2 in __convert_list_to_grep_string under _string_to_grep is what is needed to allow setting bridge{n}_phy_attach and bridge{n}_tap_members as needed.
+			# Use "set" directly is not recommended as it is not fully restrictive and will allow invalid bridge numbers be used which will later fail.
 			elif [ "$_resource" = ".config" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "primary-pool-initial-setup" ]; then
 				local _valid_properties=$( __get_property_list -c )
-				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" "bridge([0-9]{1,5})_phy_attach|bridge([0-9]{1,5})_tap_members" )
 				if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
 					__fault_detected_exit "${_property} is not a defined property ($_string_to_grep) pool. \nCreating new properties for .config is not possible."
 				fi
