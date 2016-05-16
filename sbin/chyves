@@ -1672,33 +1672,41 @@ __prepare_guest() {
 	local name="$1"
 	local pool="$( __get_pool_for_guest "$name" )"
 	__verify_valid_guest "$name" "$pool"
-	local dataset="${pool}/chyves/guests/${name}"
-	local pci="$(__get_zfs_pcidev_conf $dataset)"
+
+	__generate_bhyve_net_string $name
+	_BHYVE_pci="$_BHYVE_net_string"
+
+	# Add disk as second PCI device
+	_BHYVE_pci="ahci-hd,/dev/zvol/${pool}/chyves/guests/${name}/disk0 $_BHYVE_pci"
+	# Add Hostbridge and lpc as the first PCI devices
+	_BHYVE_pci="hostbridge lpc $_BHYVE_pci"
+}
+
+# Generate bhyve string for network devices.
+__generate_bhyve_net_string() {
+	local name="$1"
+	local pool="$( __get_pool_for_guest "$name" )"
+	__verify_valid_guest "$name" "$pool"
+
 	# Setup tap if needed
-	local listtap="$(zfs get -H -o value chyves:tap $dataset)"
-	for tap in $(echo $listtap | sed -n 1'p' | tr ',' '\n'); do
-		if [ $tap ] && [ $tap != "-" ]; then
-			local tapif="$(ifconfig -l | tr ' ' '\n' | grep -F -w $tap)"
-			if [ -z $tapif ]; then
-				# create tap interface
-				ifconfig $tap create descr "chyves-$name"
-				ifconfig bridge0 addm $tap
-			fi
-			# Add a virtio-net pci device for the tap
-			local mac="$(zfs get -H -o value chyves:mac_$tap $dataset)"
-			if [ $mac = "-" ]; then
-				pci="$pci virtio-net,$tap"
-			else
-				pci="$pci virtio-net,${tap},mac=${mac}"
-			fi
+	local _taps="$( __multi_chyves_zfs_property "get" "tap" "$pool" "guests" "$name" )"
+	for _tap in `echo $_taps | tr ',' '\n'`
+	do
+		[ "$_tap" = "-" ] && continue
+
+		__get_parent_bridge_for_tap_chyves $_tap
+		__verify_valid_system_iface $_tap -c
+		__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_tap
+		__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+
+		# Add a virtio-net pci device for the tap
+		local _mac="$( __multi_chyves_zfs_property "get" "${_tap}_mac" "$pool" "guests" "$name" )"
+		if [ $_mac = "-" ] || [ -z "$_mac" ]; then
+			_BHYVE_net_string="$_BHYVE_net_string virtio-net,$_tap"
+		else
+			_BHYVE_net_string="$_BHYVE_net_string virtio-net,${_tap},mac=${_mac}"
 		fi
-        done
-	#Add disk as second PCI device
-	pci="ahci-hd,/dev/zvol/$dataset/disk0 $pci"
-	#Add Hostbridge and lpc as the first PCI devices
-	pci="hostbridge lpc $pci"
-	# return the list of pci devices
-	echo $pci
+	done
 }
 
 # Start guest (combine load and boot)
