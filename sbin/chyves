@@ -1068,6 +1068,35 @@ __list() {
 			ps -aux | grep ${_guest_name} | grep -E -v "grep ${_guest_name}|/bin/sh /usr/local/sbin/chyves list"
 		fi
 
+	# List bridges
+	elif [ "${output_type}" = "bridges" ]; then
+		__get_bridge_list_on_chyves
+		local _bridges="$_BRIDGE_list_on_chyves"
+
+		for b in $_bridges
+		do
+			echo "Bridge: $b"
+
+			# Get outside interface for this bridge
+			local _phy=$( __multi_chyves_zfs_property "get" "${b}_phy_attach" "primary" ".config" )
+			__verify_valid_iface_format $_phy
+			if [ "$_IFACE_type" = "private" ]; then
+				echo "       Private network, no outside connectivity."
+			else
+				echo "       $_IFACE_type interface: "
+				echo "             $_phy"
+			fi
+
+			# Get taps for this bridge
+			__get_tap_list_for_bridge_on_chyves $b
+			echo "       taps: "
+			for pat in $_TAP_list_for_bridge_on_chyves
+			do
+			echo "             $pat"
+			done
+		done
+		exit
+
 	# Lists a property for all active guests. See "chyves list properties" for options
 	elif [ -n $( __get_property_list | grep "$output_type " ) ]; then
 
