@@ -2176,6 +2176,10 @@ __cloneguest() {
 		local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
 		__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
 
+		# Future use
+		#__multi_chyves_zfs_property "set" "clone"       "$pool" "guests" "$name" "-"
+		#__multi_chyves_zfs_property "set" "clone_assc"  "$pool" "guests" "$name" "-"
+
 		# Change con, tap, and UUID properties if -r is used
 		if [ "$flag" = "-r" ]; then
 			echo "Setting new properties as part of replication..."
