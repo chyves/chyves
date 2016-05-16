@@ -10,22 +10,47 @@ Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the ne
 
 Rewrite to have a CPU manufacture variable. A Intel/AMD/* check, *=dragons.
 
-31 character limit for name.
+Fix __network remove and likely add (error when does not exist on system.)
+
+`__are_guests_running()`
+- `$1` is list of guests
+- Otherwise all guests are checked.
+
+Create restrictions in `__set` for:
+- tap numbers +32768
+- .config
+   - restriction to: check_for_updates|console_start_offset|dev_mode|log_mode|restrict_new_property_names|tap_start_offset|tap_up_by_default|vlan_iface_base_name
+   - redirection to __network for: bridge([0-9]{1,5})_phy_attach|bridge([0-9]{1,5})_tap_members
+   - input verification for check_for_updates: daily|weekly|monthly|off
+
+31-4 character limit for name (create, clone, rename)
+
+`__multi_chyves_zfs_property` tweaks:
+- Remove more than one pool setting. Unnecessary as the properties on non-primary pools are not user settable.
 
 Rewrite IO MMU check for AMD? (svm?)
 - Verify AMD-Vi / IOMMU check method
 
-Put guest properties in `guests/bguest/.config`.
+Create guest properties in `guests/bguest/.config`?
 
 Write in code for `__cloneguest` to actually support a real clone.
+- How to handle multiple datasets?
+- "origin" ZFS property important
+- `clone` and `clone_assc` properties to keep track of this
+- Multi-disk support
+- Rename `-r` to `-i` for independent
+- `-c` becomes proper clone
+- `-d` becomes duplicate
 
-Add ability to use commas with guest names for things like `chyves create`, `chyves set`, `chyves start`, `chyves stop`, `chyves forcekill` and maybe `chyves get`.
-- This would make rapid deploy of guests possible.
-- `for` loops
-- This does make `__verify_valid_guest` a little complicated
-
-Create a variable section of commonly used `grep` pipes to increase readability. Prefix `_GREP_action`.
-- Do not think this is going to work. Preliminary tests did not work.
+Add ability to use commas with guest names for (aka multi-guest support):
+- <strike>`chyves create`<strike>
+- <strike>`chyves set`<strike>
+- `chyves get`
+- `chyves start` - Pending rewrite
+- `chyves stop`
+- `chyves destroy`
+- `chyves delete`
+- `chyves forcekill`
 
 - Console changes
   - Add `conreset` for individual guests in addition to all.
@@ -45,10 +70,6 @@ Create a variable section of commonly used `grep` pipes to increase readability.
     - Get guest console
     - `ps -aux | grep $console`
 
-Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
-- Change to global variables with `_guest_$var` variables.
-- Preliminary tests with `sh` do no work, `bash` does work.
-
 Input formatting for size and ram properties
 - Function to be called __verify_byte_nomenclature
 
@@ -56,6 +77,7 @@ Modify the check for which dataset version is in use.
 - This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
 - A warning will be required for version that do make changes that are not backwards compatible.
 - A range might be necessary.
+- Maybe just a "_DATASET_VERSION" instead?
 
 Create handling for configuring `.config`.
 - <strike>`chyves list .config` and `chyves list .config`</strike>
@@ -72,27 +94,25 @@ Restructured command layout to have less sub-commands.
 
 #### Changes requiring meticulous testing:
 
+Create __dataset with:
+- `chyves dataset <pool-name> setup`  - Move remaining code from `__setup()`
+- `chyves dataset <pool-name> upgrade`  - Upgrade a dataset version
+- `chyves dataset <pool-name> promote`  - Promote a dataset to primary role
+
 Consolidate or rewrite `__start` and `__uefi`
 - Possibly `__boot` and `__load` as well.
 
 Change networking handling
-- tap was currently written for multiples but then failed to implement it
-- Use `chyves:bridge` property to guests
- - Handling so that multiple bridges can used
- - Requirement:
-   - A physical interface/vlan can only be assigned to one bridge
-     - Add `chyves:bridgeXX_physical_parent` to `.config`
-       - Valid values would be physical|vlan|null
-        - null would be used for internal networks only.
-- Deprecate `chyves setup net=em0`
-- Rewritten start of a guest to include:
- - Creation or verification of `bridge`
- - Creation or verification of `tap`
- - Addition or verification of `tap` membership of `bridge`
- - Verify sysctl
- - Verify all interfaces are `UP`
-- <strike>Add `.default` property for bridge<strike>
-- Write handling for simple systems to guess the the defaults
+- **Nearly finished. Polishing at this point.**
+
+#### Not looking like it is possible:
+
+Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
+- Change to global variables with `_guest_$var` variables.
+- Preliminary tests with `sh` do no work, `bash` does work.
+
+Create a variable section of commonly used `grep` pipes to increase readability. Prefix `_GREP_action`.
+- Do not think this is going to work. Preliminary tests did not work.
 
 #### Considerations:
 
