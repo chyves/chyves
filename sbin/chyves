@@ -2268,21 +2268,21 @@ cat << 'EOT'
 
 chyves
   version
-  setup pool=<pool> kmod=<0|1> net=<interface-name>
+  setup <pool>
   list [iso|firmwares|snapshots|.config|.defaults|pools|processes|<property-name>]
   list tap active
   list .config [<pool>|primary]
   list processes [<name>]
   info [-rvstdnakgil|-h]
-  iso {list|import|rename|delete}
+  iso {list|import|rename|delete} [field1] [field2]
   iso list
   iso import {http-URL|ftp-URL|local-path}
-  iso rename <oldname> <newname>
+  iso rename <name> <newname>
   iso delete <name>
   firmware {list|import|rename|delete}
   firmware list
   firmware import {http-URL|ftp-URL|local-path}
-  firmware rename <oldname> <newname>
+  firmware rename <name> <newname>
   firmware delete <name>
   create <name> [size] [pool]
   install <name> <iso-file>
@@ -2293,7 +2293,8 @@ chyves
   destroy <name>
   rename <name> <newname>
   delete <name>
-  set <property1>=<value> {<name>|.defaults} [<property2>=<value>]...
+  set <property1>=<value> {<name>|.defaults|.config} [<property2>=<value>]...
+  set <property1>=<value> {<name1>,<name2>,<name3>} [<property2>=<value>]...
   get {<property>|all} <name>
   rmpci [-f] [name] [pcidev:N]
   add [name] [size]
@@ -2303,6 +2304,7 @@ chyves
   snap <name>[@<snapshotname>]
   roll <name>[@<snapshotname>]
   clone {-c|-r} <name> <clonename> [dest-pool]
+  clone {-c|-r} <name> {<clonename1>,<clonename2>,<clonename3>} [dest-pool]
   export <name>
   console <name> [-t]
   conreset
@@ -2314,8 +2316,9 @@ Syntax nomenclature:
  [optional|list]  - An optional list, valid if not used
  {require|list}   - A require list where one option must be used
  <user-input>     - User supplied input field. Required when not contain in [ ]
- [-abcdefg]       - An optional field but must start with a "-" and followed by
-                    any combination, in any order. Eg. "-gca" is valid.
+ [-abcdefg]       - An optional flag field but must start with a "-" and
+                    followed by any combination, in any order. (Eg: "-gca" is
+                    valid.)
  name             - chyves guest name
 
 EOT
