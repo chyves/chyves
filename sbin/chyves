@@ -879,8 +879,6 @@ __setup() {
 		zfs create $_PRIMARY_POOL/chyves/guests/.defaults
 		__multi_chyves_zfs_property "set" "bargs"         "primary" "guests" ".defaults" "-A -H -P"
 		__multi_chyves_zfs_property "set" "bridge"        "primary" "guests" ".defaults" "bridge0"
-		__multi_chyves_zfs_property "set" "clone"         "primary" "guests" ".defaults" "-"
-		__multi_chyves_zfs_property "set" "clone_assc"    "primary" "guests" ".defaults" "-"
 		__multi_chyves_zfs_property "set" "cpu"           "primary" "guests" ".defaults" "1"
 		__multi_chyves_zfs_property "set" "fw"            "primary" "guests" ".defaults" "-"
 		__multi_chyves_zfs_property "set" "guest_role"    "primary" "guests" ".defaults" "active"
