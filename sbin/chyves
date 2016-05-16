@@ -1502,8 +1502,9 @@ __install() {
 		# Load from CD
 		__load "$name" "/chyves/ISO/$iso/$iso"
 		# Prepare and start guest
-		pci="$(__prepare_guest $name) ahci-cd,/chyves/ISO/$iso/$iso"
-		local pci_args=$(__get_bhyve_cmd "$pci" )
+		__prepare_guest $name
+		_BHYVE_pci="$_BHYVE_pci ahci-cd,/chyves/ISO/$iso/$iso"
+		local pci_args=$(__get_bhyve_cmd "$_BHYVE_pci" )
 		[ "$_DEVELOPER_MODE" != "off" ] && echo "bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name"
 		bhyve -c $_GP_cpu $_GP_bargs -U $_GP_uuid -m $_GP_ram $pci_args -lcom1,/dev/${_GP_con}A chy-$name &
 	else
@@ -1745,8 +1746,8 @@ __start() {
 		esac
 		echo "Starting $name..."
 		# Prepare and boot guest
-		pci="$(__prepare_guest $name)"
-		__boot "$name" "$runmode" "$pci"
+		__prepare_guest $name
+		__boot "$name" "$runmode" "$_BHYVE_pci"
 	fi
 }
 
