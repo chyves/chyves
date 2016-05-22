@@ -53,26 +53,23 @@ Add ability to use commas with guest names for (aka multi-guest support):
 - `chyves delete`
 - `chyves forcekill`
 
-- Console changes
-  - Add `conreset` for individual guests in addition to all.
-     - Poll assigned guest con name
-  - Write `__reorder_consoles` function
-   - Will reorder all the console numbers
-   - All guests must be stopped
-   - <strike>Settable offset to start at.</strike>
-   - This will increase compatibility on systems using multiple bhyve management tools
-  - Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
-   - Check if `tmux` is installed (use `__verify_binary_available`)
-   - Check if guest is valid
-   - Check is `cu` is opened for guest already (shared)
-  - Console numbers are never reused. Always increment but can run reorder
-  -Add `__verify_console_unused` function
-    - Get guest name
-    - Get guest console
-    - `ps -aux | grep $console`
-
-Input formatting for size and ram properties
-- Function to be called __verify_byte_nomenclature
+Console changes
+- Add `conreset` for individual guests in addition to all.
+   - Poll assigned guest con name
+- Write `__reorder_consoles` function
+ - Will reorder all the console numbers
+ - All guests must be stopped
+ - <strike>Settable offset to start at.</strike>
+ - This will increase compatibility on systems using multiple bhyve management tools
+- Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
+ - Check if `tmux` is installed (use `__verify_binary_available`)
+ - Check if guest is valid
+ - Check is `cu` is opened for guest already (shared)
+- Console numbers are never reused. Always increment but can run reorder
+-Add `__verify_console_unused` function
+  - Get guest name
+  - Get guest console
+  - `ps -aux | grep $console`
 
 Modify the check for which dataset version is in use.
 - This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
