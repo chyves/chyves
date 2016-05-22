@@ -45,6 +45,7 @@ Write in code for `__cloneguest` to actually support a real clone.
 Add ability to use commas with guest names for (aka multi-guest support):
 - <strike>`chyves create`</strike>
 - <strike>`chyves set`</strike>
+- <strike>`chyves clone`</strike>
 - `chyves get`
 - `chyves start` - Pending rewrite
 - `chyves stop`
@@ -58,7 +59,7 @@ Add ability to use commas with guest names for (aka multi-guest support):
   - Write `__reorder_consoles` function
    - Will reorder all the console numbers
    - All guests must be stopped
-   - <strike>Settable offset to start at.<strike>
+   - <strike>Settable offset to start at.</strike>
    - This will increase compatibility on systems using multiple bhyve management tools
   - Add ability to use `chyves console bguest -t` to open new pane in tmux and rename pane.
    - Check if `tmux` is installed (use `__verify_binary_available`)
