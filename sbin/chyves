@@ -690,6 +690,7 @@ __load_guest_default_parameters() {
 	# GDP = Guest Default Parameter
 	# Parameters held in ZFS user properties:
 	_GDP_bargs="$( __multi_chyves_zfs_property      "get" "bargs"      "primary" "guests" ".defaults" )"
+	_GDP_bridge="$( __multi_chyves_zfs_property     "get" "bridge"     "primary" "guests" ".defaults" )"
 	_GDP_cpu="$( __multi_chyves_zfs_property        "get" "cpu"        "primary" "guests" ".defaults" )"
 	_GDP_fw="$( __multi_chyves_zfs_property         "get" "fw"         "primary" "guests" ".defaults" )"
 	_GDP_guest_role="$( __multi_chyves_zfs_property "get" "guest_role" "primary" "guests" ".defaults" )"
