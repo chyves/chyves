@@ -433,12 +433,13 @@ __get_property_list() {
 
 # Return the value of the next console to use
 __get_next_console() {
-	local conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
-	if [ -z $conlast ]; then
+	local _conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
+	if [ -z $_conlast ]; then
 		zfs get -H  -t filesystem -o value chyves:console_start_offset $_PRIMARY_POOL/chyves/.config
 	else
-		echo "$(expr $conlast + 1)"
+		echo "$(expr $_conlast + 1)"
 	fi
+	_NEXT_console="nmdm$_conlast"
 }
 
 # Return the value of the next tap interface to use
@@ -1453,7 +1454,7 @@ __create() {
 	for name in `echo "$guests" | tr ',' ' '`
 	do
 		local _next_tap="$( __get_next_tap )"
-		local _next_con="$( __get_next_console )"
+		__get_next_console
 		__verify_valid_guest "$name"
 		__set_new_uuid_guest_use
 
@@ -1473,7 +1474,7 @@ __create() {
 		__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
 		__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
 
-		__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "nmdm$_next_con"
+		__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "$_NEXT_console"
 		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
 		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
@@ -2186,9 +2187,9 @@ __cloneguest() {
 			echo "Grabbing next unused tap interface"
 			local _tap="$( __get_next_tap )"
 			echo "Grabbing next unused console interface"
-			local _con="$( __get_next_console )"
 			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "tap$_tap"
-			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "nmdm$_con"
+			__get_next_console
+			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "$_NEXT_console"
 			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
 		fi
 		echo "Cloning $_clone_type from $name to $cname complete."
