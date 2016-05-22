@@ -444,12 +444,13 @@ __get_next_console() {
 
 # Return the value of the next tap interface to use
 __get_next_tap() {
-	local taplast="$(zfs get -H -o value chyves:tap | grep -v - | sort -V | tail -n1 | cut -c 4-)"
-	if [ -z $taplast ]; then
-		zfs get -H  -t filesystem -o value chyves:tap_start_offset $_PRIMARY_POOL/chyves/.config
+	local _taplast="$(zfs get -H -o value chyves:tap | grep -v - | tr ',' '\n' | grep -v vale | sort -V | tail -n1 | cut -c 4-)"
+	if [ -z $_taplast ]; then
+		local _tap_num=zfs get -H  -t filesystem -o value chyves:tap_start_offset $_PRIMARY_POOL/chyves/.config
 	else
-		echo "$(expr $taplast + 1)"
+		local _tap_num="$(expr $_taplast + 1)"
 	fi
+	_NEXT_tap="tap$_tap_num"
 }
 
 # Get a list of guests on system
@@ -1453,7 +1454,7 @@ __create() {
 	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
 	for name in `echo "$guests" | tr ',' ' '`
 	do
-		local _next_tap="$( __get_next_tap )"
+		__get_next_tap
 		__get_next_console
 		__verify_valid_guest "$name"
 		__set_new_uuid_guest_use
@@ -1478,7 +1479,7 @@ __create() {
 		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
 		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "tap$_next_tap"
+		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "$_NEXT_tap"
 		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
 	done
 }
@@ -2185,10 +2186,10 @@ __cloneguest() {
 			echo "Generating new UUID"
 			__set_new_uuid_guest_use
 			echo "Grabbing next unused tap interface"
-			local _tap="$( __get_next_tap )"
+			__get_next_tap
 			echo "Grabbing next unused console interface"
-			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "tap$_tap"
 			__get_next_console
+			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "$_NEXT_tap"
 			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "$_NEXT_console"
 			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
 		fi
