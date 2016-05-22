@@ -380,6 +380,7 @@ __get_pool_names() {
 # Get pool name for guest
 __get_pool_for_guest() {
 	local _guest_name="$1"
+	[ -z $( zfs list -d 3 -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_name" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" ) ] && __fault_detected_exit "Invalid active guest name"
 	_GUEST_pool="$(zfs list -d 3 -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_name" | cut -d '/' -f 1 )"
 	__verify_valid_pool "$_GUEST_pool"
 	__verify_valid_guest "$_guest_name" "$_GUEST_pool"
@@ -1064,7 +1065,6 @@ __list() {
 			ps -aux | grep -E "chy-|chyves|bhyveload|grub-bhyve" | grep -v -E "grep -E chy-|/bin/sh /usr/local/sbin/chyves list"
 		else
 			__get_pool_for_guest "$_guest_name"
-			__verify_valid_guest "${_guest_name}" "$_GUEST_pool"
 			ps -aux | grep ${_guest_name} | grep -E -v "grep ${_guest_name}|/bin/sh /usr/local/sbin/chyves list"
 		fi
 
@@ -1489,7 +1489,6 @@ __install() {
 	local name="$1"
 	local iso="$2"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	__verify_all_kernel_modules
 	__load_guest_parameters $name
 
@@ -1517,7 +1516,6 @@ __load() {
 	local name="$1"
 	local media="$2"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	__verify_all_kernel_modules
 	__load_guest_parameters $name
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
@@ -1620,7 +1618,6 @@ __boot() {
 	local runmode="$2"
 	local pci="$3"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	__verify_all_kernel_modules
 	__load_guest_parameters $name
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
@@ -1672,7 +1669,6 @@ __boot() {
 __prepare_guest() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 
 	__generate_bhyve_net_string $name
 	_BHYVE_pci="$_BHYVE_net_string"
@@ -1687,7 +1683,6 @@ __prepare_guest() {
 __generate_bhyve_net_string() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 
 	# Setup tap if needed
 	local _taps="$( __multi_chyves_zfs_property "get" "tap" "$_GUEST_pool" "guests" "$name" )"
@@ -1756,7 +1751,6 @@ __uefi() {
 	local name="$1"
 	local media="${2-null.iso}"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	__verify_all_kernel_modules
 	__load_guest_parameters
 	[ "${_CPU_MISSING_UG}" ] && __get_cpu_section_from_dmesg && __fault_detected_exit "This CPU lacks the 'UG' feature of EPT. UEFI guests are disabled."
@@ -1807,7 +1801,6 @@ __uefi() {
 __stop() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	local pid=$(pgrep -fx "bhyve: chy-$name")
 	echo "Stopping $name..."
 	kill $pid
@@ -1818,7 +1811,6 @@ __stop() {
 __forcekill() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 
 	# Display current running processes for guest
 	__list processes $name | grep -v "/bin/sh /usr/local/sbin/chyves forcekill"
@@ -1850,7 +1842,6 @@ __scram() {
 __destroy() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	echo "Destroying $name..."
 	bhyvectl --force-poweroff --vm=chy-$name
 	bhyvectl --destroy --vm=chy-$name
@@ -1917,7 +1908,6 @@ __set() {
 				else
 					echo "Switching to setting properties for guest: $name"
 					__get_pool_for_guest "$name"
-					__verify_valid_guest "$name" "$_GUEST_pool"
 				fi
 			fi
 
@@ -1948,7 +1938,6 @@ __get() {
 	for name in `echo "$guests" | tr ',' ' '`
 	do
 		__get_pool_for_guest "$name"
-		__verify_valid_guest "$name" "$_GUEST_pool"
 
 		if [ "$prop" = "all" ]; then
 			echo "Getting all $name's chyves properties..."
@@ -1969,7 +1958,6 @@ __rmpci() {
 		echo "Removing $flagthree from $flagtwo"
 		local pciprop="$(echo "$flagthree" | grep pcidev:)"
 		__get_pool_for_guest "$name"
-		__verify_valid_guest "$flagtwo" "$_GUEST_pool"
 		local dataset="${_GUEST_pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
@@ -1980,7 +1968,6 @@ __rmpci() {
 	else
 		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
 		__get_pool_for_guest "$flagone"
-		__verify_valid_guest "$flagone" "$_GUEST_pool"
 		local dataset="${_GUEST_pool}/chyves/guests/${name}"
 		# Make sure it's a valid pcidev property as to not shoot foot
 		if [ -z $pciprop ]; then
@@ -2002,7 +1989,6 @@ __add() {
 	local name="$1"
 	local size="$2"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	__load_guest_default_parameters
 	local _disk_options=$( __create_zvol_disk_options_string )
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
@@ -2064,7 +2050,6 @@ __resize(){
 	local disk="$2"
 	local size="$3"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
 	# Check if guest exists
 	echo "Resizing $disk to $size"
@@ -2084,7 +2069,6 @@ __resize(){
 __disks() {
 	local name="$1"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
 	(
 	echo "Listing disks for $name..."
@@ -2099,7 +2083,6 @@ __snapguest() {
 	local fullsnap="$1"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	echo "Taking snapshot $fullsnap"
 	zfs snap -r $_GUEST_pool/chyves/guests/$fullsnap
 }
@@ -2109,7 +2092,6 @@ __rollguest() {
 	local fullsnap="$1"
 	local name="$(echo $fullsnap | cut -d '@' -f1)"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	local snap="$(echo $fullsnap | cut -d '@' -f2)"
 	local disklist="$(zfs list -H | grep chyves/guests/$name | grep disk | \
 				cut -f1 | cut -d '/' -f4-)"
@@ -2138,7 +2120,6 @@ __cloneguest() {
 	local _dst_pool="$4"
 	__get_pool_for_guest
 	local _src_pool="$_GUEST_pool"
-	__verify_valid_guest "$name" "$_src_pool"
 
 	# Verify -c or -f flag used.
 	if [ "$flag" = "-c" ];then
@@ -2252,7 +2233,6 @@ __console() {
 	local name="$1"
 	local _flag="$2"
 	__get_pool_for_guest "$name"
-	__verify_valid_guest "$name" "$_GUEST_pool"
 	local dataset="${_GUEST_pool}/chyves/guests/${name}"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	echo "Starting console on $name..."
