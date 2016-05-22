@@ -2248,6 +2248,9 @@ __exportguest() {
 __console() {
 	local name="$1"
 	local _flag="$2"
+	__get_pool_for_guest "$name"
+	__verify_valid_guest "$name" "$_GUEST_pool"
+	local dataset="${_GUEST_pool}/chyves/guests/${name}"
 	local con="$(zfs get -H -o value chyves:con $dataset)"
 	echo "Starting console on $name..."
 	echo "~~. to escape console [uses cu(1) for console]"
