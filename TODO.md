@@ -43,8 +43,8 @@ Write in code for `__cloneguest` to actually support a real clone.
 - `-d` becomes duplicate
 
 Add ability to use commas with guest names for (aka multi-guest support):
-- <strike>`chyves create`<strike>
-- <strike>`chyves set`<strike>
+- <strike>`chyves create`</strike>
+- <strike>`chyves set`</strike>
 - `chyves get`
 - `chyves start` - Pending rewrite
 - `chyves stop`
