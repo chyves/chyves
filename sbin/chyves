@@ -55,19 +55,19 @@ PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 __preflight_check() {
 
 	# Checks to see variable is empty as grep needs an arguement and a UUID stastically should not have a collision if there are no pools in an offline role
-	if [ -z "${_OFFLINE_POOLS_GREP_STRING}" ]; then
+	if [ -z "$_OFFLINE_POOLS_GREP_STRING" ]; then
 	  _OFFLINE_POOLS_GREP_STRING=${_UUID_GENERAL_USE}
 	fi
 
 	# Appends ".defaults" to $_TEMPLATE_GUESTS_GREP_STRING
-	if [ -z "${_TEMPLATE_GUESTS_GREP_STRING}" ]; then
+	if [ -z "$_TEMPLATE_GUESTS_GREP_STRING" ]; then
 	  _TEMPLATE_GUESTS_GREP_STRING=".defaults"
 	else
 	  _TEMPLATE_GUESTS_GREP_STRING=$( echo "${_TEMPLATE_GUESTS_GREP_STRING}|.defaults" )
 	fi
 
 	# Check for out of date datasets when not running setup.
-	if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
+	if [ ! -z "$_OLD_VERSION_DATASETS" ] && [ "$1" != "setup" ]; then
 	  __fault_detected_exit "Out of date chyves\' dataset(s) version found. \nPlease install sysutils/chyves-utils and then run: \nchyves-upgrade"
 	fi
 
@@ -77,7 +77,7 @@ __preflight_check() {
 	fi
 
 	# Check for out of date datasets when not running setup.
-	if [ ! -z ${_OLD_VERSION_DATASETS} ] && [ "$1" != "setup" ]; then
+	if [ ! -z "$_OLD_VERSION_DATASETS" ] && [ "$1" != "setup" ]; then
 		echo "Out of date chyves\' dataset(s) version found."
 		echo "Please install sysutils/chyves-utils and then run:"
 		echo "chyves-upgrade"
