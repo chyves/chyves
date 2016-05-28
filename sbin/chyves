@@ -581,6 +581,12 @@ __multi_chyves_zfs_property() {
 			fi
 		fi
 
+		# Correct byte nomenclature for RAM and size for .default
+		if [ "$_property" = "ram" ] || [ "$_property" = "size" ]; then
+			__get_corrected_byte_nomenclature "$_value"
+			local _value="$_CORRECTED_byte_nomenclature"
+		fi
+
 		# Do not exceed bhyve CPU capability
 		[ "$_property" = "cpu" ] && [ "$_value" -gt "16" ] && local _value="16" && echo "bhyve has a 16 CPU core limit. Setting cpu=16"
 
@@ -711,6 +717,33 @@ __load_guest_default_parameters() {
 	_GDP_disk_compression="$( __multi_chyves_zfs_property     "get" "disk_compression"    "primary" "guests" ".defaults" )"
 	_GDP_disk_primarycache="$( __multi_chyves_zfs_property    "get" "disk_primarycache"   "primary" "guests" ".defaults" )"
 	_GDP_disk_secondarycache="$( __multi_chyves_zfs_property  "get" "disk_secondarycache" "primary" "guests" ".defaults" )"
+}
+
+__get_corrected_byte_nomenclature() {
+	local _var="$1"
+
+	[ -n "$( echo "$_var" | grep -v -E '^[0-9]{1,}[kmgtKMGT]?$' )" ] && __fault_detected_exit "Unrecognized size: '$_var', must be any integer and optionally a suffix K, M, G, or T. Megabytes are assumed if not specified."
+
+	# Change to upper case
+	local _var=$( echo "$_var" | tr '[:lower:]' '[:upper:]' )
+
+	# Break _var into two parts number and size suffix
+	local _num=$( echo "$_var" | grep -o -E "[0-9]{1,}" )
+	local _suffix=$( echo "$_var" | grep -o "[kmgtKMGT]" )
+
+	# If no suffix, then use the bhyve default of Megabytes
+	[ -z "$_suffix" ] && local _suffix="M"
+
+	# If devisable by 1024, then increase the file size denomination
+	while [ "$( expr $_num % 1024 )" -eq 0 ] && [ "$_suffix" != "T" ]
+	do
+		local _num=$( expr $_num / 1024 )
+		[ "$_suffix" = "G" ] && local _suffix="T"
+		[ "$_suffix" = "M" ] && local _suffix="G"
+		[ "$_suffix" = "K" ] && local _suffix="M"
+	done
+
+	_CORRECTED_byte_nomenclature="$_num$_suffix"
 }
 
 # Process command line
