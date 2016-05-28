@@ -1333,7 +1333,6 @@ __resource_functions() {
 	local _subfunction="$2"
 	local _arg3="$3"			# URL|File-Path\File-Name|Firmware-Name
 	local _arg4="$4"			# Rename-Name
-	local _prim_pool=$_PRIMARY_POOL
 
 	# Sets the variable to use to for the resource
 	if [ "$_function" = "firmware" ]; then
