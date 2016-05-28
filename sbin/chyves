@@ -523,10 +523,10 @@ __create_zvol_disk_options_string() {
 
 #  get|set chyves: properties
 __multi_chyves_zfs_property() {
-	local _action=$1        # get|set
-	local _property=$2      # <property name>
-	local _pool=$3          # primary|<pool name>
-	local _resource=$4      # .config|guests
+	local _action="$1"      # get|set
+	local _property="$2"    # <property name>
+	local _pool="$3"        # primary|<pool name>
+	local _resource="$4"    # .config|guests
 	local _guest="$5"       # -|<guest name>
 	local _value="$6"       # <property value>
 
