@@ -224,10 +224,19 @@ __verify_valid_guest() {
 
 	# Checks to run when validating unused guest name for create/clone/etc
 	if [ -z "$_pool" ]; then
+
+		# Check if guest name is forbidden
 		[ -n  "$( echo "$_guest_to_check" | grep -E "$_FORBIDDEN_GUEST_NAMES" )" ] && __fault_detected_exit "\"$_guest_to_check\" name is forbidden."
+
+		# Check for valid guest name and length
+		[ -n "$( echo "$_guest_to_check" | grep -v -E "^[a-zA-Z0-9_.-]{1,27}$" )" ] && __fault_detected_exit "Unsuitable name: '$_guest_to_check', must be alphanumeric between 1 and 27 characters and optionally can contain dashes '-', underscores '_', and or periods '.'."
+
+		# Check if guest name in use on active pool.
 		if [ "$(zfs list -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_to_check" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | wc -l )" -gt "0" ]; then
 			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
+
+	# Normal check of guest and pool combo
 	else
 		# Check to see if pool has chyves setup on it.
 		__verify_valid_pool "$_pool" "-c"
