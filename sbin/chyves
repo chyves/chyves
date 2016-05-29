@@ -1606,6 +1606,7 @@ __create() {
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "$_NEXT_tap"
 		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
+
 		__multi_chyves_zfs_property "set" "uefi_console_output"                  "$pool" "guests" "$name" "$_GDP_uefi_console_output"
 		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "$pool" "guests" "$name" "$_GDP_uefi_mouse_type"
 		__multi_chyves_zfs_property "set" "uefi_vnc_port"                        "$pool" "guests" "$name" "$_NEXT_vnc_port"
@@ -2225,7 +2226,7 @@ __cloneguest() {
 	local name="$2"
 	local clones="$3"
 	local _dst_pool="$4"
-	__get_pool_for_guest
+	__get_pool_for_guest $name
 	local _src_pool="$_GUEST_pool"
 
 	# Verify -c or -f flag used.
