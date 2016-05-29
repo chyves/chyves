@@ -307,9 +307,10 @@ Guest Properties:
     11-CURRENT (r300097), a modified bhyve binary with graphics support, and the
     UEFI firmware "BHYVE_UEFI_20160526.fd".
   uefi_mouse_type=ps2|usb3
-    When set to "ps2" a PS/2 mouse is connected to the guest. When set "usb3" a
-    USB 3.0 tablet is emulated which provides much better mouse performance but
-    is only supported on newer guests.
+    This property is only used when the property "uefi_console_output" is set
+    to "vnc". When set to "ps2" a PS/2 mouse is connected to the guest. When
+    set "usb3" a USB 3.0 tablet is emulated which provides much better mouse
+    performance but is only supported on newer guest OSes.
   uefi_vnc_port=1025-65536
     Specifies the port for the host to listen on for VNC connections for the
     guest.
@@ -330,8 +331,8 @@ Guest Properties:
       640x480
   uefi_pause_until_vnc_client_connect={on|off}
     When set to "on" the guest will wait to boot until a VNC client connects.
-    This is helpful for installations requiring a key press for a short window
-    after starting.
+    This is helpful for installations requiring a key press for a short timing
+    window after starting.
 
 Default Guest Properties:
   These properties are referenced when creating new guests. The guest section of
