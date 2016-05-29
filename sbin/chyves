@@ -454,6 +454,17 @@ __get_next_tap() {
 	_NEXT_tap="tap$_tap_num"
 }
 
+# Return the next vnc port to use
+__get_next_vnc_port() {
+	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 | cut -c 5- )"
+	if [ -z $_vnc_port_last ]; then
+		local _vnc_port_last="$( __multi_chyves_zfs_property "get" "uefi_vnc_port_start_offset" "primary" ".config" )"
+	else
+		local _vnc_port_last="$( expr $_vnc_port_last + 1 )"
+	fi
+	_NEXT_vnc_port="$_vnc_port_last"
+}
+
 # Get a list of guests on system
 __get_guests_list() {
 	local _flags="$1"
@@ -687,6 +698,14 @@ __load_guest_parameters() {
 	_GP_tap="$( __multi_chyves_zfs_property      "get" "tap"      "$_GUEST_pool" "guests" "$_guest" )"
 	_GP_uuid="$( __multi_chyves_zfs_property     "get" "uuid"     "$_GUEST_pool" "guests" "$_guest" )"
 
+	# UEFI GOP Support
+	_GP_uefi_console_output="$( __multi_chyves_zfs_property "get" "uefi_console_output"                  "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uefi_mouse_type="$( __multi_chyves_zfs_property     "get" "uefi_mouse_type"                      "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uefi_vnc_ip="$( __multi_chyves_zfs_property         "get" "uefi_vnc_ip"                          "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uefi_vnc_port="$( __multi_chyves_zfs_property       "get" "uefi_vnc_port"                        "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uefi_vnc_res="$( __multi_chyves_zfs_property        "get" "uefi_vnc_res"                         "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uefi_vnc_pause="$( __multi_chyves_zfs_property      "get" "uefi_pause_until_vnc_client_connect"  "$_GUEST_pool" "guests" "$_guest" )"
+
 	# Other parameters
 	_GP_path="$( __get_path_for_guest_dataset "$_guest" "$_GUEST_pool" )"
 	_GP_disk0_blocksize="$( zfs get -H -o value volblocksize "$_GUEST_pool/chyves/guests/${_guest}/disk0" )"
@@ -709,6 +728,13 @@ __load_guest_default_parameters() {
 	_GDP_ram="$( __multi_chyves_zfs_property        "get" "ram"        "primary" "guests" ".defaults" )"
 	_GDP_rcboot="$( __multi_chyves_zfs_property     "get" "rcboot"     "primary" "guests" ".defaults" )"
 	_GDP_size="$( __multi_chyves_zfs_property       "get" "size"       "primary" "guests" ".defaults" )"
+
+	# UEFI GOP Support
+	_GDP_uefi_console_output="$( __multi_chyves_zfs_property "get" "uefi_console_output"                  "primary" "guests" ".defaults" )"
+	_GDP_uefi_mouse_type="$( __multi_chyves_zfs_property     "get" "uefi_mouse_type"                      "primary" "guests" ".defaults" )"
+	_GDP_uefi_vnc_ip="$( __multi_chyves_zfs_property         "get" "uefi_vnc_ip"                          "primary" "guests" ".defaults" )"
+	_GDP_uefi_vnc_res="$( __multi_chyves_zfs_property        "get" "uefi_vnc_res"                         "primary" "guests" ".defaults" )"
+	_GDP_uefi_vnc_pause="$( __multi_chyves_zfs_property      "get" "uefi_pause_until_vnc_client_connect"  "primary" "guests" ".defaults" )"
 
 	# Get _disk specific properties
 	_GDP_disk_volmode="$( __multi_chyves_zfs_property         "get" "disk_volmode"        "primary" "guests" ".defaults" )"
@@ -926,6 +952,12 @@ __setup() {
 		__multi_chyves_zfs_property "set" "rcboot"        "primary" "guests" ".defaults" "0"
 		__multi_chyves_zfs_property "set" "size"          "primary" "guests" ".defaults" "8G"
 
+		__multi_chyves_zfs_property "set" "uefi_console_output"                  "primary" "guests" ".defaults" "serial"
+		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "primary" "guests" ".defaults" "ps2"
+		__multi_chyves_zfs_property "set" "uefi_vnc_ip"                          "primary" "guests" ".defaults" "0.0.0.0"
+		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "primary" "guests" ".defaults" "800x600"
+		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "primary" "guests" ".defaults" "yes"
+
 		__multi_chyves_zfs_property "set" "disk_volmode"         "primary" "guests" ".defaults" "dev"
 		__multi_chyves_zfs_property "set" "disk_volblocksize"    "primary" "guests" ".defaults" "512"
 		__multi_chyves_zfs_property "set" "disk_dedup"           "primary" "guests" ".defaults" "inherit"
@@ -942,6 +974,7 @@ __setup() {
 		__multi_chyves_zfs_property "set" "tap_start_offset"                     "primary" ".config" "-" "50"
 		__multi_chyves_zfs_property "set" "tap_up_by_default"                    "primary" ".config" "-" "yes"        # net.link.tap.up_on_open
 		__multi_chyves_zfs_property "set" "vlan_iface_base_name"                 "primary" ".config" "-" "vlan"
+		__multi_chyves_zfs_property "set" "uefi_vnc_port_start_offset"           "primary" ".config" "-" "5900"
 		__multi_chyves_zfs_property "set" "check_for_updates"                    "primary" ".config" "-" "weekly"
 		__multi_chyves_zfs_property "set" "check_for_updates_timeout_seconds"    "primary" ".config" "-" "2"
 		__multi_chyves_zfs_property "set" "check_for_updates_last_check"         "primary" ".config" "-" "$_DATE_YMD"
@@ -1488,6 +1521,7 @@ __create() {
 	do
 		__get_next_tap
 		__get_next_console
+		__get_next_vnc_port
 		__verify_valid_guest "$name"
 		__set_new_uuid_guest_use
 
@@ -1513,6 +1547,13 @@ __create() {
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "$_NEXT_tap"
 		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
+		__multi_chyves_zfs_property "set" "uefi_console_output"                  "$pool" "guests" "$name" "$_GDP_uefi_console_output"
+		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "$pool" "guests" "$name" "$_GDP_uefi_mouse_type"
+		__multi_chyves_zfs_property "set" "uefi_vnc_port"                        "$pool" "guests" "$name" "$_NEXT_vnc_port"
+		__multi_chyves_zfs_property "set" "uefi_vnc_ip"                          "$pool" "guests" "$name" "$_GDP_uefi_vnc_ip"
+		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "$pool" "guests" "$name" "$_GDP_uefi_vnc_res"
+		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "$pool" "guests" "$name" "$_GDP_uefi_vnc_pause"
+
 	done
 }
 
