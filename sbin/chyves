@@ -465,7 +465,7 @@ __get_next_tap() {
 
 # Return the next vnc port to use
 __get_next_vnc_port() {
-	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 | cut -c 5- )"
+	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 )"
 	if [ -z $_vnc_port_last ]; then
 		local _vnc_port_last="$( __multi_chyves_zfs_property "get" "uefi_vnc_port_start_offset" "primary" ".config" )"
 	else
