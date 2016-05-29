@@ -212,7 +212,8 @@ Guest Properties:
          <property3>=<value> {<name2>} <property1>=<value> <property2>=<value>
 
   ram=[nS]
-    [n] is the number of bytes and [S] is the size in M megabytes or G gigabytes.
+    [n] is the number of bytes and [S] is the size in "K" kilobytes, "M"
+    megabytes,  "G" gigabytes, or "T" terabytes.
     Usage: ram=2G for 2 Gigabytes of RAM allocation.
   clone
     Used to indicate the clone relationship when the guest is clone using
