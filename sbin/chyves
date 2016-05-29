@@ -965,7 +965,7 @@ __setup() {
 		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "primary" "guests" ".defaults" "ps2"
 		__multi_chyves_zfs_property "set" "uefi_vnc_ip"                          "primary" "guests" ".defaults" "0.0.0.0"
 		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "primary" "guests" ".defaults" "800x600"
-		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "primary" "guests" ".defaults" "yes"
+		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "primary" "guests" ".defaults" "no"
 
 		__multi_chyves_zfs_property "set" "disk_volmode"         "primary" "guests" ".defaults" "dev"
 		__multi_chyves_zfs_property "set" "disk_volblocksize"    "primary" "guests" ".defaults" "512"
