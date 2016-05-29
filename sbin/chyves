@@ -432,13 +432,13 @@ __get_property_list() {
 	fi
 }
 
-# Return the value of the next console to use
+# Return the next console to use
 __get_next_console() {
-	local _conlast="$(zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5-)"
+	local _conlast="$( zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5- )"
 	if [ -z $_conlast ]; then
-		zfs get -H  -t filesystem -o value chyves:console_start_offset $_PRIMARY_POOL/chyves/.config
+		local _conlast="$( __multi_chyves_zfs_property "get" "console_start_offset" "primary" ".config" )"
 	else
-		echo "$(expr $_conlast + 1)"
+		local _conlast="$( expr $_conlast + 1 )"
 	fi
 	_NEXT_console="nmdm$_conlast"
 }
