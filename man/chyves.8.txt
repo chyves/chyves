@@ -201,6 +201,10 @@ Global Configuration Properties:
     When using a non-standard vlan naming nomenclature this needs to reflect the
     change. The default is "vlan" when using the standard "vlan{n}" naming
     nomenclature.
+  uefi_vnc_port_start_offset={integer}
+    This is a convenience mechanism used to offset the first VNC port used by
+    UEFI guests. The initial default is set to "5900", valid values are from
+    1025 to 65536.
 
 Guest Properties:
   These are properties used by chyves to specify the parameters to pass to bhyve
@@ -289,6 +293,38 @@ Guest Properties:
     [1] - Power off guest if shutdown state is detected, attempt to
           reboot otherwise. This is the default.
     [2] - Always attempt to reboot.
+  uefi_console_output=vnc|serial
+    When set to "serial" UEFI guests will use the standard serial interface.
+    Guests set to "vnc" will use a VNC connection on supported hosts. VNC output
+    is experimental and introduced to bhyve in May 2016. VNC support requires
+    11-CURRENT (r300097), a modified bhyve binary with graphics support, and the
+    UEFI firmware "BHYVE_UEFI_20160526.fd".
+  uefi_mouse_type=ps2|usb3
+    When set to "ps2" a PS/2 mouse is connected to the guest. When set "usb3" a
+    USB 3.0 tablet is emulated which provides much better mouse performance but
+    is only supported on newer guests.
+  uefi_vnc_port=1025-65536
+    Specifies the port for the host to listen on for VNC connections for the
+    guest.
+  uefi_vnc_ip=x.x.x.x
+    Specifies the IP for the host to bind-to for VNC connections for the
+    guest. The default is "0.0.0.0" which binds to all IPs on the host.
+  uefi_vnc_res=<width>x<height>
+    Specifies the resolutions the VNC client will connect with. The following
+    resolutions are supported:
+      1920x1200
+      1920x1080
+      1600x1200
+      1600x900
+      1280x1024
+      1280x720
+      1024x768
+      800x600
+      640x480
+  uefi_pause_until_vnc_client_connect={on|off}
+    When set to "on" the guest will wait to boot until a VNC client connects.
+    This is helpful for installations requiring a key press for a short window
+    after starting.
 
 Default Guest Properties:
   These properties are referenced when creating new guests. The guest section of
@@ -310,6 +346,11 @@ Default Guest Properties:
     Used during setup when the size field is omitted. No longer a guest
     property. The ZFS property "usedbychildren" is used to show the size in
     'chyves info'.
+  uefi_console_output=serial
+  uefi_mouse_type=ps2
+  uefi_vnc_ip=0.0.0.0
+  uefi_vnc_res=800x600
+  uefi_pause_until_vnc_client_connect=no
 
   These default disk properties are direct ZFS values used to create disks for
   the guest. These properties are not recommended to be changed, you are liable
