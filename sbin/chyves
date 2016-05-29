@@ -1787,7 +1787,7 @@ __start() {
 	local runmode="1"
 
 	# Check for special handling.
-	if [ "${_CPU_MISSING_UG}" ] && [ "${_GP_loader}" != "bhyveload" ]; then
+	if [ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ]; then
 	 __get_cpu_section_from_dmesg
 	 __fault_detected_exit "Missing CPU feature UG, can only start guests with loader=bhyveload."
 	elif [ $_GP_loader = "grub-bhyve" ]; then
