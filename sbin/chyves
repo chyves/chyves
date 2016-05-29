@@ -903,7 +903,7 @@ __parse_cmd () {
     help|-h)  __help
               exit
     ;;
-    dev)      [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves set .config primary dev_mode=on'"
+    dev)      [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves set dev_mode=on .config primary'"
               [ "$_DEVELOPER_MODE" != "on" ] && set "$_DEVELOPER_MODE"
               $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
               [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
