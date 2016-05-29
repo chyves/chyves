@@ -232,7 +232,7 @@ Guest Properties:
   tap=tap{n}[,tap{n}]
     tap device(s) used for virtio-net
     {n} is a tap interface number to use.
-    Taps are process locked and can not be shared by simultaneously by multiple
+    Taps are process locked and can not be shared simultaneously by multiple
     guests. Specify multiple tap devices using a comma.
     Examples: chyves set tap=tap0 <name>
               chyves set tap=tap0,tap10,tap20,tap39 <name>
