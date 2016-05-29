@@ -260,14 +260,6 @@ Guest Properties:
     to the network adapter inside the guest OS. The MAC address is an ASCII
     string in ethers(5) format.
     Example: "tap10_mac=58:9C:FC:00:00:00"
-  pcidev:{n}={spec}
-    Advanced way to add devices to the guest. See bhyve(8) for complete details.
-    {n} is the pcislot bus number, valid values are from 0 to 31.
-    {spec} defines a virtual device added to the guest by using a bhyve -s
-    argument without the pcislot or function argument. PCI slot numbers are
-    assigned automatically by chyves.
-    Examples: "pcidev:1=passthru,2/0/0"
-              "pcidev:2=ahci-hd,/some/place/disk.img"
   os={operating-system}
     Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm,
     centos6, centos7, arch, gentoo and custom. Any other values are handled by a
@@ -372,6 +364,67 @@ Default Guest Properties:
     disk_compression=inherit
     disk_primarycache=inherit
     disk_secondarycache=inherit
+
+Manually Setting Properties - Expert Level:
+  WARNING: dragons reside here, so think of the kittens and puppies.
+
+  There are occasions when setting a property that is not defined above is
+  desired. Such a case would be to: attach a PCI passthrough device, a rand
+  device, or even setting virtio-block options for a disk.
+
+  It is always possible to manually set a property with zfs(8) directly, however
+  it is not recommended as there are no filters to restrict typos, incorrect
+  property names, or invalid values. That said if you willing to take the risk
+  and because this is Unix and the line between daft things and brilliant things
+  is often thin, the zfs command to set the "cpu" value to 8 for "guest1" on
+  pool "zroot" would be:
+    zfs set chyves:cpu=8 zroot/chyves/guests/guest1
+
+  There are some properties which chyves looks for but are entirely optional and
+  are only documented in this section. These values do no appear unless
+  explicitly set with zfs by the end user, however chyves does check to see if
+  these properties exist and will utilize them if provided.
+
+  Guest Property:
+    pcidev:{n}={bhyve-pci-dev}
+      Set on a guest.
+      These PCI devices are attached to the guest when starting. {n} is
+      completely arbitrary and is only a matter of the order of attachment.
+      {bhyve-pci-dev} is the bhyve PCI device to attach, see below for common
+      uses or see bhyve(8) for a complete list.
+
+      To set a PCI passthrough device for the same guest, where 3 and 4 are
+      arbitrary values and 9/0/0 and 9/0/1 are the bus/slot/function of the PCI
+      device on the host.
+        zfs set chyves:pcidev:3=passthru,9/0/0 zroot/chyves/guests/guest1
+        zfs set chyves:pcidev:4=passthru,9/0/1 zroot/chyves/guests/guest1
+
+      For PCI passthrough devices, devices sharing the same PCI slot on the host
+      are attached to the same virtual PCI slot within the guest. This is due to
+      the potential for kernel panics. The arbitrary numbers are irrelevant
+      and do not need to be in order of the function level of the PCI device.
+
+      To create a virtio RNG interface then the command would be
+        zfs set chyves:pcidev:5=virtio-rnd zroot/chyves/guests/guest1
+
+  Disk virtio-block options Property:
+    virtio_block_options=[nocache[,direct][,ro][,sectorsize=logical[/physical]]]
+      Set on a guest's disk, this is a per disk setting.
+      This property is used to append bhyve virtio-block options to a disk when
+      starting the guest. While there is a very limited use case of this option
+      they can be utilized. See bhyve(8) for what these options do. Keep in mind
+      that the logical sectorsize is already used by chyves and pulled from the
+      zvol's volblocksize ZFS property WHEN virtio_block_options is not set.
+      When the property "virtio_block_options" exists, the sectorsize is no
+      longer automatically populated to prevent collision. To set this property:
+        zfs inherit chyves:virtio_block_options=direct,sectorsize=512/4096 \
+        zroot/chyves/guests/guest1/disk0
+
+  After a property is created, chyves will allow you to modify the value of that
+  property.
+
+  To remove a property from a guest, use the following command:
+    zfs inherit chyves:cpu zroot/chyves/guests/guest1
 
 SUB-COMMANDS
 version     Prints the current running version of chyves
