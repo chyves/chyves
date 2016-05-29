@@ -25,6 +25,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Stage 1 global variables (Not dependent on functions or primary pool)
 _VERSION=0.0.0                        # Example: v11.6.25 - XXX.YY.ZZZ
 _VERSION_LONG="v0.0.0 2016/04/00"     # Example: v11.6.25 2021/12/31
 _VERSION_INT="00000000"               # Example: 01106025 XXXYYZZZ
@@ -111,12 +112,11 @@ __preflight_check() {
 		__fault_detected_exit "Your CPU lacks the basic feature to run bhyve. For AMD CPUs this means RVI. For Intel CPUs this means EPT."
 	fi
 
-	# Variables that need functions loaded:
-	__get_primary_pool_name   # _PRIMARY_POOL
-	_NUMBER_OF_ACTIVE_POOLS=$( zfs get -H -o name -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING" | wc -l )
+	# Stage 2 global variables (Dependent on functions or primary pool)
+	__get_primary_pool_name   # Sets $_PRIMARY_POOL
 	if [ -z "$_PRIMARY_POOL" ]; then
 		echo "Run setup to install chyves dataset on a pool."
-		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup pool=<ZFS-pool-name>\""
+		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
 	else
 		_DEVELOPER_MODE=$( __multi_chyves_zfs_property                       "get" "dev_mode"                             "primary" ".config" )
 		_RESTRICT_NEW_PROPERTY_NAMES=$( __multi_chyves_zfs_property          "get" "restrict_new_property_names"          "primary" ".config" )
