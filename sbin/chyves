@@ -840,8 +840,8 @@ __parse_cmd () {
               __destroy "$2"
               exit
     ;;
-    rename)   __verify_number_of_arguments "4" "$#" "4"
-              __resource_functions "guest" "rename" "$3" "$4"
+    rename)   __verify_number_of_arguments "3" "$#" "3"
+              __resource_functions "guest" "rename" "$2" "$3"
               exit
     ;;
     delete)   __verify_number_of_arguments "2" "$#" "2"
@@ -1480,16 +1480,29 @@ __resource_functions() {
 			__resource_functions $_function delete "$_folder_name"
 		fi
 	elif [ "$_subfunction" = "rename" ]; then
-		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
-		# <INSERT> check to verify target dataset does not exist __verify_valid_dataset "$pool" "$_resource_type" "$name" -n
-		[ "$_arg3" = "$_arg4" ] && __fault_detected_exit "Can not rename $_resource_name from $_arg3 to $_arg4"
-		read -p "Do you want to rename firmware from '$_arg3' to '$_arg4' [y/N]? " _rename_or_no </dev/tty
-		case "$_rename_or_no" in
-			y|Y|yes)   mv -f /chyves/$_resource_name/$_arg3/$_arg3 /chyves/$_resource_name/$_arg3/$_arg4
-			           zfs rename $_prim_pool/chyves/$_resource_name/$_arg3 $_prim_pool/chyves/$_resource_name/$_arg4
-			;;
-			*) echo "${_resource_name}: '$_arg3' not renamed."
-		esac
+		# INSERT check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
+		# INSERT check to verify target dataset does not exist __verify_valid_dataset "$pool" "$_resource_type" "$name" -n
+
+		read -p "Do you want to rename $_function from '$_arg3' to '$_arg4' [y/N]? " _rename_or_no </dev/tty
+
+		if [ "$_resource_name" = "guests" ]; then
+			case "$_rename_or_no" in
+				y|Y|yes)   __verify_valid_guest $_arg4
+				           __get_pool_for_guest $_arg3
+				           zfs rename $_GUEST_pool/chyves/guests/$_arg3 $_GUEST_pool/chyves/guests/$_arg4
+				;;
+				*)         echo "Guest: '$_arg3' not renamed."
+			esac
+		else
+			local _pool="$_PRIMARY_POOL"
+			case "$_rename_or_no" in
+				y|Y|yes)   mv -f /chyves/$_resource_name/$_arg3/$_arg3 /chyves/$_resource_name/$_arg3/$_arg4
+				           zfs rename $_pool/chyves/$_resource_name/$_arg3 $_pool/chyves/$_resource_name/$_arg4
+				;;
+				*)         echo "$_resource_name: '$_arg3' not renamed."
+			esac
+		fi
+
 	elif [ "$_subfunction" = "delete" ]; then
 		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
 		read -p "[WARNING] Do you want to delete ${_resource_name}: '$_arg3' [y/N]? " _delete_or_no </dev/tty
