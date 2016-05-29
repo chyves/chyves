@@ -1456,15 +1456,16 @@ __resource_functions() {
 		if [ -n "$( echo "$_file_name" | grep -E "\.gz$" )" ]; then
 			echo "Decompressing .gz file."
 			gunzip -d /chyves/ISO/$_folder_name/$_file_name
+			local _file_name="$_folder_name"
 		elif [ -n "$( echo "$_file_name" | grep -E "\.xz$" )" ]; then
 			echo "Decompressing .xz file."
 			xz -d /chyves/ISO/$_folder_name/$_file_name
-		else
+			local _file_name="$_folder_name"
 		fi
 
 		# Checks to see if resource exists now.
-		if [ -e /chyves/ISO/$_folder_name/$_folder_name ]; then
-			echo "$_folder_name sucessfully imported as a chyves $_resource_name resource."
+		if [ -e /chyves/$_resource_name/$_folder_name/$_file_name ]; then
+			echo "$_file_name sucessfully imported as a chyves $_resource_name resource."
 		else
 			echo "Operation unsucessful: delete the dataset and try again."
 			__resource_functions $_function delete "$_folder_name"
