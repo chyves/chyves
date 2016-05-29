@@ -1387,6 +1387,7 @@ __resource_functions() {
 		local _resource_name="guests/$_arg4/disk$_arg5"
 	fi
 
+	# Import ISO and Firmware resources into chyves
 	if [ "$_subfunction" = "import" ]; then
 		local _URL=$_arg3
 		local _file_name="$(basename $_URL)"
@@ -1479,6 +1480,8 @@ __resource_functions() {
 			echo "Operation unsucessful: delete the dataset and try again."
 			__resource_functions $_function delete "$_folder_name"
 		fi
+
+	# Rename guest, ISO, and Firmware resources
 	elif [ "$_subfunction" = "rename" ]; then
 		# INSERT check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
 		# INSERT check to verify target dataset does not exist __verify_valid_dataset "$pool" "$_resource_type" "$name" -n
@@ -1503,6 +1506,7 @@ __resource_functions() {
 			esac
 		fi
 
+	# Delete guest, ISO, and Firmware resources
 	elif [ "$_subfunction" = "delete" ]; then
 		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
 		read -p "[WARNING] Do you want to delete ${_resource_name}: '$_arg3' [y/N]? " _delete_or_no </dev/tty
@@ -1512,8 +1516,12 @@ __resource_functions() {
 			;;
 			*) echo "${_resource_name}: '$_arg3' not deleted."
 		esac
+
+	# List Firmware resources
 	elif [ "$_subfunction" = "list" ] && [ "$_function" = "firmware" ]; then
 		__list "firmwares"
+
+	# List ISO resources
 	elif [ "$_subfunction" = "list" ] && [ "$_function" = "iso" ]; then
 		__list "iso"
 	fi
