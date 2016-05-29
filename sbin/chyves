@@ -1393,8 +1393,8 @@ __resource_functions() {
 
 		# Check to see if file is on a remote source
 		if [ -n "$(echo "$_URL" | grep -E '^http|^ftp')" ]; then
-			echo "Creating ZFS dataset: $_prim_pool/chyves/$_resource_name/$_folder_name"
-			zfs create $_prim_pool/chyves/$_resource_name/$_folder_name
+			echo "Creating ZFS dataset: $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name"
+			zfs create $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name
 
 			# Remote ISOs are downloaded using fetch and hash checked.
 			if [ "$_function" = "iso" ]; then
