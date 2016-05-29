@@ -656,7 +656,7 @@ __check_bhyve_process_running() {
 	fi
 }
 
-# Displays the boot priority of a guest "YES (xxx)" where number is the priority
+# Displays the boot priority of a guest "YES (xxx)" where xxx is the priority
 __display_rcboot_priority() {
 	local _pool=$1
 	local _guest=$2
