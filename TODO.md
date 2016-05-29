@@ -4,13 +4,11 @@ Move to library files for use by `chyves-utils` for certain functions _but_ **ma
 - Copy `sbin/chyves` to each file in `lib/`, rename, then modify out lines.
 - Use `git diff --find-copies-harder` to catch changes.
 
-Rewrite script to not use `__get_pool_for_guest` direct into a variable. Or at least write a something that at least checks the guest name is valid. Invalid names are not correctly exited. stage1/stage2?
-
 Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the necessary checks as a lot of that code a repeated over and over.
 
 Rewrite to have a CPU manufacture variable. A Intel/AMD/* check, *=dragons.
 
-Fix __network remove and likely add (error when does not exist on system.)
+Fix `__network` remove and likely add (error when does not exist on system.)
 
 `__are_guests_running()`
 - `$1` is list of guests
@@ -25,10 +23,7 @@ Create restrictions in `__set` for:
 
 31-4 character limit for name (create, clone, rename)
 
-Rewrite IO MMU check for AMD? (svm?)
-- Verify AMD-Vi / IOMMU check method
-
-Create guest properties in `guests/bguest/.config`?
+Move guest properties to `guests/bguest/.config`?
 
 Write in code for `__cloneguest` to actually support a real clone.
 - How to handle multiple datasets?
@@ -47,7 +42,7 @@ Add ability to use commas with guest names for (aka multi-guest support):
 - `chyves start` - Pending rewrite
 - `chyves stop`
 - `chyves destroy`
-- `chyves delete`
+- <strike>`chyves delete`</strike>
 - `chyves forcekill`
 
 Console changes
@@ -94,7 +89,7 @@ Create __dataset with:
 - `chyves dataset <pool-name> upgrade`  - Upgrade a dataset version
 - `chyves dataset <pool-name> promote`  - Promote a dataset to primary role
 
-Consolidate or rewrite `__start` and `__uefi`
+Consolidate or rewrite `__start` and `__uefi` - Started
 - Possibly `__boot` and `__load` as well.
 
 Change networking handling
@@ -144,5 +139,6 @@ Need help with:
  -  chyves-util
    -  Require / Optional
      - qemu / Virtualbox "Used to convert ESXi guest disk images."
+ - Verify AMD-Vi / IOMMU check method (svm?) Rewrite??
 
 ## Testing!!!
