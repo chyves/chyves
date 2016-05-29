@@ -25,9 +25,6 @@ Create restrictions in `__set` for:
 
 31-4 character limit for name (create, clone, rename)
 
-`__multi_chyves_zfs_property` tweaks:
-- Remove more than one pool setting. Unnecessary as the properties on non-primary pools are not user settable.
-
 Rewrite IO MMU check for AMD? (svm?)
 - Verify AMD-Vi / IOMMU check method
 

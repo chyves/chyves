@@ -1948,28 +1948,7 @@ __destroy() {
 
 # User interface to set chyves properties
 __set() {
-	local _config_prop="$2"   # This is script indexed. Only used with .config.
 	local _name="$3"          # This is script indexed.
-	local _config_pool="$4"   # This is script indexed. Only used with .config when multiple active pools are present.
-
-	[ "$_config_pool" = "primary" ] && local _config_pool="$_PRIMARY_POOL"
-
-	# If more than one active pool then only one .config paramenter can be set at a time.
-	if [ "$_name" = ".config" ] && [ "$_NUMBER_OF_ACTIVE_POOLS" -gt 1 ]; then
-		local prop="$(echo $_config_prop | cut -d '=' -f1)"
-		local val="$(echo $_config_prop | cut -d '=' -f2)"
-
-		# Needed because __verify_number_of_arguments does not catch this.
-		if [ -z "$_config_pool" ]; then
-			__fault_detected_exit "Need pool to set .config property when multiple active chyves pools are detected."
-		else
-			__verify_valid_pool "$_config_pool" -c
-		fi
-
-		echo "[WARNING] Only able to set one .config property at a time when more than one active pool is present."
-		__multi_chyves_zfs_property "set" "$prop" "$_config_pool" ".config" "-" "$val"
-		exit
-	fi
 
 	# Legacy command syntax support
 	if [ -z "$( echo "$2" | grep '=' )" ] && [ -n "$( echo "$3" | grep '=' )" ]; then
@@ -1999,8 +1978,6 @@ __set() {
 		for name in `echo "$guests" | tr ',' ' '`
 		do
 
-			[ "$name" = ".config" ] && [ "$_NUMBER_OF_ACTIVE_POOLS" -gt 1 ] && __fault_detected_exit ".config parameters must be set individually when multiple active pool are present. Correct syntax is: 'chyves set param=value .config pool-name'"
-
 			if [ "$name" != "$_lastguest" ]; then
 				if [ "$name" = ".config" ]; then
 					echo "Switching to setting properties for .config on: $_PRIMARY_POOL"
@@ -2016,7 +1993,7 @@ __set() {
 
 			# Use function to set ZFS property
 			if [ "$name" = ".config" ]; then
-				[ "$_NUMBER_OF_ACTIVE_POOLS" -eq 1 ] && __multi_chyves_zfs_property "set" "$prop" "primary" ".config" "-" "$val"
+				__multi_chyves_zfs_property "set" "$prop" "$_PRIMARY_POOL" ".config" "-" "$val"
 			else
 				__multi_chyves_zfs_property "set" "$prop" "$_GUEST_pool" "guests" "$name" "$val"
 			fi
