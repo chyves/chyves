@@ -2299,42 +2299,6 @@ __cloneguest() {
 	echo "Sucessfully cloned $name to $clones."
 }
 
-# Export Guest
-__exportguest() {
-	local name="$1"
-	local pool="$(zfs list -H -t volume | grep chyves/guests/$name | grep disk0 | cut -d '/' -f 1 | head -n1)"
-	local disklist="$(zfs list -H | grep "chyves/guests/$name/disk" | cut -f1 | cut -d '/' -f4-)"
-	# Check if guest exists
-	echo "Exporting $name. Note this may take some time depending on the size."
-	if [ -d /chyves/$pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running $name )" ]; then
-			# Create /tmp/chyves/guests/$name
-			echo "Creating temp directory..."
-			mkdir -p /tmp/chyves/guests/$name
-			# Export Properties to file
-			echo "Exporting properties..."
-			zfs get -H -o property,value all $pool/chyves/guests/$name | grep chyves: | sort | \
-				sed -e 's/chyves://g' | sed -e 's/	/=/g' > /tmp/chyves/guests/$name/properties.ucl
-			# Write disks to file
-			echo "Exporting disks..."
-			for disk in $disklist ; do
-				dd if=/dev/zvol/$pool/chyves/guests/$name/$disk of=/tmp/chyves/guests/$name/${disk}.img bs=1M
-			done
-			# Compress and add to archive
-			echo "Compressing to archive..."
-			tar -czf /chyves/guests/$name/$name.tar.gz -C /tmp/chyves/guests/$name/ .
-			# Remove /tmp/chyves/
-			echo "Removing temp directory..."
-			rm -fr /tmp/chyves
-		else
-			echo "Please stop the guest first"
-		fi
-	else
-		echo "Not a valid guest name"
-	fi
-}
-
 # Run console
 __console() {
 	local name="$1"
