@@ -160,6 +160,12 @@ Global Configuration Properties:
     This is a compatibility mechanism used to offset the first chyves null
     console modem number so that a collision is less likely with another
     application or bhyve front end manager. The initial default is set to "50".
+  consolidate_bhyve_pci_devices={no|yes}
+    The default is set to "no" as it may have performance implications, however
+    this may be necessary if more than 26 PCI devices are connect to a guest.
+    This property signals the bhyve string generators to use PCI functions for
+    similar devices. In ideal conditions up to 208 PCI devices can be attached
+    when set to "yes".
   dataset_role={primary|secondary|offline}
     Vital in multi-pool configurations, each role type has different
     characteristics as explained below:
