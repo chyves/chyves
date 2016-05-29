@@ -626,27 +626,36 @@ network     Used to store properties about associate network devices and creates
             interfaces to the bridges while starting a guest. Multiple bridges
             and taps per guest is supported.
 
-            add         chyves network bridge{n} add tap{n}
-                        Used to add a tap to a bridge interface.
+            add       chyves network {name} add [$null|tap{n}|vale{s}[:{p}]]
+                        Used to add a tap or VALE interface to a guest, this
+                        also adds the tap interface to the default bridge as set
+                        in .defaults. When no value is given for the interface
+                        then the next available tap interface is created and
+                        added. {n} is the tap number, {s} is the VALE switch
+                        number, and optionally {p} is the port on the VALE
+                        switch.
 
-            attach      chyves network bridge{n} attach iface{n}
+            attach    chyves network bridge{n} attach iface{n}
                         Used to associate a vlan or physical interface with a
                         bridge. Keep in mind that a physical or vlan interface
                         can only be on one bridge group. See ifconfig(8) for
                         details.
 
-            default     chyves network bridge{n} default
+            default   chyves network bridge{n} default
                         Used to set the default bridge to use for newly created
                         guests.
 
-            migrate     chyves network bridge{n} migrate bridge{n}
+            join      chyves network bridge{n} add tap{n}
+                        Used to add a tap to a bridge interface.
+
+            migrate   chyves network bridge{n} migrate bridge{n}
                         Used to migrate a set of tap interfaces and outside
                         interface to an existing or new bridge interface. If
-                        migrating to an existing bridge the outside interface is
-                        overwritten with the interface from the bridge being
+                        migrating to an existing bridge the external interface
+                        is overwritten with the interface from the bridge being
                         migrated from and the tap interface lists are combined.
 
-            private     chyves network bridge{n} private
+            private   chyves network bridge{n} private
                         Used to set the bridge to private mode. This means there
                         is not an external network connected. This can be useful
                         when sensitive data is being exchanged over a network
@@ -654,7 +663,12 @@ network     Used to store properties about associate network devices and creates
                         database. This could also be used with NAT. However NAT
                         support is not build into chyves.
 
-            remove      chyves network bridge{n} remove tap{n}
+            remove    chyves network {name} add {tap{n}|vale{s}[:{p}]}
+                        Used to remove a tap or vale interface from a guest,
+                        this also removes tap devices from the bridge
+                        configuration.
+
+            unjoin    chyves network bridge{n} remove tap{n}
                         Used to remove a tap from a bridge interface.
 
 help        Prints version information and command valid syntax.
