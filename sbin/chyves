@@ -1509,14 +1509,41 @@ __resource_functions() {
 
 	# Delete guest, ISO, and Firmware resources
 	elif [ "$_subfunction" = "delete" ]; then
-		# <INSERT> check to verify dataset is valid  __verify_valid_dataset "$pool" "$_resource_type" "$name"
-		read -p "[WARNING] Do you want to delete ${_resource_name}: '$_arg3' [y/N]? " _delete_or_no </dev/tty
-		case "$_delete_or_no" in
-			y|Y|yes)   zfs destroy -rR $_prim_pool/chyves/$_resource_name/$_arg3
-			           exit
-			;;
-			*) echo "${_resource_name}: '$_arg3' not deleted."
-		esac
+		# INSERT check to verify dataset is valid  __verify_valid_dataset "$_pool" "$_resource_type" "$name"
+
+		__resource_functions_delete_sub() {
+			local _gst="$1"
+
+			# Delete guest and their net interfaces
+			if [ "$_resource_name" = "guests" ]; then
+				__get_pool_for_guest $_gst
+				__load_guest_parameters $_gst
+				if [ -n "$_GP_tap" ]; then
+					for _iface in "`echo $_GP_tap | tr ',' ' '`"
+					do
+						__network "$_gst" remove "$_iface"
+					done
+				fi
+
+			# Delete other resources
+			else
+				_GUEST_pool="$_PRIMARY_POOL"
+			fi
+
+			echo -n "Deleting ${_function}: '$_guest'..."
+			zfs destroy -r $_GUEST_pool/chyves/$_resource_name/$_gst
+			echo "done."
+		}
+
+		for _guest in `echo $_arg3 | tr ',' ' '`
+		do
+			read -p "[WARNING] Do you want to delete ${_function}: '$_guest' [y/N]? " _delete_or_no </dev/tty
+			case "$_delete_or_no" in
+				y|Y|yes)  __resource_functions_delete_sub $_guest
+				;;
+				*) echo "The $_function ('$_guest') was not deleted."
+			esac
+		done
 
 	# List Firmware resources
 	elif [ "$_subfunction" = "list" ] && [ "$_function" = "firmware" ]; then
