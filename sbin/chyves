@@ -122,6 +122,7 @@ __preflight_check() {
 		_RESTRICT_NEW_PROPERTY_NAMES=$( __multi_chyves_zfs_property          "get" "restrict_new_property_names"          "primary" ".config" )
 		_VLAN_IFACE_BASE_NAME=$( __multi_chyves_zfs_property                 "get" "vlan_iface_base_name"                 "primary" ".config" )
 		_TAP_UP_BY_DEFAULT=$( __multi_chyves_zfs_property                    "get" "tap_up_by_default"                    "primary" ".config" )
+		_AUTO_LOAD_KERNEL_MODS=$( __multi_chyves_zfs_property                "get" "auto_load_kernel_mods"                "primary" ".config" )
 		_CHECK_FOR_UPDATES=$( __multi_chyves_zfs_property                    "get" "check_for_updates"                    "primary" ".config" )
 		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS=$( __multi_chyves_zfs_property    "get" "check_for_updates_timeout_seconds"    "primary" ".config" )
 		_CHECK_FOR_UPDATES_LAST_CHECK=$( __multi_chyves_zfs_property         "get" "check_for_updates_last_check"         "primary" ".config" )
@@ -974,6 +975,7 @@ __setup() {
 		__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
 
 		echo "Setting up .config properties on primary pool..."
+		__multi_chyves_zfs_property "set" "auto_load_kernel_mods"                "primary" ".config" "-" "on"
 		__multi_chyves_zfs_property "set" "console_start_offset"                 "primary" ".config" "-" "50"
 		__multi_chyves_zfs_property "set" "dataset_role"                         "primary" ".config" "-" "primary"
 		__multi_chyves_zfs_property "set" "dev_mode"                             "primary" ".config" "-" "on"
