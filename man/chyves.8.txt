@@ -259,12 +259,9 @@ Guest Properties:
     Examples: "pcidev:1=passthru,2/0/0"
               "pcidev:2=ahci-hd,/some/place/disk.img"
   os={operating-system}
-    Supported values are freebsd, openbsd59, openbsd58, openbsd57, netbsd,
-    debian, d8lvm, centos6, centos7, arch, gentoo and custom. Any other values
-    are handled by a catch-all. There is no special handling for "freebsd"
-    guests except when the CPU lacks the UG feature on Intel CPUs, then only
-    guests with "freebsd" as the "os" property are allowed to start due to the
-    CPU virtualization limitations.
+    Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm,
+    centos6, centos7, arch, gentoo and custom. Any other values are handled by a
+    catch-all.
   rcboot={0|<positive-integer>}
     Tells chyves to start guests upon host boot a positive integer is assigned.
     The integer represents the boot priority where the highest numbered guest is
