@@ -237,12 +237,12 @@ Guest Properties:
   con=nmdm[n]
     Attaches null modem console. [n] must be a unique number and
     can not be shared between started guests.
-  uuid= Sets UUID for bhyve instance. Normally set by /bin/uuidgen at creation.
   tap=tap{n}[,tap{n}]
     tap device(s) used for virtio-net
     {n} is a tap interface number to use.
     Taps are process locked and can not be shared simultaneously by multiple
     guests. Specify multiple tap devices using a comma.
+  uuid= Sets UUID for bhyve instance. Set by /bin/uuidgen at creation.
     Examples: chyves set tap=tap0 <name>
               chyves set tap=tap0,tap10,tap20,tap39 <name>
   tap{n}_mac={xx:xx:xx:yy:yy:yy}
