@@ -541,7 +541,7 @@ __multi_chyves_zfs_property() {
 	local _guest="$5"       # -|<guest name>
 	local _value="$6"       # <property value>
 
-	# Null out value when "-" used
+	# Null out value when "-" used. Used for setting .config
 	[ "${_guest}" = "-" ] && local _guest=""
 
 	# If the guest variable is populated, prepend a "/" - This is for .config compatibility
