@@ -380,7 +380,7 @@ __get_pool_names() {
 # Get pool name for guest
 __get_pool_for_guest() {
 	local _guest_name="$1"
-	[ -z $( zfs list -d 3 -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_name" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" ) ] && __fault_detected_exit "Invalid active guest name"
+	[ -z $( zfs list -d 3 -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_name" | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" ) ] && __fault_detected_exit "Invalid active guest name, '$_guest_name'"
 	_GUEST_pool="$(zfs list -d 3 -r -H -t filesystem -o name | grep -w "chyves/guests/$_guest_name" | cut -d '/' -f 1 )"
 	__verify_valid_pool "$_GUEST_pool"
 	__verify_valid_guest "$_guest_name" "$_GUEST_pool"
