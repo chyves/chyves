@@ -717,7 +717,6 @@ __load_guest_parameters() {
 
 	# Other parameters
 	_GP_path="$( __get_path_for_guest_dataset "$_guest" "$_GUEST_pool" )"
-	_GP_disk0_blocksize="$( zfs get -H -o value volblocksize "$_GUEST_pool/chyves/guests/${_guest}/disk0" )"
 }
 
 # Loads .defaults parameters to global variables
@@ -1904,7 +1903,7 @@ __uefi() {
 	echo "bhyve -c $_GP_cpu $_GP_bargs -m $_GP_ram "
 	echo "        -s 0,hostbridge "
 	echo "        -s 3,ahci-cd,/chyves/ISO/$media/$media "
-	echo "        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=$_GP_disk0_blocksize "
+	echo "        -s 4,ahci-hd,/dev/zvol/$dataset/disk0 "
 	echo "        -s 10,virtio-net,$_GP_tap "
 	echo "        -s 31,lpc "
 	echo "        -l com1,/dev/${_GP_con}A "
@@ -1916,7 +1915,7 @@ __uefi() {
 	bhyve -c $_GP_cpu $_GP_bargs -m $_GP_ram \
 	        -s 0,hostbridge \
 	        -s 3,ahci-cd,/chyves/ISO/$media/$media \
-	        -s 4,ahci-hd,/dev/zvol/$dataset/disk0,sectorsize=$_GP_disk0_blocksize \
+	        -s 4,ahci-hd,/dev/zvol/$dataset/disk0 \
 	        -s 10,virtio-net,$_GP_tap \
 	        -s 31,lpc \
 	        -l com1,/dev/${_GP_con}A \
