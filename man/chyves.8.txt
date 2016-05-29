@@ -131,6 +131,10 @@ Global Configuration Properties:
          chyves set <property>=<value> .config
          chyves list .config [pool]
 
+  auto_load_kernel_mods={yes|no}
+    When set to "yes", chyves will load the kernel modules necessary for guests.
+    When set to "no", chyves will simply check if the modules are loaded and
+    exit with a message if not loaded.
   bridge{n}_phy_attach={<interface>|private}
     This property contains a physical or vlan interface name for a bridge
     to belong. When set to "private" the bridge is not joined with a outside

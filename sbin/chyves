@@ -975,7 +975,7 @@ __setup() {
 		__multi_chyves_zfs_property "set" "disk_secondarycache"  "primary" "guests" ".defaults" "inherit"
 
 		echo "Setting up .config properties on primary pool..."
-		__multi_chyves_zfs_property "set" "auto_load_kernel_mods"                "primary" ".config" "-" "on"
+		__multi_chyves_zfs_property "set" "auto_load_kernel_mods"                "primary" ".config" "-" "yes"
 		__multi_chyves_zfs_property "set" "console_start_offset"                 "primary" ".config" "-" "50"
 		__multi_chyves_zfs_property "set" "dataset_role"                         "primary" ".config" "-" "primary"
 		__multi_chyves_zfs_property "set" "dev_mode"                             "primary" ".config" "-" "on"
