@@ -1981,6 +1981,9 @@ __set() {
 			if [ "$name" != "$_lastguest" ]; then
 				if [ "$name" = ".config" ]; then
 					echo "Switching to setting properties for .config on: $_PRIMARY_POOL"
+				elif [ "$name" = ".defaults" ]; then
+					echo "Switching to setting properties for .defaults on: $_PRIMARY_POOL"
+					_GUEST_pool="$_PRIMARY_POOL"
 				else
 					echo "Switching to setting properties for guest: $name"
 					__get_pool_for_guest "$name"
