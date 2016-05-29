@@ -443,13 +443,13 @@ __get_next_console() {
 	_NEXT_console="nmdm$_conlast"
 }
 
-# Return the value of the next tap interface to use
+# Return the next tap interface to use
 __get_next_tap() {
-	local _taplast="$(zfs get -H -o value chyves:tap | grep -v - | tr ',' '\n' | grep -v vale | sort -V | tail -n1 | cut -c 4-)"
+	local _taplast="$( zfs get -H -o value chyves:tap | grep -v - | tr ',' '\n' | grep -v vale | sort -V | tail -n1 | cut -c 4- )"
 	if [ -z $_taplast ]; then
-		local _tap_num=zfs get -H  -t filesystem -o value chyves:tap_start_offset $_PRIMARY_POOL/chyves/.config
+		local _tap_num="$( __multi_chyves_zfs_property "get" "tap_start_offset" "primary" ".config" )"
 	else
-		local _tap_num="$(expr $_taplast + 1)"
+		local _tap_num="$( expr $_taplast + 1 )"
 	fi
 	_NEXT_tap="tap$_tap_num"
 }
