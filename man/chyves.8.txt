@@ -68,7 +68,11 @@ drivers are used to paravirtualize I/O for disk and network access.
 
 For networking, a guest is presented a PCI Ethernet device, the host
 communicates with this device through a tap interface which in-turn is connected
-to a bridge interface.
+to a bridge interface which optionally can be attached to a physical or vlan
+interface. If the bridge is not connected physical or vlan interface the bridge
+must be put into "private" mode. A private bridge allows sensitive traffic to
+transverse the bridge without the possibility of traffic being monitored from an
+outside network.
 
 For storage, guests are provided block storage device(s) via ZFS volumes from
 the host. Datasets are used to organize these block devices and other important
