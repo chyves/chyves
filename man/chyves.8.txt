@@ -329,7 +329,7 @@ Default Guest Properties:
   above, unless otherwise noted. Below are the defaults values on a fresh
   installation of chyves for reference.
 
-  bargs-A_-H_-P
+  bargs="-A -H -P"
   bridge=bridge0
     Used to set the default bridge interface to join tap interfaces to.
   cpu=1
