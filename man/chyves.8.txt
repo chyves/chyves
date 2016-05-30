@@ -74,6 +74,17 @@ must be put into "private" mode. A private bridge allows sensitive traffic to
 transverse the bridge without the possibility of traffic being monitored from an
 outside network.
 
+VALE support is experimentally provided as a proof of concept. VALE support is
+not widely implemented and is feature limited at it's current development stage.
+To use VALE requires that 'device netmap' be compiled into the kernel and that
+'vale-ctl' be compiled from '/usr/src/tools/tools/netmap' and moved to $PATH
+directory. VALE natively support em(4),	igb(4),	ixgbe(4), lem(4), and re(4) and
+all other NICs must use emulation which may (significantly) reduce performance.
+See netmap(4) for more information see. That said, VALE interfaces are added to
+a guest the same way a tap interface is added using:
+"chyves network add vale{n}[:{p}]" where {n} is the vale switch you want to use
+and optionally :{p} specifies the port on that switch.
+
 For storage, guests are provided block storage device(s) via ZFS volumes from
 the host. Datasets are used to organize these block devices and other important
 data in a hierarchical structure. ZFS user properties are referenced when
@@ -247,14 +258,17 @@ Guest Properties:
   con=nmdm[n]
     Attaches null modem console. [n] must be a unique number and
     can not be shared between started guests.
-  tap=tap{n}[,tap{n}]
-    tap device(s) used for virtio-net
-    {n} is a tap interface number to use.
-    Taps are process locked and can not be shared simultaneously by multiple
-    guests. Specify multiple tap devices using a comma.
   uuid= Sets UUID for bhyve instance. Set by /bin/uuidgen at creation.
     Examples: chyves set tap=tap0 <name>
               chyves set tap=tap0,tap10,tap20,tap39 <name>
+    Where {n} is a tap interface number to use for tap interfaces. Taps are
+    VALE support is experimentally provided with disclaimers above. VALE
+    interfaces are added to guest using the same method as a tap interface. VALE
+    interface names must be vale{n}[:{p}] where {n} can be alpha-numeric up to
+    9 characters long and optionally a port can be specified where [:{p}] starts
+    with a separating colon and either a single alphabetical character or a
+    number 0-9999. VALE interfaces are clever in that the interface is commonly
+    shared between other guests connecting to that 'virtual' VALE switch.
   tap{n}_mac={xx:xx:xx:yy:yy:yy}
     {n} is the tap interface to assign the specified MAC address to be attached
     to the network adapter inside the guest OS. The MAC address is an ASCII
@@ -861,4 +875,4 @@ Trent -- @pr1ntf
 
 SEE ALSO
 bhyve(8), bhyveload(8), zfs(8), nmdm(4), cu(1), if_bridge(4), grub2-bhyve(8),
-chyves-utils(8), virtio(4), ethers(5)
+chyves-utils(8), virtio(4), ethers(5), netmap(4)

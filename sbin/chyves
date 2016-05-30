@@ -1157,7 +1157,7 @@ __list() {
 
 			# Get outside interface for this bridge
 			local _phy=$( __multi_chyves_zfs_property "get" "${b}_phy_attach" "primary" ".config" )
-			[ "$_phy" = "-" ] && __fault_detected_exit "Bridge not associated with physical or vlan interface, or set to \"private\". \nPlease run: chyves network $b attach {iface} \n         Or: chyves network $b private"
+			[ "$_phy" = "-" ] && __fault_detected_exit "Bridge not associated with physical or vlan interface, or set to \"private\". \nPlease run: chyves network $b attach {iface} \n        Or: chyves network $b private"
 			__verify_valid_iface_format $_phy
 			if [ "$_IFACE_type" = "private" ]; then
 				echo "       Private network, no outside connectivity."
