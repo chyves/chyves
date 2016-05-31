@@ -276,11 +276,6 @@ Guest Properties:
     Examples: chyves set net_ifaces=vale0 <name>
               chyves set net_ifaces=vale123456789:9999 <name>
               chyves set net_ifaces=tap0,tap10,tap39,vale0,vale123:a <name>
-  tap{n}_mac={xx:xx:xx:yy:yy:yy}
-    {n} is the tap interface to assign the specified MAC address to be attached
-    to the network adapter inside the guest OS. The MAC address is an ASCII
-    string in ethers(5) format.
-    Example: "tap10_mac=58:9C:FC:00:00:00"
   os={operating-system}
     Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm,
     centos6, centos7, arch, gentoo and custom. Any other values are handled by a
@@ -421,6 +416,12 @@ Manually Setting Properties - Expert Level:
 
       To create a virtio RNG interface then the command would be
         zfs set chyves:pcidev:5=virtio-rnd zroot/chyves/guests/guest1
+
+    tap{n}_mac={xx:xx:xx:yy:yy:yy}
+      {n} is the tap interface to assign the specified MAC address to be
+      attached to the network adapter inside the guest OS. The MAC address is an
+      ASCII string in ethers(5) format.
+        zfs set chyves:tap10_mac=58:9C:FC:00:00:00 zroot/chyves/guests/guest1
 
   Disk virtio-block options Property:
     virtio_block_options=[nocache[,direct][,ro][,sectorsize=logical[/physical]]]
