@@ -137,7 +137,7 @@ Internal development.
 
 - Added functions `__verify_valid_pool` and `__verify_valid_guest` functions to verify a pool and guest are valid and exit if not.
 
-- Added function `__create_device_map` to create device map used in `__load`.
+- Added function `__generate_generic_device_map` to create device map used in `__load`.
 
 - Added function `__get_path_for_guest_dataset` to get the mount path of a guest.
 
