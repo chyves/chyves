@@ -48,6 +48,8 @@ _FREEBSD_NET_DRIVERS_GREP_STRING='^bxe[0-9]?[0-9]?$|^de[0-9]?[0-9]?$|^em[0-9]?[0
 _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge")
 _NUMBER_OF_ALL_GUESTS=$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -v .defaults | wc -l )
 _FORBIDDEN_GUEST_NAMES=".defaults|reorder|reset"
+_PCI_SLOT_START=4
+_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING='0|3|31'
 
 ##### More global variables set in __preflight_check #####
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin

@@ -25,6 +25,88 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Generates a bhyve PCI slot string from $1
+__generate_bhyve_slot_string() {
+	local _in_string="$1"                                                 # Required, contains string that is space separated
+	local _max_slot="$2"                                                  # Optional, maximum number of buses to use. Important for UEFI ACHI drives.
+	local _use_pci_funcions="${3-$_CONSOLIDATE_BHYVE_PCI_DEVICES}"        # Optional with default, use PCI functions. Important for PCI passthrough so physical devices are on same slot. Uses $_CONSOLIDATE_BHYVE_PCI_DEVICES if no set.
+	local _max_slot_count=1                                               # Seeds counter used to ensure maximum slots are not exceeded.
+	local _num_devices="$( echo $_in_string | tr ' ' '\n' | wc -l )"      # Number of devices to connect from $_in_string, implies slot usage
+	local _func=0                                                         # Seeds PCI function number 
+
+	# Return when empty string is provided but erase $_BHYVE_slot_string beforehand.
+	[ -z "$_in_string" ] && _BHYVE_slot_string="" && return 0
+
+	# Populate $_PCI_SLOT if empty.
+	[ -z "$_PCI_SLOT" ] && _PCI_SLOT="$_PCI_SLOT_START"
+
+	# This will dwindle down the number of max device if not specified.
+	[ -z "$_max_slot" ] && local _max_slot=$( expr 30 - $_PCI_SLOT )
+
+	# Choose whether or not to use PCI functions or only use on device per slot
+	if [ $_num_devices -gt "$_max_slot" ] || [ "$_use_pci_funcions" = "yes" ]; then
+		local _per_slot=$( expr $_num_devices / $_max_slot - 1 )
+
+		# Tell user that chyves can not exceed bhyve's eight PCI functions per PCI slot limit.
+		if [ "$_per_slot" -gt 7 ]; then
+			echo "More devices than available PCI Slots and PCI functions can provide, some devices will not be attached."
+			local _per_slot=7
+		fi
+
+	# Use one device per PCI Slot when there are abundant PCI slots available
+	else
+		local _per_slot="0"
+	fi
+
+	# Create the string.
+	for _str in $_in_string
+	do
+		# Skip these off limit PCI slot numbers
+		[ -n "$( echo "$_PCI_SLOT" | grep -E "$_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING" )" ] && _PCI_SLOT="$( expr $_PCI_SLOT + 1)"
+
+		# Exit if above bhyve's maximum number of PCI slots but return the value of what is available. 31 is always used by the lpc
+		if [ "$_PCI_SLOT" -gt 30 ]; then
+			echo "Can not attach any additional PCI devices to guest per bhyve, attaching what can be attached."
+			_BHYVE_slot_string="$_out_string"
+			return 0
+		fi
+
+		# String generation - where the magic happens
+		local _out_string="$_out_string -s ${_PCI_SLOT}:${_func},${_str}"
+
+		# Must meet or be under bhyve's limit of 0-7 functions per PCI slot
+		if [ "$_func" -eq "$_per_slot" ]; then
+
+			# Reset function to 0
+			local _func=0
+
+			# Increment PCI Slot number
+			_PCI_SLOT=$( expr $_PCI_SLOT + 1)
+
+			# Increase counter for MAX slot checker
+			local _max_slot_count=$( expr $_max_slot_count + 1)
+
+			# MAX slot counter checker
+			if [ "$_max_slot_count" -gt "$_max_slot" ]; then
+
+				# Do not display the warning message for PCI Custom devices or when propery $_CONSOLIDATE_BHYVE_PCI_DEVICES is set to "yes".
+				[ "$_use_pci_funcions" != "yes" ] && echo "Can not attach any additional PCI devices to guest per chyves, attaching what can be attached."
+
+				# Return to the function that called this one after setting $_BHYVE_slot_string to what has been done.
+				_BHYVE_slot_string="$_out_string"
+				return 0
+			fi
+
+		# Increment PCI function number.
+		else
+			local _func=$( expr $_func + 1)
+		fi
+	done
+
+	# Return the value in the form of a global variable
+	_BHYVE_slot_string="$_out_string"
+}
+
 # Verify I/O MMU (iommu) for guests using PCI passthrough
 __verify_iommu_capable() {
 	local _acpidump=$( acpidump -t | grep DMAR )
