@@ -456,7 +456,7 @@ __get_next_console() {
 
 # Return the next tap interface to use
 __get_next_tap() {
-	local _taplast="$( zfs get -H -o value chyves:tap | grep -v - | tr ',' '\n' | grep -v vale | sort -V | tail -n1 | cut -c 4- )"
+	local _taplast="$( zfs get -H -o value chyves:net_ifaces | grep -v - | tr ',' '\n' | grep tap | sort -V | tail -n1 | cut -c 4- )"
 	if [ -z $_taplast ]; then
 		local _tap_num="$( __multi_chyves_zfs_property "get" "tap_start_offset" "primary" ".config" )"
 	else
@@ -697,17 +697,16 @@ __load_guest_parameters() {
 
 	# GP = Guest Parameter
 	# Parameters held in ZFS user properties:
-	_GP_bargs="$( __multi_chyves_zfs_property    "get" "bargs"    "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_con="$(__multi_chyves_zfs_property       "get" "con"      "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_cpu="$( __multi_chyves_zfs_property      "get" "cpu"      "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_fw="$( __multi_chyves_zfs_property       "get" "fw"       "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_loader="$( __multi_chyves_zfs_property   "get" "loader"   "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_os="$( __multi_chyves_zfs_property       "get" "os"       "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_persist="$( __multi_chyves_zfs_property  "get" "persist"  "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_ram="$( __multi_chyves_zfs_property      "get" "ram"      "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_rcboot="$( __multi_chyves_zfs_property   "get" "rcboot"   "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_tap="$( __multi_chyves_zfs_property      "get" "tap"      "$_GUEST_pool" "guests" "$_guest" )"
-	_GP_uuid="$( __multi_chyves_zfs_property     "get" "uuid"     "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_bargs="$( __multi_chyves_zfs_property       "get" "bargs"       "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_con="$(__multi_chyves_zfs_property          "get" "con"         "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_cpu="$( __multi_chyves_zfs_property         "get" "cpu"         "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_fw="$( __multi_chyves_zfs_property          "get" "fw"          "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_loader="$( __multi_chyves_zfs_property      "get" "loader"      "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_os="$( __multi_chyves_zfs_property          "get" "os"          "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_ram="$( __multi_chyves_zfs_property         "get" "ram"         "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_rcboot="$( __multi_chyves_zfs_property      "get" "rcboot"      "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_net_ifaces="$( __multi_chyves_zfs_property  "get" "net_ifaces"  "$_GUEST_pool" "guests" "$_guest" )"
+	_GP_uuid="$( __multi_chyves_zfs_property        "get" "uuid"        "$_GUEST_pool" "guests" "$_guest" )"
 
 	# UEFI GOP Support
 	_GP_uefi_console_output="$( __multi_chyves_zfs_property "get" "uefi_console_output"                  "$_GUEST_pool" "guests" "$_guest" )"
@@ -1264,7 +1263,7 @@ EOT
 	[ -n "$(echo "$flags" | grep -E 'r|a')" ] && printf "^%s" "Dataset Role"
 
 	# Print headers for -v flag
-	[ -n "$(echo "$flags" | grep -E 'v|a')" ] && printf "^%s^%s^%s^%s" "OS" "Loader" "Tap" "Con"
+	[ -n "$(echo "$flags" | grep -E 'v|a')" ] && printf "^%s^%s^%s^%s" "OS" "Loader" "net-ifaces" "Con"
 
 	# Print headers for -s flag
 	[ -n "$(echo "$flags" | grep -E 's|a')" ] && printf "^%s^%s^%s" "VMM" "Running" "rcboot"
@@ -1319,7 +1318,7 @@ EOT
 			if [ -n "$(echo "$flags" | grep -E 'v|a')" ]; then
 				local os="$(zfs get -H -o value chyves:os $pool/chyves/guests/$g)"
 				local loader="$(zfs get -H -o value chyves:loader $pool/chyves/guests/$g)"
-				local tap="$(zfs get -H -o value chyves:tap $pool/chyves/guests/$g)"
+				local tap="$(zfs get -H -o value chyves:net_ifaces $pool/chyves/guests/$g)"
 				local con="$(zfs get -H -o value chyves:con $pool/chyves/guests/$g)"
 
 				printf "^%s^%s^%s^%s" "$os" "$loader" "$tap" "$con"
@@ -1607,7 +1606,7 @@ __create() {
 		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
 		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
 		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "tap"         "$pool" "guests" "$name" "$_NEXT_tap"
+		__multi_chyves_zfs_property "set" "net_ifaces"  "$pool" "guests" "$name" "$_NEXT_tap"
 		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
 
 		__multi_chyves_zfs_property "set" "uefi_console_output"                  "$pool" "guests" "$name" "$_GDP_uefi_console_output"
