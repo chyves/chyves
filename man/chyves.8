@@ -749,16 +749,6 @@ like \fIto\fP \fIname\fP the new \fIclone\fP, \fIand\fP [\fIpool\fP] \fIis\fP op
 \fIpool\fP for the \fIclone\fP.
 .TP
 .B
-\fIexport\fP
-Export \fI.\fP \fIguest\fP \fIwith\fP all of it'\fI.\fP properties \fIand\fP \fIdisks\fP \fIto\fP \fI.\fP
-GZip'\fI.\fP tarball. Property file \fIis\fP \fIin\fP \fI.\fP ucl-type format.
-Disks output \fIto\fP \fI.\fP raw file, allowing for other managers using
-ahci-hd emulation \fIto\fP use them. Tarball \fIis\fP put \fIin\fP the \fIguest\fP
-dataset ex: /\fIchyves\fP/guestname/guestname.tar.gz
-Usage: '\fIchyves\fP \fIexport\fP [\fIname\fP]' \fIwhere\fP [\fIname\fP] \fIis\fP the \fIname\fP of the
-\fIguest\fP.
-.TP
-.B
 \fIconsole\fP
 Consoles into \fI.\fP \fIguest\fP operating system. Utilizes \fBnmdm\fP(\fI.\fP) \fIand\fP
 \fBcu\fP(\fI.\fP) \fIto\fP open \fI.\fP \fIconsole\fP on \fI.\fP \fIguest\fP operating system. Since
