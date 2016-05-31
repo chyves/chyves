@@ -41,7 +41,12 @@
 \fBchyves\fP \fIsnap\fP <\fIname\fP>[@<snapshotname>]
 \fBchyves\fP \fIroll\fP <\fIname\fP>[@<snapshotname>]
 \fBchyves\fP \fIclone\fP {\fB-c\fP|\fB-r\fP} <\fIname\fP> <clonename>
-\fBchyves\fP \fIexport\fP <\fIname\fP>
+\fBnetwork\fP {\fIname\fP} {\fIadd\fP|\fIremove\fP} [-|\fItap\fP{n}|vale{n}] [bridge{n}]
+\fBnetwork\fP bridge{n} {\fIadd\fP|attach|default|join|migrate|private|\fIremove\fP} [device{n}]
+\fBnetwork\fP bridge{n} {join|unjoin} \fItap\fP{n}
+\fBnetwork\fP bridge{n} \fIattach\fP {vlan-iface{n}|physical-iface{n}|private}
+\fBnetwork\fP bridge{n} {default|private}
+\fBnetwork\fP bridge{n} \fImigrate\fP bridge{n}
 \fBchyves\fP \fIconsole\fP <\fIname\fP> [\fB-t\fP]
 \fBchyves\fP \fIconreset\fP
 \fBchyves\fP \fIhelp\fP
@@ -69,8 +74,8 @@
 Optionally grub2-bhyve \fIand\fP \fBtmux\fP(\fI.\fP) can \fIbe\fP \fIused\fP \fIto\fP expand the capabilities of
 \fIchyves\fP. \fIchyves\fP uses ZFS user properties, filesystems, \fIand\fP volumes \fIto\fP store
 guests \fIand\fP resources \fIin\fP an organized hierarchy. \fIchyves\fP \fIalso\fP uses the virtio
-drivers built into the GENERIC kernel for network virtualization. \fBThe\fP virtio
-drivers \fIare\fP \fIused\fP \fIto\fP paravirtualize \fI.\fP/\fI.\fP for disk \fIand\fP network access.
+drivers built into the GENERIC kernel for \fBnetwork\fP virtualization. \fBThe\fP virtio
+drivers \fIare\fP \fIused\fP \fIto\fP paravirtualize \fI.\fP/\fI.\fP for disk \fIand\fP \fBnetwork\fP access.
 .PP
 For networking, \fI.\fP \fIguest\fP \fIis\fP presented \fI.\fP PCI Ethernet device, the host
 communicates \fIwith\fP this device through \fI.\fP \fItap\fP interface which \fIin\fP-turn \fIis\fP connected
@@ -78,7 +83,7 @@ communicates \fIwith\fP this device through \fI.\fP \fItap\fP interface which \f
 interface. If the bridge \fIis\fP \fInot\fP connected physical \fBor\fP vlan interface the bridge
 \fImust\fP \fIbe\fP put into "private" mode. \fI.\fP private bridge allows sensitive traffic \fIto\fP
 transverse the bridge \fIwithout\fP the possibility of traffic being monitored from an
-outside network.
+outside \fBnetwork\fP.
 .PP
 VALE support \fIis\fP experimentally provided as \fI.\fP proof of concept. VALE support \fIis\fP
 \fInot\fP widely implemented \fIand\fP \fIis\fP feature limited at it'\fI.\fP current development stage.
@@ -88,7 +93,7 @@ directory. VALE natively support \fBem\fP(\fI.\fP), \fBigb\fP(\fI.\fP), \fBixgbe
 all other NICs \fImust\fP use emulation which may (significantly) reduce performance.
 See \fBnetmap\fP(\fI.\fP) for more information see. That said, VALE interfaces \fIare\fP added \fIto\fP
 \fI.\fP \fIguest\fP the same way \fI.\fP \fItap\fP interface \fIis\fP added using:
-"\fIchyves\fP network \fIadd\fP vale{\fI.\fP}[:{\fI.\fP}]" \fIwhere\fP {\fI.\fP} \fIis\fP the vale switch you want \fIto\fP use
+"\fIchyves\fP \fBnetwork\fP \fIadd\fP vale{\fI.\fP}[:{\fI.\fP}]" \fIwhere\fP {\fI.\fP} \fIis\fP the vale switch you want \fIto\fP use
 \fIand\fP optionally :{\fI.\fP} specifies the port on that switch.
 .PP
 For storage, guests \fIare\fP provided block storage \fBdevice\fP(\fI.\fP) via ZFS volumes from
@@ -142,7 +147,7 @@ functionality. As the first \fIpool\fP \fIis\fP always \fIset\fP as the primary 
 .PP
 Many of these global properties \fIare\fP \fInot\fP recommended \fIto\fP \fIbe\fP changed unless you
 understand the scope of their impact \fBor\fP \fIare\fP managed through subcommands such
-as '\fIchyves\fP network'
+as '\fIchyves\fP \fBnetwork\fP'
 .PP
 Usage: \fIchyves\fP \fIget\fP <property> .config
 \fIchyves\fP \fIset\fP <property>=<value> .config
@@ -155,12 +160,12 @@ exit \fIwith\fP \fI.\fP message \fIif\fP \fInot\fP loaded.
 bridge{\fI.\fP}_phy_attach={<interface>|private}
 This property contains \fI.\fP physical \fBor\fP vlan interface \fIname\fP for \fI.\fP bridge
 \fIto\fP belong. When \fIset\fP \fIto\fP "private" the bridge \fIis\fP \fInot\fP joined \fIwith\fP \fI.\fP outside
-network.
+\fBnetwork\fP.
 Example values: bridge0_attach=em0
 bridge10_phy_attach=vlan52
 bridge512_phy_attach=private
 To \fIset\fP this property use the follow command \fIsyntax\fP:
-\fIchyves\fP network bridge{\fI.\fP} attach {<interface>|private}
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIattach\fP {<interface>|private}
 bridge{\fI.\fP}_tap_members={\fItap\fP{\fI.\fP}[,\fItap\fP{\fI.\fP},\fItap\fP{\fI.\fP}]}
 This property \fIis\fP \fI.\fP comma separated \fIlist\fP of the \fItap\fP members for bridge{\fI.\fP},
 \fIwhere\fP {\fI.\fP} \fIis\fP the interface number. Valid values for "\fI.\fP" \fIare\fP \fI.\fP \fIto\fP 32768.
@@ -171,8 +176,8 @@ bridge70_tap_members=tap20,tap30
 \fI.\fP \fItap\fP can \fIbe\fP moved \fIto\fP another bridge \fIby\fP first removing the \fItap\fP from the
 original bridge \fIand\fP adding \fIto\fP the desired bridge. Use the \fIfollowing\fP command
 \fIsyntax\fP \fIto\fP do this:
-\fIchyves\fP network bridge{\fI.\fP} \fIremove\fP \fItap\fP{\fI.\fP}
-\fIchyves\fP network bridge{\fI.\fP} \fIadd\fP \fItap\fP{\fI.\fP}
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIremove\fP \fItap\fP{\fI.\fP}
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIadd\fP \fItap\fP{\fI.\fP}
 console_start_offset={integer}
 This \fIis\fP \fI.\fP compatibility mechanism \fIused\fP \fIto\fP offset the first \fIchyves\fP null
 \fIconsole\fP modem number so that \fI.\fP collision \fIis\fP less likely \fIwith\fP another
@@ -396,7 +401,7 @@ WARNING: dragons reside here, so think of the kittens \fIand\fP puppies.
 .RS
 .PP
 There \fIare\fP occasions \fIwhen\fP setting \fI.\fP property that \fIis\fP \fInot\fP defined above \fIis\fP
-desired. Such \fI.\fP case would \fIbe\fP \fIto\fP: attach \fI.\fP PCI passthrough device, \fI.\fP rand
+desired. Such \fI.\fP case would \fIbe\fP \fIto\fP: \fIattach\fP \fI.\fP PCI passthrough device, \fI.\fP rand
 device, \fBor\fP even setting virtio-block \fIoptions\fP for \fI.\fP disk.
 .PP
 It \fIis\fP always possible \fIto\fP manually \fIset\fP \fI.\fP property \fIwith\fP \fBzfs\fP(\fI.\fP) directly, however
@@ -417,7 +422,7 @@ pcidev:{\fI.\fP}={bhyve-pci-dev}
 Set on \fI.\fP \fIguest\fP.
 These PCI devices \fIare\fP attached \fIto\fP the \fIguest\fP \fIwhen\fP starting. {\fI.\fP} \fIis\fP
 completely arbitrary \fIand\fP \fIis\fP only \fI.\fP matter of the order of attachment.
-{bhyve-pci-dev} \fIis\fP the bhyve PCI device \fIto\fP attach, see below for common
+{bhyve-pci-dev} \fIis\fP the bhyve PCI device \fIto\fP \fIattach\fP, see below for common
 uses \fBor\fP see \fBbhyve\fP(\fI.\fP) for \fI.\fP complete \fIlist\fP.
 .RS
 .PP
@@ -438,7 +443,7 @@ zfs \fIset\fP \fIchyves\fP:pcidev:\fI.\fP=virtio-rnd zroot/\fIchyves\fP/guests/g
 .PP
 \fItap\fP{\fI.\fP}_mac={xx:xx:xx:yy:yy:yy}
 {\fI.\fP} \fIis\fP the \fItap\fP interface \fIto\fP assign the specified MAC address \fIto\fP \fIbe\fP
-attached \fIto\fP the network adapter inside the \fIguest\fP OS. \fBThe\fP MAC address \fIis\fP an
+attached \fIto\fP the \fBnetwork\fP adapter inside the \fIguest\fP OS. \fBThe\fP MAC address \fIis\fP an
 ASCII string \fIin\fP \fBethers\fP(\fI.\fP) format.
 zfs \fIset\fP \fIchyves\fP:tap10_mac=58:9C:FC:00:00:00 zroot/\fIchyves\fP/guests/guest1
 .PP
@@ -780,10 +785,10 @@ Double quotes \fIare\fP required for parameters \fIwith\fP strings, such as
 commands.
 .TP
 .B
-network
-Used \fIto\fP store properties about associate network devices \fIand\fP creates
+\fBnetwork\fP
+Used \fIto\fP store properties about associate \fBnetwork\fP devices \fIand\fP creates
 bridge \fIand\fP \fItap\fP interfaces. \fBThe\fP sub-commands below store properties
-that \fIare\fP referenced \fIand\fP later \fIused\fP \fIto\fP recreated the network design
+that \fIare\fP referenced \fIand\fP later \fIused\fP \fIto\fP recreated the \fBnetwork\fP design
 \fIwhen\fP starting \fI.\fP \fIguest\fP. \fBThe\fP host still requires configuration of the
 vlan \fIand\fP physical interfaces. \fIchyves\fP will handle creating \fIand\fP
 associating the \fItap\fP interfaces \fIwith\fP the appropriate bridge
@@ -794,7 +799,7 @@ interfaces \fIto\fP the bridges while starting \fI.\fP \fIguest\fP. Multiple bri
 .TP
 .B
 \fIadd\fP
-\fIchyves\fP network {\fIname\fP} \fIadd\fP [$null|\fItap\fP{\fI.\fP}|vale{\fI.\fP}[:{\fI.\fP}]]
+\fIchyves\fP \fBnetwork\fP {\fIname\fP} \fIadd\fP [$null|\fItap\fP{\fI.\fP}|vale{\fI.\fP}[:{\fI.\fP}]]
 Used \fIto\fP \fIadd\fP \fI.\fP \fItap\fP \fBor\fP VALE interface \fIto\fP \fI.\fP \fIguest\fP, this
 \fIalso\fP adds the \fItap\fP interface \fIto\fP the default bridge as \fIset\fP
 \fIin\fP .defaults. When no value \fIis\fP given for the interface
@@ -804,8 +809,8 @@ number, \fIand\fP optionally {\fI.\fP} \fIis\fP the port on the VALE
 switch.
 .TP
 .B
-attach
-\fIchyves\fP network bridge{\fI.\fP} attach iface{\fI.\fP}
+\fIattach\fP
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIattach\fP iface{\fI.\fP}
 Used \fIto\fP associate \fI.\fP vlan \fBor\fP physical interface \fIwith\fP \fI.\fP
 bridge. Keep \fIin\fP mind that \fI.\fP physical \fBor\fP vlan interface
 can only \fIbe\fP on \fIone\fP bridge group. See \fBifconfig\fP(\fI.\fP) for
@@ -813,19 +818,19 @@ details.
 .TP
 .B
 default
-\fIchyves\fP network bridge{\fI.\fP} default
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} default
 Used \fIto\fP \fIset\fP the default bridge \fIto\fP use for newly created
 guests.
 .TP
 .B
 join
-\fIchyves\fP network bridge{\fI.\fP} \fIadd\fP \fItap\fP{\fI.\fP}
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIadd\fP \fItap\fP{\fI.\fP}
 Used \fIto\fP \fIadd\fP \fI.\fP \fItap\fP \fIto\fP \fI.\fP bridge interface.
 .TP
 .B
-migrate
-\fIchyves\fP network bridge{\fI.\fP} migrate bridge{\fI.\fP}
-Used \fIto\fP migrate \fI.\fP \fIset\fP of \fItap\fP interfaces \fIand\fP outside
+\fImigrate\fP
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fImigrate\fP bridge{\fI.\fP}
+Used \fIto\fP \fImigrate\fP \fI.\fP \fIset\fP of \fItap\fP interfaces \fIand\fP outside
 interface \fIto\fP an existing \fBor\fP new bridge interface. If
 migrating \fIto\fP an existing bridge the external interface
 \fIis\fP overwritten \fIwith\fP the interface from the bridge being
@@ -833,24 +838,24 @@ migrated from \fIand\fP the \fItap\fP interface lists \fIare\fP combined.
 .TP
 .B
 private
-\fIchyves\fP network bridge{\fI.\fP} private
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} private
 Used \fIto\fP \fIset\fP the bridge \fIto\fP private mode. This means there
-\fIis\fP \fInot\fP an external network connected. This can \fIbe\fP useful
-\fIwhen\fP sensitive data \fIis\fP being exchanged over \fI.\fP network
+\fIis\fP \fInot\fP an external \fBnetwork\fP connected. This can \fIbe\fP useful
+\fIwhen\fP sensitive data \fIis\fP being exchanged over \fI.\fP \fBnetwork\fP
 \fIbut\fP \fInot\fP necessarily needing outside access such as \fI.\fP SQL
 database. This could \fIalso\fP \fIbe\fP \fIused\fP \fIwith\fP NAT. However NAT
 support \fIis\fP \fInot\fP build into \fIchyves\fP.
 .TP
 .B
 \fIremove\fP
-\fIchyves\fP network {\fIname\fP} \fIadd\fP {\fItap\fP{\fI.\fP}|vale{\fI.\fP}[:{\fI.\fP}]}
+\fIchyves\fP \fBnetwork\fP {\fIname\fP} \fIadd\fP {\fItap\fP{\fI.\fP}|vale{\fI.\fP}[:{\fI.\fP}]}
 Used \fIto\fP \fIremove\fP \fI.\fP \fItap\fP \fBor\fP vale interface from \fI.\fP \fIguest\fP,
 this \fIalso\fP removes \fItap\fP devices from the bridge
 configuration.
 .TP
 .B
 unjoin
-\fIchyves\fP network bridge{\fI.\fP} \fIremove\fP \fItap\fP{\fI.\fP}
+\fIchyves\fP \fBnetwork\fP bridge{\fI.\fP} \fIremove\fP \fItap\fP{\fI.\fP}
 Used \fIto\fP \fIremove\fP \fI.\fP \fItap\fP from \fI.\fP bridge interface.
 .RE
 .TP
