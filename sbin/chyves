@@ -25,6 +25,77 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#### Library
+# The chyves project split the main binary (this file) into library files with
+# the blame and history maintained in May of 2016. Each library file contains
+# functions that only handle one aspect of chyves. This was done for the
+# developers' sanity. Below is a table of contents for the functions in each
+# library file. This TOC is most helpful for casual, curious users but it should
+# also be helpful for developers as well.
+#
+### Table of Contents:
+#
+## ../lib/chyves-basics                    ## Functions that are basic to chyves functionality
+# __help()                                  # Print help page
+# __parse_cmd()                             # First stage to process command line parameters for chyves
+# __readonly_cmd()                          # Check to see if supplied command is read-only.
+# __version()                               # Show version
+#
+## ..lib/chyves-creation                   ## Functions used to create guests in some port or another
+# __cloneguest()                            # Clone a guest
+# __create()                                # Create guest(s)
+# __get_next_console()                      # Return the next console to use
+# __get_next_tap()                          # Return the next tap interface to use
+# __get_next_vnc_port()                     # Return the next vnc port to use
+# __generate_zvol_disk_options_string()     # Creates string used to create ZFS volume for disks
+# __set_new_uuid_guest_use()                # Set new UUID in _UUID_GUEST_USE
+#
+## ../lib/chyves-informational             ## Functions to display information about chyves to the user
+# __disks()                                 # List disks for a guest
+# __info()                                  # List various aspects of chyves guests, properties, and other resources
+# __list()                                  # Display info about all guests.
+#
+## ../lib/chyves-network                   ## Functions for network related tasks
+# __exit_if_tap_locked()                    # Exits if tap is locked by a process/guest
+# __get_bridge_members_on_system()          # Get bridge members on system
+# __get_bridge_phy_iface_chyves()           # Get outside interface for bridge
+# __get_bridge_list_on_chyves()             # Get a list of bridges on chyves
+# __get_parent_bridge_for_tap_chyves()      # Get a tap's bridge membership as set in .config as a chyves properties
+# __get_iface_list_on_system()              # Get a list of interfaces on system
+# __get_parent_guest_for_tap_chyves()       # Get a tap's guest membership
+# __get_pid_locking_tap()                   # Get PID on tap
+# __get_tap_list_for_bridge_on_chyves()     # Get a list of taps on a bridge in chyves properties
+# __network()                               # Network sub-command
+# __network_add_dev_to_bridge()             # Adds network device to bridge
+# __network_add_phy_to_bridge()             # Adds outside interface to bridge with error handling
+# __network_remove_dev_to_bridge()          # Removes network device from bridge
+# __verify_tap_not_in_use()                 # Verifies tap is not in use on system
+# __verify_vale_system_compat()             # Check if VALE might be possible on system
+# __verify_valid_iface_format()             # Verifies interface is in valid format for type.
+# __verify_valid_system_iface()             # Verifies interface exists on system
+#
+## ../lib/chyves-properties                ## Functions that deal with chyves properties
+# __get()                                   # Frontend interface to get chyves properties
+# __get_corrected_byte_nomenclature()       # Corrects user input when setting RAM properties and size for .defaults
+# __load_guest_parameters()                 # Load guest parameters to global variables
+# __load_guest_default_parameters()         # Loads .defaults parameters to global variables
+# __multi_chyves_zfs_property()             # Backend interface to set and get chyves properties with ZFS
+# __set()                                   # Frontend interface to set chyves properties
+#
+## ../lib/chyves-start-guest               ## Functions for starting guests
+# __generate_bhyve_slot_string()            # Generates a bhyve PCI slot string from $1
+# __generate_bhyve_custom_pci_string()      # Generates a bhyve slot string for custom PCI devices
+# __generate_bhyve_disk_string()            # Generates a bhyve slot string for disks
+# __generate_bhyve_net_string()             # Generate bhyve slot string for network devices.
+# __generate_bhyve_vnc_string()             # Generates bhyve slot string for UEFI GOP code
+# __generate_generic_device_map()           # Creates device.map for guest and places in /chyves/guests/$_guest/device.map
+# __generate_grub_bhyve_command()           # Generates grub-bhyve command used to start guest.
+# __start()                                 # All inclusive start function
+#
+## ../lib/chyves-updates                   ## Function for checking for updates.
+# __check_for_chyves_update                 # Check for chyves updated
+#
+
 # Stage 1 global variables (Not dependent on functions or primary pool)
 _VERSION=0.0.0                        # Example: v11.6.25 - XXX.YY.ZZZ
 _VERSION_LONG="v0.0.0 2016/04/00"     # Example: v11.6.25 2021/12/31
@@ -50,12 +121,16 @@ _NUMBER_OF_ALL_GUESTS=$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -
 _FORBIDDEN_GUEST_NAMES=".defaults|reorder|reset"
 _PCI_SLOT_START=4
 _OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING='0|3|31'
+_LIBRARY_PATH=/usr/local/lib/chyves
 
 ##### More global variables set in __preflight_check #####
 PATH=${PATH}:/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 # This function gets ran before any other.
 __preflight_check() {
+
+	# Load library files
+	__load_library_files
 
 	# Checks to see variable is empty as grep needs an arguement and a UUID stastically should not have a collision if there are no pools in an offline role
 	if [ -z "$_OFFLINE_POOLS_GREP_STRING" ]; then
@@ -138,6 +213,18 @@ __preflight_check() {
 		__verify_kernel_module_loaded if_tap -l
 		sysctl net.link.tap.up_on_open=1 > /dev/null 2>&1
 	fi
+}
+
+# Loads the library files from list contained in $_LIBRARY_PATH and exits if any are missing
+__load_library_files() {
+	for _lib_file in chyves-basics chyves-creation chyves-informational chyves-network chyves-properties chyves-start-guest chyves-updates
+	do
+		if [ -e "$_LIBRARY_PATH/$_lib_file" ]; then
+			. "$_LIBRARY_PATH/$_lib_file"
+		else
+			__fault_detected_exit "\n\n\nMissing chyves library file $_lib_file from $_LIBRARY_PATH\n\n\n"
+		fi
+	done
 }
 
 # Function used to exit with a message.
