@@ -718,6 +718,7 @@ __load_guest_parameters() {
 
 	# Other parameters
 	_GP_path="$( __get_path_for_guest_dataset "$_guest" "$_GUEST_pool" )"
+	_GP_wire_memory="$( [ -n "$( echo "$_GP_bargs" | grep '\-S' )" ] && echo "-S" )"
 }
 
 # Loads .defaults parameters to global variables
