@@ -187,8 +187,7 @@ chyves
   firmware rename <name> <newname>
   firmware delete <name>
   create <name> [size] [pool]
-  install <name> <iso-file>
-  start <name> [-s | -a]
+  start <name>[,<name2>[,name3]] [iso-resource] 
   stop <name>
   forcekill <name>
   scram
@@ -207,7 +206,6 @@ chyves
   roll <name>[@<snapshotname>]
   clone {-c|-r} <name> <clonename> [dest-pool]
   clone {-c|-r} <name> {<clonename1>,<clonename2>,<clonename3>} [dest-pool]
-  export <name>
   console <name> [-t]
   conreset
   help
