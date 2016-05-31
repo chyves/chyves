@@ -80,7 +80,7 @@ Create handling for configuring `.config`.
 Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
 
 Restructured command layout to have less sub-commands.
-- `remove` for `remove` `rmiso` `rmfw` `rmpci`
+- `remove` for `remove` `rmiso` `rmfw`
 
 #### Changes requiring meticulous testing:
 

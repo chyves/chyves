@@ -933,41 +933,6 @@ __destroy() {
 	bhyvectl --destroy --vm=chy-$name
 }
 
-# Remove a PCIDEV property
-__rmpci() {
-	local flagone="$1"          # -f | name
-	local flagtwo="$2"          # name | pcidev:N
-	local flagthree="$3"        # pcidev:N | null
-	if [ $flagone = "-f" ]; then
-		echo "Removing $flagthree from $flagtwo"
-		local pciprop="$(echo "$flagthree" | grep pcidev:)"
-		__get_pool_for_guest "$name"
-		local dataset="${_GUEST_pool}/chyves/guests/${name}"
-		# Make sure it's a valid pcidev property as to not shoot foot
-		if [ -z $pciprop ]; then
-			echo "Not a valid PCIDEV property"
-		else
-			zfs inherit  -r chyves:$flagthree $dataset
-		fi
-	else
-		local pciprop="$(echo "$flagtwo" | grep pcidev:)"
-		__get_pool_for_guest "$flagone"
-		local dataset="${_GUEST_pool}/chyves/guests/${name}"
-		# Make sure it's a valid pcidev property as to not shoot foot
-		if [ -z $pciprop ]; then
-			echo "Not a valid PCIDEV property"
-		else
-			read -p "Are you sure you want to remove $flagtwo [Y/N]? " an </dev/tty
-			case "$an" in
-				y|Y) zfs inherit  -r chyves:$flagtwo $dataset
-				;;
-				*) echo "Not removed..."
-				;;
-			esac
-		fi
-	fi
-}
-
 # Add a new disk to guest
 __add() {
 	local name="$1"

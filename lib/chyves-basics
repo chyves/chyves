@@ -103,10 +103,6 @@ __parse_cmd () {
               __get "$2" "$3"
               exit
     ;;
-    rmpci)    __verify_number_of_arguments "3" "$#" "4"       # Soon to be consolidated
-              __rmpci "$2" "$3" "$4"
-              exit
-    ;;
     add)      __verify_number_of_arguments "3" "$#" "3"
               __add "$2" "$3"
               exit
@@ -201,7 +197,6 @@ chyves
   set <property1>=<value> {<name>|.defaults|.config} [<property2>=<value>]...
   set <property1>=<value> {<name1>,<name2>,<name3>} [<property2>=<value>]...
   get {<property>|all} <name>
-  rmpci [-f] [name] [pcidev:N]
   add [name] [size]
   remove [-f] [name] [diskN]
   resize [name] [diskN] [size]

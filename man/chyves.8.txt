@@ -30,7 +30,6 @@ chyves rename <name> <newname>
 chyves delete <name>
 chyves set <property1>=<value> {<name>|.defaults} [prop2=value]...
 chyves get {<property>|all} <name>
-chyves rmpci [-f] [name] [pcidev:N]
 chyves add [name] [size] [[pool]]
 chyves remove [-f] [name] [diskN]
 chyves resize [name] [diskN] [size]
@@ -603,12 +602,6 @@ get         Gets ZFS properties for guests
             properties are displayed.
             Usage: 'chyves get all' All properties are displayed.
             See properties section above for more detail.
-
-rmpci       Removes a pcidev from the guest
-            Usage: 'chyves rmpci [name] [pcidev:N]' where [name] is the name
-            of the guest operating system. [pcidev:N] is the PCI
-            device you want removed. Ex: 'pcidev:3' If [-f] is supplied
-            before the [name], there is no prompt to remove.
 
 add         Adds a new disk to the guest.
             Usage: 'chyves add [name] [size] [[pool]]' where [name] is
