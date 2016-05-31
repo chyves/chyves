@@ -2,10 +2,33 @@ This early in the project, a map is not defined. However many goals are planned:
 
 Rewrite to have a CPU manufacture variable. A Intel/AMD/* check, *=dragons.
 
-Fix `__network remove` and likely `network add`.
+Fix `network remove` and likely `network add`.
 - Error when does not exist on system. Is this still a problem?
 
-Fix issue with `chyves list <unknown-property`
+Change `__convert_list_to_grep_string` to take both new-line delimited lists and space delimited lists.
+- Really just an addition `tr` call will implement this. BUT test it.
+
+Create `lib/chyves-version`.
+- Does _not_ need to maintain history.
+
+Create `lib/chyves-get`.
+- _Does_ need to maintain history.
+
+Create `lib/chyves-verify`.
+- _Does_ need to maintain history.
+
+Commit code from `chyves-utils` for dataset upgrade to `lib/chyves-dataset`
+- Move `__setup()` > `__dataset_sub_setup()`
+  - _Does_ need to maintain history.
+- Create
+  - `__dataset_sub_promote`
+  - `__dataset_sub_remove`
+  - `__dataset_sub_upgrade`
+
+Look into and test if setting the VNC `fbuf` on PCI slot 2 would work.
+- Could do a more shared handling in `__start`
+
+Fix issue with `chyves list <unknown-property>`
 - probably an issue with "-"
 
 Look into size always being 1.5x that of the guest drive.
@@ -24,6 +47,21 @@ Globalize `_GUEST_name`
 - This would handle this:
   - _Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the necessary checks as a lot of that code a repeated over and over._
 
+Create variables
+- `_GUEST_NAMES_ALL` - All guest, no restrictions
+- `_GUEST_NAMES_ACTIVE` - Active guest
+- `_GUEST_NAMES_TEMPLATE` - Guests set in template mode
+- `_GUEST_NAMES_OFFLINE` - Guests on offline pools
+- Change `_FORBIDDEN_GUEST_NAMES` to `_GUEST_NAMES_FORBIDDEN`
+
+Create `__validate_correct_name_format`
+ - 31-4=27 character limit for name (create, clone, rename)
+   - `"^[a-zA-Z0-9_.-]{1,27}$"`
+
+Rework `__verify_valid_guest` to referece `_ALL_GUEST_NAMES`
+
+Change `__get_corrected_byte_nomenclature` to be a little looser, allow for [a-zA-Z]{0,3} suffix for any potential and then only use the first letter.
+
 `__are_guests_running()`
 - `$1` is list of guests
 - Otherwise all guests are checked.
@@ -34,8 +72,6 @@ Create restrictions in `__set` for:
    - restriction to: check_for_updates|console_start_offset|dev_mode|log_mode|restrict_new_property_names|tap_start_offset|tap_up_by_default|vlan_iface_base_name
    - redirection to __network for: bridge([0-9]{1,5})_phy_attach|bridge([0-9]{1,5})_tap_members
    - input verification for check_for_updates: daily|weekly|monthly|off
-
-31-4 character limit for name (create, clone, rename)
 
 Move guest properties to `guests/bguest/.config`?
 
@@ -94,8 +130,58 @@ Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to functi
 
 Change `__generate_grub_bhyve_command` to use the first disk OR property the `grub_boot_disk`
 
-Add github.io webpage for chyves.org
+<strike>Add chyves.github.io</strike> Create webpage for chyves.org
+- Create CNAME file
 - https://github.com/t413/SinglePaged
+  - What is it?
+  - Preannouncement > Announcement
+  - Demo
+    - Use https://asciinema.org or https://showterm.io/
+    - Use `tmux` and point out.
+    - Simple demo
+      - `chyves dataset demo-zpool setup`
+      - `chyves network bridge0 attach bce1`
+      - `chyves create guest1`
+      - `chyves iso import freebsd.iso`
+      - `chyves set cpu=2 guest1`
+      - New tmux pane
+      - `chyves console guest1`
+      - `chyves start guest1`
+    - Complex guests demo
+      - `chyves dataset demo-zpool setup`
+      - `chyves network bridge0 attach bce1`
+      - `chyves create deb,cent,arch 8G demo-ssd`
+      - `chyves iso import centos.iso`
+      - `chyves iso import debian.iso`
+      - `chyves iso import arch-linux.iso`
+      - `chyves set cpu=2 deb,cent,arch ram=2048 loader=grub-bhyve deb os=debian centos os=centos7 arch os=arch`
+      - create tmux 4x panes
+      - `chyves console deb`
+      - `chyves console cent`
+      - `chyves console arch`
+      - `chyves iso list`
+      - `chyves start centos.iso`
+      - `chyves start debian.iso`
+      - `chyves start arch-linux.iso`
+    - Complex network demo
+      - `chyves dataset demo-zpool setup`
+      - `chyves set tap_start_offset=1600 .config`
+      - `chyves network bridge32 default`
+      - `chyves network bridge32 attach bce1`
+      - `chyves network bridge128 private`
+      - `chyves create guest1`
+      - `chyves network guest1 add`
+      - `chyves network guest1 add`
+      - `chyves list bridges`
+      - `chyves list tap`
+  - Download it
+  - Thank you
+  - About this page
+
+Add handling for known haters of the network hardware offloaders.
+- `bce` maybe `em`
+- `chyves network <iface> disable tso`
+- Property `network_disable_tso_auto` and `network_disable_tso_prompt`
 
 Write "Request for help" page
 
@@ -104,6 +190,7 @@ Write "Request for help" page
 ##### Restructured command layout to have less sub-commands.
 - `chyves scram` > `chyves stop all`
 - `chyves disk` > `chyves list disks`
+- `chyves list tap` > `chyves list net` ???
 
 ```
 chyves $_guest create
@@ -132,6 +219,14 @@ chyves dataset [pool-name] setup                   Move remaining code from `__s
                            upgrade                 Upgrade a dataset version
 ```
 
+#### No interest to implement:
+
+- `bridge{n}_phy_attach=nat{n}`
+  - `.config` properties
+    - `nat{n}_gateway_ip`=0.0.0.0/0
+    - `nat{n}_dhcp`=enable|disabled
+    - `nat_gateway_ip_offset`=0.0.0.0/0
+
 #### Not looking like it is possible:
 
 Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
@@ -155,12 +250,16 @@ Added comments throughout the code to indicate what is going on.
 
 Added more output to indicate to the end user what is happening in the script
 
-Get redundant code into functions. Use a standard nomenclature to denote internal use functions? See vm-bhyve for help.
+Get redundant code into functions.
+- _Doing the duty_
+
+Use a standard nomenclature to denote internal use functions? See vm-bhyve for help.
 - `__functions` - Start with two underscores
   - `__verb_future_variable_name` - Function called to set global variable.
 - `_variables` - Start with one underscore
   - `_CAPS_ONLY_VARIABLES` - Variable with all capitalization are created in beginning of script.
   - `_CAP_mixed_variables` - Variable start with capitalization for first word and lower case for the remaining. Used for Global variables set later in script by called function.
+  - `_only_lower` - Local variable
 
 Normalize variables to a consistent verbose naming scheme.
 - _On-going_.
@@ -190,3 +289,5 @@ Need help with:
 ## Testing!!!
 
 - Testing speed - Noticeably slower than iohyve
+
+- Grab an object (variable or function) and follow it throughout the entire project and check it behaves the way it is designed for.
