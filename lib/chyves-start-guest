@@ -107,6 +107,38 @@ __generate_bhyve_slot_string() {
 	_BHYVE_slot_string="$_out_string"
 }
 
+# Generates a bhyve slot string for custom PCI devices
+__generate_bhyve_custom_pci_string() {
+	local _dataset="$1"
+	local _custom_pci_devs=$( zfs get -H -o property,value all $_dataset | grep chyves:pcidev: | sort | cut -f2 )
+
+
+	# Special handling for PCI passthrough devices
+	if [ -n "$(echo "$_custom_pci_devs" | grep 'passthru,' )" ]; then
+
+		# Verify VT-d capable CPU when using using PCI passthrough
+		__verify_iommu_capable
+
+		# Get unique physical devices on host that share the same PCI slot number
+		for _single_pci_phy in `echo $_custom_pci_devs | grep 'passthru,' | cut -d',' -f2 | cut -d'/' -f1 | uniq | tr '\n' ' '`
+		do
+			# Generate complete bhyve string under one PCI slot per physical device on host.
+			local _devs_for_phy="$( echo $_custom_pci_devs | sort -k1 | grep "passthru,$_single_pci_phy/" | tr '\n' ' ' )"
+			__generate_bhyve_slot_string "$_devs_for_phy" 1 yes
+			local _processed_string="$_processed_string $_BHYVE_slot_string"
+		done
+	fi
+
+	# Handling for other custom PCI devices
+	for _pci in `echo $_custom_pci_devs | grep -v 'passthru,' | tr '\n' ' '`
+	do
+		__generate_bhyve_slot_string "$_pci" "" no
+		local _processed_string="$_processed_string $_BHYVE_slot_string"
+	done
+
+	_BHYVE_custom_pci_string="$_processed_string"
+}
+
 # Verify I/O MMU (iommu) for guests using PCI passthrough
 __verify_iommu_capable() {
 	local _acpidump=$( acpidump -t | grep DMAR )
