@@ -187,7 +187,7 @@ chyves
   firmware rename <name> <newname>
   firmware delete <name>
   create <name> [size] [pool]
-  start <name>[,<name2>[,name3]] [iso-resource] 
+  start <name>[,<name2>[,name3]] [iso-resource]
   stop <name>
   forcekill <name>
   scram
