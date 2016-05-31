@@ -121,6 +121,11 @@ __create() {
 		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "$pool" "guests" "$name" "$_GDP_uefi_vnc_res"
 		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "$pool" "guests" "$name" "$_GDP_uefi_vnc_pause"
 
+		echo "Adding $_NEXT_tap to $_GDP_bridge"
+		__network "$_GDP_bridge" join "$_NEXT_tap"
+		echo "$name created."
+		echo ""  # Create visual space for next multi-guest.
+
 	done
 }
 

@@ -152,6 +152,10 @@ __parse_cmd () {
               [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
               exit
     ;;
+    network)  __verify_number_of_arguments "2" "$#" "5"
+              __network "$2" "$3" "$4" "$5"
+              exit
+    ;;
     *)        __help
               __fault_detected_exit "Unrecognized command: $1. See above for list of correct sub-commands."
     ;;
@@ -206,6 +210,12 @@ chyves
   roll <name>[@<snapshotname>]
   clone {-c|-r} <name> <clonename> [dest-pool]
   clone {-c|-r} <name> {<clonename1>,<clonename2>,<clonename3>} [dest-pool]
+  network {name} {add|remove} [-|tap{n}|vale{n}] [bridge{n}]
+  network bridge{n} {add|attach|default|join|migrate|private|remove} [device{n}]
+  network bridge{n} {join|unjoin} tap{n}
+  network bridge{n} attach {vlan-iface{n}|physical-iface{n}|private}
+  network bridge{n} {default|private}
+  network bridge{n} migrate bridge{n}
   console <name> [-t]
   conreset
   help
