@@ -39,7 +39,7 @@ Add ability to use commas with guest names for (aka multi-guest support):
 - <strike>`chyves set`</strike>
 - <strike>`chyves clone`</strike>
 - `chyves get`
-- `chyves start` - Pending rewrite
+- <strike>`chyves start`</strike> - Recently rewrote
 - `chyves stop`
 - `chyves destroy`
 - <strike>`chyves delete`</strike>
