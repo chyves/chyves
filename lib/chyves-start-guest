@@ -182,6 +182,25 @@ __generate_bhyve_disk_string() {
 	_BHYVE_disk_string="$_BHYVE_slot_string"
 }
 
+# Generates bhyve slot string for UEFI GOP code
+__generate_bhyve_vnc_string() {
+	local _string="fbuf"
+
+	# IP & Port
+	local _string="${_string},tcp=${_GP_uefi_vnc_ip}:${_GP_uefi_vnc_port}"
+
+	# Resolution
+	local _vnc_h_res="$( echo $_GP_uefi_vnc_res | cut -d'x' -f2 )"
+	local _vnc_w_res="$( echo $_GP_uefi_vnc_res | cut -d'x' -f1 )"
+	local _string="${_string},w=${_vnc_w_res},h=${_vnc_h_res}"
+
+	# VNC Pause boot until connect
+	[ "$_GP_uefi_vnc_pause" = "yes" ] && local _string="${_string},wait"
+
+	__generate_bhyve_slot_string "$_string"
+	_BHYVE_vnc_string="$_BHYVE_slot_string"
+}
+
 # Verify I/O MMU (iommu) for guests using PCI passthrough
 __verify_iommu_capable() {
 	local _acpidump=$( acpidump -t | grep DMAR )
