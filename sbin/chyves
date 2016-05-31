@@ -384,39 +384,6 @@ __get_property_list() {
 	fi
 }
 
-# Return the next console to use
-__get_next_console() {
-	local _conlast="$( zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5- )"
-	if [ -z $_conlast ]; then
-		local _conlast="$( __multi_chyves_zfs_property "get" "console_start_offset" "primary" ".config" )"
-	else
-		local _conlast="$( expr $_conlast + 1 )"
-	fi
-	_NEXT_console="nmdm$_conlast"
-}
-
-# Return the next tap interface to use
-__get_next_tap() {
-	local _taplast="$( zfs get -H -o value chyves:net_ifaces | grep -v - | tr ',' '\n' | grep tap | sort -V | tail -n1 | cut -c 4- )"
-	if [ -z $_taplast ]; then
-		local _tap_num="$( __multi_chyves_zfs_property "get" "tap_start_offset" "primary" ".config" )"
-	else
-		local _tap_num="$( expr $_taplast + 1 )"
-	fi
-	_NEXT_tap="tap$_tap_num"
-}
-
-# Return the next vnc port to use
-__get_next_vnc_port() {
-	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 )"
-	if [ -z $_vnc_port_last ]; then
-		local _vnc_port_last="$( __multi_chyves_zfs_property "get" "uefi_vnc_port_start_offset" "primary" ".config" )"
-	else
-		local _vnc_port_last="$( expr $_vnc_port_last + 1 )"
-	fi
-	_NEXT_vnc_port="$_vnc_port_last"
-}
-
 # Get a list of guests on system
 __get_guests_list() {
 	local _flags="$1"
@@ -826,67 +793,6 @@ __resource_functions() {
 	fi
 }
 
-# Create guest(s)
-__create() {
-	local guests="$1"
-	local size="$2"
-	local pool="$3"
-	__load_guest_default_parameters
-	local creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
-	local _disk_options="$( __generate_zvol_disk_options_string )"
-
-	# If size not declared in command line, use .default's
-	[ -z $size ] && local size="$_GDP_size"
-
-	# Check on pool
-	if [ -z "${pool}" ]; then
-		local pool="${_PRIMARY_POOL}"
-	else
-		__verify_valid_pool "$pool" -c
-	fi
-
-	# Multi-guest support.
-	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
-	for name in `echo "$guests" | tr ',' ' '`
-	do
-		__get_next_tap
-		__get_next_console
-		__get_next_vnc_port
-		__verify_valid_guest "$name"
-		__set_new_uuid_guest_use
-
-		echo "Creating $name..."
-		echo "Creating dataset on $pool"
-		zfs create $pool/chyves/guests/$name
-		echo "Creating $size disk0 with options: $_disk_options"
-		zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
-		echo "Creating properties:"
-		__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
-		__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
-		__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
-		__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
-		__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
-		__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
-		__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
-		__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
-
-		__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "$_NEXT_console"
-		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
-		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "net_ifaces"  "$pool" "guests" "$name" "$_NEXT_tap"
-		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
-
-		__multi_chyves_zfs_property "set" "uefi_console_output"                  "$pool" "guests" "$name" "$_GDP_uefi_console_output"
-		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "$pool" "guests" "$name" "$_GDP_uefi_mouse_type"
-		__multi_chyves_zfs_property "set" "uefi_vnc_port"                        "$pool" "guests" "$name" "$_NEXT_vnc_port"
-		__multi_chyves_zfs_property "set" "uefi_vnc_ip"                          "$pool" "guests" "$name" "$_GDP_uefi_vnc_ip"
-		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "$pool" "guests" "$name" "$_GDP_uefi_vnc_res"
-		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "$pool" "guests" "$name" "$_GDP_uefi_vnc_pause"
-
-	done
-}
-
 # Gracefully stop a guest
 __stop() {
 	local name="$1"
@@ -1085,86 +991,6 @@ __rollguest() {
 	else
 		echo "Not a valid guest name"
 	fi
-}
-
-# Clone a guest
-__cloneguest() {
-	local flag="$1"  # Only -r used to replicate, -c is arbitrary
-	local name="$2"
-	local clones="$3"
-	local _dst_pool="$4"
-	__get_pool_for_guest $name
-	local _src_pool="$_GUEST_pool"
-
-	# Verify -c or -f flag used.
-	if [ "$flag" = "-c" ];then
-		echo "Using the cloning method (-c) is not recommended as the UUID, tap interface, and console interface remain the same. Dragons be ahead."
-		echo "It is recommended to use the replication method (-r) as these properties are regenerated."
-		local _clone_type="(clone-only)"
-	elif [ "$flag" = "-r" ]; then
-		local _clone_type="(replication)"
-	else
-		__fault_detected_exit "Invalid flag used \"$flag\", valid flags are \"-c\" or \"-r\". See 'man chyves' for more information."
-	fi
-
-	# See if destination pool is declared.
-	if [ -z "$_dst_pool" ]; then
-		local _dst_pool=$_src_pool
-	else
-		__verify_valid_pool "$_dst_pool" "-c"
-	fi
-
-	echo "Taking $name snapshot on $_src_pool name @chyves-clone-process-$_UUID_GENERAL_USE"
-	zfs snap -r $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
-
-	# Multi-guest support.
-	# Eg.: chyves clone goldenVM devteam1,devteam2,devteam3 dev-pool
-	for cname in `echo "$clones" | tr ',' ' '`
-	do
-		echo "Cloning $name to $cname"
-		echo "Verifing $cname is unused."
-		__verify_valid_guest "$cname"    # Exits if name in use.
-
-		echo "Using zfs send to send $name to $cname"
-		zfs send -R $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$cname
-
-		echo "Setting creation stamp on $cname..."
-		local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
-		__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
-
-		# Future use
-		#__multi_chyves_zfs_property "set" "clone"       "$pool" "guests" "$name" "-"
-		#__multi_chyves_zfs_property "set" "clone_assc"  "$pool" "guests" "$name" "-"
-
-		# Change con, tap, and UUID properties if -r is used
-		if [ "$flag" = "-r" ]; then
-			echo "Setting new properties as part of replication..."
-			echo "Generating new UUID"
-			__set_new_uuid_guest_use
-			echo "Grabbing next unused tap interface"
-			__get_next_tap
-			echo "Grabbing next unused console interface"
-			__get_next_console
-			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "$_NEXT_tap"
-			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "$_NEXT_console"
-			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
-		fi
-		echo "Cloning $_clone_type from $name to $cname complete."
-	done
-
-	echo "Deleting snapshot on $_src_pool"
-	if [ -z "$_src_pool" ]; then
-		__fault_detected_exit "Something went wrong, \$_src_pool variable is empty. Aborting before running zfs destroy command. Please report to the chyves developers."
-	else
-		zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
-		if [ "$?" = 0 ]; then
-			echo "Sucessfully deleted snapshot for clone."
-		else
-			echo "Unsuccessfully deleted snapshot on $_src_pool"
-			echo "To delete, run this manually: zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE"
-		fi
-	fi
-	echo "Sucessfully cloned $name to $clones."
 }
 
 # Run console
