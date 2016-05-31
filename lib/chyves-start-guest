@@ -221,19 +221,6 @@ __create_device_map() {
 	printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
 }
 
-# Get PCI device config from zfs
-__get_zfs_pcidev_conf() {
-	local pool="$1"
-	local oldifs=$IFS
-	#local pci
-	IFS=$'\n'
-	for pcidev in $(zfs get -H -o property,value all $pool | grep chyves:pcidev: | sort )
-	do
-		echo $pcidev | cut -f2-
-	done
-	IFS=$oldifs
-}
-
 # Install guest
 __install() {
 	local name="$1"
