@@ -25,8 +25,7 @@
 \fBchyves\fP \fIfirmware\fP \fIrename\fP <oldname> <newname>
 \fBchyves\fP \fIfirmware\fP \fIdelete\fP <name>
 \fBchyves\fP \fIcreate\fP <name> [\fIsize\fP] [\fIpool\fP]
-\fBchyves\fP \fIinstall\fP <name> <\fIiso\fP-file>
-\fBchyves\fP \fIstart\fP <name> [\fB-s\fP | \fB-a\fP]
+\fBchyves\fP \fIstart\fP <name>[,<name2>[,name3]] [\fIiso-resource\fP]
 \fBchyves\fP \fIstop\fP <name>
 \fBchyves\fP \fIforcekill\fP <name>
 \fBchyves\fP \fIscram\fP
@@ -474,7 +473,7 @@ Prints the current running \fIversion\fP of \fIchyves\fP
 \fIsetup\fP
 Installs ZFS datasets \fIand\fP properties on \fIpool\fP.
 Usage: '\fIchyves\fP \fIsetup\fP [\fIpool\fP]'
-Where [\fIpool\fP] \fIis\fP the \fIpool\fP you want \fIto\fP \fIinstall\fP \fIchyves\fP on.
+Where [\fIpool\fP] \fIis\fP the \fIpool\fP you want \fIto\fP install \fIchyves\fP on.
 .TP
 .B
 \fIlist\fP
@@ -617,9 +616,9 @@ given. If [\fIsize\fP] \fIis\fP \fInot\fP \fIsupplied\fP, then '\fIsize\fP' \fIi
 .default as well. Support multi-\fIguest\fP specification.
 .TP
 .B
-\fIinstall\fP
+install
 Loads \fIand\fP boots into ISO for \fIguest\fP installation.
-Usage: '\fIchyves\fP \fIinstall\fP {\fIname\fP} {ISO}' \fIwhere\fP {\fIname\fP} \fIis\fP the \fIname\fP of the
+Usage: '\fIchyves\fP install {\fIname\fP} {ISO}' \fIwhere\fP {\fIname\fP} \fIis\fP the \fIname\fP of the
 \fIguest\fP, \fIand\fP {ISO} \fIis\fP the \fIname\fP of the ISO resource you would like \fIto\fP
 boot from \fIin\fP the form of: 'install.iso'
 .TP
@@ -938,7 +937,7 @@ Change the default bridge \fIto\fP "bridge50"
 
 .fam T
 .fi
-Fetch FreeBSD \fIinstall\fP ISO for later:
+Fetch FreeBSD install ISO for later:
 .PP
 .nf
 .fam C

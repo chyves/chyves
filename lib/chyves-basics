@@ -67,16 +67,8 @@ __parse_cmd () {
               __create "$2" "$3" "$4"
               exit
     ;;
-    install)  __verify_number_of_arguments "3" "$#" "3"
-              __install "$2" "$3"
-              exit
-    ;;
     start)    __verify_number_of_arguments "2" "$#" "3"
               __start "$2" "$3"
-              exit
-    ;;
-    uefi)     __verify_number_of_arguments "2" "$#" "3"
-              __uefi "$2" "$3"
               exit
     ;;
     stop)     __verify_number_of_arguments "2" "$#" "2"

@@ -21,8 +21,7 @@ chyves firmware import {http-URL|ftp-URL|local-path}
 chyves firmware rename <oldname> <newname>
 chyves firmware delete <name>
 chyves create <name> [size] [pool]
-chyves install <name> <iso-file>
-chyves start <name> [-s | -a]
+chyves start <name>[,<name2>[,name3]] [iso-resource]
 chyves stop <name>
 chyves forcekill <name>
 chyves scram
