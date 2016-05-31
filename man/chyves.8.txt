@@ -300,12 +300,6 @@ Guest Properties:
     on global configuration "dev_mode" to "on".
   fw=<firmware-resource-name>
     Firmware file loaded to boot UEFI guests.
-  persist={0|1|2}
-    Used to indicate how to handle when the bhyve process ends.
-    [0] - Leave powered off when bhyve process closes
-    [1] - Power off guest if shutdown state is detected, attempt to
-          reboot otherwise. This is the default.
-    [2] - Always attempt to reboot.
   uefi_console_output=vnc|serial
     When set to "serial" UEFI guests will use the standard serial interface.
     Guests set to "vnc" will use a VNC connection on supported hosts. VNC output

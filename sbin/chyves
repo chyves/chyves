@@ -1599,7 +1599,6 @@ __create() {
 		__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
 		__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
 		__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
-		__multi_chyves_zfs_property "set" "persist"     "$pool" "guests" "$name" "$_GDP_persist"
 		__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
 		__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
 
