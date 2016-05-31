@@ -1224,7 +1224,7 @@ does:
         rcboot is set.
   -t    [template] Displays if guest is a template.
   -d    [description] Dispays description property.
-	-n    [notes] Dispays notes property.
+  -n    [notes] Dispays notes property.
   -a    [all] Display all fields above.
 
  Flags to controls which guests are display or their disks:
