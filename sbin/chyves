@@ -91,6 +91,7 @@
 # __generate_generic_device_map()           # Creates device.map for guest and places in /chyves/guests/$_guest/device.map
 # __generate_grub_bhyve_command()           # Generates grub-bhyve command used to start guest.
 # __start()                                 # All inclusive start function
+# __verify_iommu_capable()                  # Verify I/O MMU (iommu) for guests using PCI passthrough
 #
 ## ../lib/chyves-updates                   ## Function for checking for updates.
 # __check_for_chyves_update                 # Check for chyves updated
