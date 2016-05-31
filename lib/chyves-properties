@@ -25,22 +25,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-# Creates string used to create ZFS volume for disks
-__generate_zvol_disk_options_string() {
-	[ "$_GDP_parameters_loaded" != 1 ] && __load_guest_default_parameters
-
-	# Compile a variable string to be used in the ZFS volume creation
-	[ "${_GDP_disk_volmode}" != "inherit" ] && local _disk_options="-o volmode=$_GDP_disk_volmode"
-	[ "${_GDP_disk_volblocksize}" != "inherit" ] && local _disk_options="$_disk_options -o volblocksize=$_GDP_disk_volblocksize"
-	[ "${_GDP_disk_dedup}" != "inherit" ] && local _disk_options="$_disk_options -o dedup=$_GDP_disk_dedup"
-	[ "${_GDP_disk_compression}" != "inherit" ] && local _disk_options="$_disk_options -o compression=$_GDP_disk_compression"
-	[ "${_GDP_disk_primarycache}" != "inherit" ] && local _disk_options="$_disk_options -o primarycache=$_GDP_disk_primarycache"
-	[ "${_GDP_disk_secondarycache}" != "inherit" ] && local _disk_options="$_disk_options -o secondarycache=$_GDP_disk_secondarycache"
-
-	echo "$_disk_options"
-}
-
 # Backend interface to set chyves properties with ZFS
 __multi_chyves_zfs_property() {
 	local _action="$1"      # get|set
