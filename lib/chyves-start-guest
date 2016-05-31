@@ -373,19 +373,6 @@ __boot() {
 	) &
 }
 
-__prepare_guest() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-
-	__generate_bhyve_net_string $name
-	_BHYVE_pci="$_BHYVE_net_string"
-
-	# Add disk as second PCI device
-	_BHYVE_pci="ahci-hd,/dev/zvol/${_GUEST_pool}/chyves/guests/${name}/disk0 $_BHYVE_pci"
-	# Add Hostbridge and lpc as the first PCI devices
-	_BHYVE_pci="hostbridge lpc $_BHYVE_pci"
-}
-
 # Generate bhyve slot string for network devices.
 __generate_bhyve_net_string() {
 	local name="$1"
