@@ -1,14 +1,28 @@
 This early in the project, a map is not defined. However many goals are planned:
 
-Move to library files for use by `chyves-utils` for certain functions _but_ **maintain the commit history/blame**.
-- Copy `sbin/chyves` to each file in `lib/`, rename, then modify out lines.
-- Use `git diff --find-copies-harder` to catch changes.
-
-Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the necessary checks as a lot of that code a repeated over and over.
-
 Rewrite to have a CPU manufacture variable. A Intel/AMD/* check, *=dragons.
 
-Fix `__network` remove and likely add (error when does not exist on system.)
+Fix `__network remove` and likely `network add`.
+- Error when does not exist on system. Is this still a problem?
+
+Fix issue with `chyves list <unknown-property`
+- probably an issue with "-"
+
+Look into size always being 1.5x that of the guest drive.
+
+Load libraries on demand?
+- Like in `__parse_cmd`
+- Intended to fix slowness
+- Trace source of slowness
+
+Globalize `_GUEST_name`
+- Use at `__parse_cmd` to set
+- `_GUEST_pool` not possible due to multi-guest, or at least another solution needs to be had.
+  - Could even be part of `__load_guest_parameters` - Probably the best solution, do verification here.
+- "all" points to variable set at start: "_ALL_GUEST_NAMES"
+  - [ "$_guest" = "all" ] && $_GUEST_name="$( echo "$_ALL_GUEST_NAMES" | tr ' ' ','   )"
+- This would handle this:
+  - _Write `__bulk_verify` to be supplied a guest name and maybe a pool to run the necessary checks as a lot of that code a repeated over and over._
 
 `__are_guests_running()`
 - `$1` is list of guests
@@ -25,21 +39,26 @@ Create restrictions in `__set` for:
 
 Move guest properties to `guests/bguest/.config`?
 
+Add ability to set properties from `__create()`
+- use `shift`
+  - Figure a way to decide how far to shift, probably just a three layer descending if statement.
+
 Write in code for `__cloneguest` to actually support a real clone.
 - How to handle multiple datasets?
 - "origin" ZFS property important
 - `clone` and `clone_assc` properties to keep track of this
 - Multi-disk support
-- Rename `-r` to `-i` for independent
-- `-c` becomes proper clone
-- `-d` becomes duplicate
+- Flags
+  - Rename `-r` to `-i` for independent
+  - `-c` becomes proper clone
+  - `-d` becomes duplicate
 
 Add ability to use commas with guest names for (aka multi-guest support):
 - <strike>`chyves create`</strike>
 - <strike>`chyves set`</strike>
 - <strike>`chyves clone`</strike>
-- `chyves get`
-- <strike>`chyves start`</strike> - Recently rewrote
+- <strike>`chyves get`</strike>
+- <strike>`chyves start`</strike>
 - `chyves stop`
 - `chyves destroy`
 - <strike>`chyves delete`</strike>
@@ -63,37 +82,55 @@ Console changes
   - Get guest console
   - `ps -aux | grep $console`
 
-Modify the check for which dataset version is in use.
-- This is because there might be multiple versions of chyves install (stable, dev, and/or sid)
-- A warning will be required for version that do make changes that are not backwards compatible.
-- A range might be necessary.
-- Maybe just a "_DATASET_VERSION" instead?
-
-Create handling for configuring `.config`.
-- <strike>`chyves list .config` and `chyves list .config`</strike>
-- Syntax for set will be `chyves set .config [pool] property`
-
 <strike>FreeNAS verification out of setup and into a function.</strike>
 - Will be used elsewhere to tell user to configure tunables
 - Write code to `grep` FreeNAS config file and see if the tunables are actually set. (This would be another function)
 
-Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
+Write check in `/boot/loader.conf` for ppt devices. Should be fairly easy to implement.
+- Maybe check `dmesg` instead?
 
-Restructured command layout to have less sub-commands.
-- `remove` for `remove` `rmiso` `rmfw`
+Adapt `__verify_valid_guest` to `__verify_valid_dataset` and add flags to function.
+- Or write something to check in `__resource_functions`
+
+Change `__generate_grub_bhyve_command` to use the first disk OR property the `grub_boot_disk`
+
+Add github.io webpage for chyves.org
+- https://github.com/t413/SinglePaged
+
+Write "Request for help" page
 
 #### Changes requiring meticulous testing:
 
-Create __dataset with:
-- `chyves dataset <pool-name> setup`  - Move remaining code from `__setup()`
-- `chyves dataset <pool-name> upgrade`  - Upgrade a dataset version
-- `chyves dataset <pool-name> promote`  - Promote a dataset to primary role
+##### Restructured command layout to have less sub-commands.
+- `chyves scram` > `chyves stop all`
+- `chyves disk` > `chyves list disks`
 
-Consolidate or rewrite `__start` and `__uefi` - Started
-- Possibly `__boot` and `__load` as well.
+```
+chyves $_guest create
+               clone
+               start
+               stop [all]
+               destroy
+               rename
+               delete
+               set - This might get involved.
+               get
+               snapshot $DATE
+                        <name>
+                        rollback [<snap-name>]
+                        list
+               console [reset|tmux|vnc]
+               disk add
+                    remove
+                    resize
+```
 
-Change networking handling
-- **Nearly finished. Polishing at this point.**
+```
+chyves dataset [pool-name] setup                   Move remaining code from `__setup()`
+                           promote                 Promote a dataset to primary role
+                           remove                  Completely remove chyves from pool
+                           upgrade                 Upgrade a dataset version
+```
 
 #### Not looking like it is possible:
 
@@ -108,8 +145,10 @@ Create a variable section of commonly used `grep` pipes to increase readability.
 
 Logs?
 - Dual console with one being logged on startup? Is that possible?
+- `echo "blah blah" | tee -a log.txt`
 
 Thoughts on using $1 as a guest name for action???
+- Maybe use "guest" to consolidate the actions?
 
 #### General plan:
 Added comments throughout the code to indicate what is going on.
@@ -117,8 +156,14 @@ Added comments throughout the code to indicate what is going on.
 Added more output to indicate to the end user what is happening in the script
 
 Get redundant code into functions. Use a standard nomenclature to denote internal use functions? See vm-bhyve for help.
+- `__functions` - Start with two underscores
+  - `__verb_future_variable_name` - Function called to set global variable.
+- `_variables` - Start with one underscore
+  - `_CAPS_ONLY_VARIABLES` - Variable with all capitalization are created in beginning of script.
+  - `_CAP_mixed_variables` - Variable start with capitalization for first word and lower case for the remaining. Used for Global variables set later in script by called function.
 
 Normalize variables to a consistent verbose naming scheme.
+- _On-going_.
 
 Need help with:
 - Spelling and grammar checking `man`, UI, and internal notes.
@@ -129,16 +174,19 @@ Need help with:
  - Find someone who can help with this.
  - chyves
    - Require / Optional
-     - tmux "Used with `chyves console $guest -t` to create a console pane and rename it."
+     - `tmux` "Used with `chyves console $guest -t` to create a console pane and rename it."
       - grub2-bhyve "Used to boot non-UEFI and non-bhyveload guests (Read: Non-FreeBSD guests)"
  -  chyves-devel
    - Require / Optional
      - tmux "Used with `chyves console $guest -t` to create a console pane and rename it."
-      - grub2-bhyve "Used to boot non-UEFI and non-bhyveload guests (Read: Non-FreeBSD guests)"
-      - txt2man "Used to rebuild man page file after edits. Use make buildman"
+      - `grub2`-bhyve "Used to boot non-UEFI and non-bhyveload guests (Read: Non-FreeBSD guests)"
+      - `txt2man` "Used to rebuild man page file after edits. Use make buildman"
  -  chyves-util
    -  Require / Optional
-     - qemu / Virtualbox "Used to convert ESXi guest disk images."
+     - `chyves`
+     - `qemu` / Virtualbox "Used to convert ESXi guest disk images."
  - Verify AMD-Vi / IOMMU check method (svm?) Rewrite??
 
 ## Testing!!!
+
+- Testing speed - Noticeably slower than iohyve
