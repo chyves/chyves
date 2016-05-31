@@ -259,9 +259,13 @@ Guest Properties:
     Attaches null modem console. [n] must be a unique number and
     can not be shared between started guests.
   uuid= Sets UUID for bhyve instance. Set by /bin/uuidgen at creation.
-    Examples: chyves set tap=tap0 <name>
-              chyves set tap=tap0,tap10,tap20,tap39 <name>
+  net_ifaces=tap{n}|vale{n}[:{p}]
+    tap and vale device(s) attached using virtio-net
     Where {n} is a tap interface number to use for tap interfaces. Taps are
+    process locked and can not be shared simultaneously by multiple guests.
+    Specify multiple tap devices using a comma.
+    Examples: chyves set net_ifaces=tap0 <name>
+              chyves set net_ifaces=tap0,tap10,tap39 <name>
     VALE support is experimentally provided with disclaimers above. VALE
     interfaces are added to guest using the same method as a tap interface. VALE
     interface names must be vale{n}[:{p}] where {n} can be alpha-numeric up to
@@ -269,6 +273,9 @@ Guest Properties:
     with a separating colon and either a single alphabetical character or a
     number 0-9999. VALE interfaces are clever in that the interface is commonly
     shared between other guests connecting to that 'virtual' VALE switch.
+    Examples: chyves set net_ifaces=vale0 <name>
+              chyves set net_ifaces=vale123456789:9999 <name>
+              chyves set net_ifaces=tap0,tap10,tap39,vale0,vale123:a <name>
   tap{n}_mac={xx:xx:xx:yy:yy:yy}
     {n} is the tap interface to assign the specified MAC address to be attached
     to the network adapter inside the guest OS. The MAC address is an ASCII
