@@ -32,7 +32,7 @@ __generate_bhyve_slot_string() {
 	local _use_pci_funcions="${3-$_CONSOLIDATE_BHYVE_PCI_DEVICES}"        # Optional with default, use PCI functions. Important for PCI passthrough so physical devices are on same slot. Uses $_CONSOLIDATE_BHYVE_PCI_DEVICES if no set.
 	local _max_slot_count=1                                               # Seeds counter used to ensure maximum slots are not exceeded.
 	local _num_devices="$( echo $_in_string | tr ' ' '\n' | wc -l )"      # Number of devices to connect from $_in_string, implies slot usage
-	local _func=0                                                         # Seeds PCI function number 
+	local _func=0                                                         # Seeds PCI function number
 
 	# Return when empty string is provided but erase $_BHYVE_slot_string beforehand.
 	[ -z "$_in_string" ] && _BHYVE_slot_string="" && return 0
