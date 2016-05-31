@@ -37,9 +37,9 @@ Internal development.
 
 - Created the dataset `$pool/chyves/.config` with two ZFS user properties, `chyves:pool_version` and `chyves:dataset_role` as explained below.
 
- - The `chyves:pool_version` ZFS property within `$pool/chyves/.config` contains the chyves version the dataset is compatible with. This will be set upon dataset creation and then updated via [chyves-utils](https://github.com/chyves/chyves-utils) using the `chyves-upgrade` command, non-contiguous updates are possible. This will be the automated process of ensuring the dataset contains the necessary properties to run correctly. This will also make future dataset changes easier to implement. This feature will make the file `UPGRADING.md` a matter of reference. There is also a check ran before anything else to ensure the dataset is upgraded, even if the only change made to the dataset structure is an increment in the version. Setup is still able to run if multiple datasets exist. This setup use-case is if you want to migrate guests from one pool to another pool that is not currently setup, limited but possible.
+ - The `chyves:dataset_version` ZFS property within `$pool/chyves/.config` contains the chyves dataset version the dataset is compatible with. This will be set upon dataset creation and then updated via chyves dataset <pool-name> upgrade`, non-contiguous updates are possible. This will be the automated process of ensuring the dataset contains the necessary properties to run correctly. This will also make future dataset changes easier to implement. This feature will make the file `UPGRADING.md` a matter of reference. There is also a check ran before anything else to ensure the dataset is upgraded, even if the only change made to the dataset structure is an increment in the version. Setup is still able to run if multiple datasets exist. This setup use-case is if you want to migrate guests from one pool to another pool that is not currently setup, limited but possible.
 
- - The `chyves:dataset_role` ZFS property within `$pool/chyves/.config` contains which role the dataset is used for. The valid values are `primary`, `secondary`, and possibly `offline` in the future. The primary pool will always host the ISO and Firmware resources. The primary pool will also own the `mountpoint` "`/chyves`". All pool that are active and not the primary are considered `secondary`.
+ - The `chyves:dataset_role` ZFS property within `$pool/chyves/.config` contains which role the dataset is used for. The valid values are `primary`, `secondary`, and `offline`. The primary pool will *always* host the ISO and Firmware resources. The primary pool will also own the `mountpoint` "`/chyves`". All pool that are active and not the primary are considered `secondary`.
 
  - Using `chyves list .config` will display the current properties for all the pools and using `chyves list .config [pool]` will list the properties for a single pool.
 
@@ -120,15 +120,19 @@ Internal development.
 
 - Removed the ability to create additional guest disks on a different pool. This functionality was never implemented, impractical, is dangerous to leave. See [commit  85274ad](https://github.com/chyves/chyves/commit/85274adddd94d1280a658920101278720391ecdc) for removed code.
 
-- Changed default description to `"Created on ``date``"` for created guests and `"Cloned on ``date``"` for cloned guests.
+- Created guest property `creation` to contain the creation date and origin. This replaces the text that used to be populated in `description` on guest.
 
 - Added `chyves list .defaults` to display guest defaults for newly created guests.
 
-- `null.iso` is created and imported as an ISO resource with `chyves setup pool=<pool>` on the primary pool. `chyves` references this file when an ISO resource is not specified for `chyves uefi`  or during `chyves start` for guests with `loader=uefi`.
-
-- Some default properties can be set for ZFS specific parameters for guest disks can be set in `.defaults`.
+- `null.iso` is created and imported as an ISO resource with `chyves setup <pool>` on the primary pool. `chyves` references this file when an ISO resource is not specified for `chyves start` on UEFI guests.
 
 - Added multi-guest support for some sub-functions. Multi-guest support is the ability to specify multiple guests in one command. This includes `clone`, `get`, `set`
+
+- Deprecated `kmod` and `net` from `setup` command. These have been replaced by an auto loader/checker for kernel modules and there is now the `chyves network` for network related tasks.
+ 
+- Deprecated `persist` property.
+
+- Guests now reboot properly and all other `bhyve` exit codes destroy the VMM.
 
 ##### Internal code changes:
 
@@ -142,8 +146,7 @@ Internal development.
 - Added function `__get_path_for_guest_dataset` to get the mount path of a guest.
 
 
-- Added functions `__get_next_console` and `__get_next_tap` to return the next number for respective device.
-
+- Added functions `__get_next_console` and `__get_next_tap` to set the global variables `_NEXT_tap` and `_NEXT_console` with the respective next unused device.
 
 - Added `__verify_kernel_module_loaded` function to verify, load `-l`, or unload `-u` kernels modules. Exits when no argument is given and the module is not loaded.
 
@@ -166,7 +169,7 @@ Internal development.
  - Added CPU feature check in this section.
    - The variable `_CPU_MISSING_UG` is set to "1" when the running on an Intel CPU that lacks the unrestricted guest `UG` feature is unavailable.
    - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
-   - `chyves` will only start guests with the `os` set as `freebsd` as further restriction when the CPU lacks `UG`.
+   - `chyves` will only start guests with the `loader` set as `bhyveload` as further restriction when the CPU lacks `UG`.
 
 - Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
 
@@ -200,7 +203,90 @@ Internal development.
 
 - Deprecated the of using underscores for storing `bargs`.
 
-- Added variable `_NUMBER_OF_ACTIVE_POOLS`. Currently used in `__set` when setting properties for `.config`. When only one active pool is on the system, then the multiple `.config` property can be set, otherwise the [pool] field must be used and only property can be set at a time.
+- <strike>Added variable `_NUMBER_OF_ACTIVE_POOLS`. Currently used in `__set` when setting properties for `.config`. When only one active pool is on the system, then the multiple `.config` property can be set, otherwise the [pool] field must be used and only property can be set at a time.</strike> Deprecated.
+ 
+- Added variables `_VERSION_BRANCH`, `_PROJECT_URL`, and `_PROJECT_URL_GIT` to keep track of aspect for use in `__check_for_chyves_update`.
+
+- Added variables `_OS`, `_OS_VERSION_DATE`, `_OS_VERSION_FREENAS`, `_OS_VERSION_REL`, and `_OS_VERSION_REV` to keep track of aspects of the host system OS.
+
+- Added variable `_DATE_YMD` to store date information for general reference in YYYYMMDD format.
+
+- Added function `__check_for_chyves_update` to check GitHub for latest version.
+
+- Added properties and variables `_CHECK_FOR_UPDATES`, `_CHECK_FOR_UPDATES_TIMEOUT_SECONDS`, `_CHECK_FOR_UPDATES_LAST_CHECK`, `_CHECK_FOR_UPDATES_LAST_CHECK_STATUS`, `_CHECK_FOR_UPDATES_UNIQUE_ID`, and `_CHECK_FOR_UPDATES_URL` for use by `__check_for_chyves_update`.
+
+- <Out of order> Added function `__convert_list_to_grep_string` to have a raw list of anything be converted to a `grep`-able string. $2 is used to append an existing `grep`-able list to what is converted.
+
+- Added variable `_FREEBSD_NET_DRIVERS_GREP_STRING` to keep a string of valid FreeBSD network drivers (names of interfaces effectively) for use in the networking methods.
+
+- Added variable `_VLAN_IFACE_BASE_NAME` to keep track of the base name used on system for vlan interfaces. Typically vlan0, vlan1, vlan2 is the standard naming nomenclature but specifying “clone_interfaces” in /etc/rc.conf you can deviate from this standard.
+
+- Added property and variable `_TAP_UP_BY_DEFAULT` to keep track of whether or not to set `tap` interfaces to up using the `sysctl`. If set to "yes", then an `if` statement in `__preflight_check` loads the `if_tap` kernel module and then sets the `sysctl`.
+
+- <Out of order> Added `.defaults` property `bridge` and variable `_GDP_bridge` to keep track of the default bridge to assign tap interfaces to.
+
+- <Out of order> Created `.default` properties and variables to contain ZFS specific parameters for new ZFS volumes aka (disks) for guests.
+  - Assume you have some experience with ZFS and assumes you know what you are doing. 
+  - Properties: `disk_volmode`, `disk_volblocksize`, `disk_dedup`, `disk_compression`, `disk_primarycache`, and `disk_secondarycache`
+
+- Added function `__generate_zvol_disk_options_string` to generate the ZFS string used create ZFS volumes (disks) for guests.
+
+- Added function `__get_guest_name_by_pid` and variable `_GUEST_name_by_pid` to get the name of a guest but the process ID. This is currently used when a `tap` interface is locked by a process and descriptive user output is needed including the guest name that is causing the issue.
+
+- Added function `__generate_bhyve_net_string` to dynamically generate bhyve PCI string (Eg. -s 7,virtio-net,tap{n}) for each network device. VALE devices supported (Eg. -s 7,virtio-net,vale{n}).
+
+- Added function `__get_pool_for_guest` to verify and then set "_GUEST_pool" for supplied guest.
+
+- Added function `__get_corrected_byte_nomenclature` to verify user input, pull the size denomination, use only the first letter, and captilize that letter. Then if the number is evenly divisible by 1024, it increaeses the size denomination.
+
+- Added function `__get_next_vnc_port` to generate next unused VNC port, then assigns variable `_NEXT_vnc_port`.
+
+- Added guests properties `uefi_console_output`, `uefi_mouse_type`, `uefi_vnc_ip`, `uefi_vnc_port`,  `uefi_vnc_res`, and `uefi_pause_until_vnc_client_connect` for use with UEFI guests using VNC consoles.
+
+- Added global property `uefi_vnc_port_start_offset` to indicate when first starting port for VNC. The default is 5900.
+
+- Added function `__verify_iommu_capable` to check if IO MMU is enabled on the system. This is more commonly known as VT-d or AMD-Vi.
+
+- Renamed property `tap` to `net_ifaces`
+
+- Deprecated function `__exportguest` because this functionality will be part of `chyves-utils`. Also it did not export proper UCL format.
+
+- Added global property `auto_load_kernel_mods` to determine whether or not to load the kernel modules when starting guests, otherwise there is a check and exiting error if not loaded. Default is "yes".
+
+- Added global property `consolidate_bhyve_pci_devices` to determine whether or not to use PCI functions for similar devices in bhyve string generation. This is needed when more than 26 PCI devices are going to be connected to a guest.
+
+- Started using library files to break up the code for managability and also for use by other chyves projects.
+  - chyves-start-guest
+  - chyves-properties
+  - chyves-updates
+  - chyves-informational
+  - chyves-basics
+  - chyves-network
+
+- Renamed function `__load` to `__generate_grub_bhyve_command` and rewritten
+ - Now only handles grub-bhyve guests, no more bhyveload.
+ - Assigns global variable $_LOADER_cmd for the grub-bhyve command to use. This allows for use in a small while loop later on to be use to make sure guests reboot correctly.
+ - Deprecated `install` property. If optical media is used from the command line, it is assumed to boot from that the optical media.
+
+- Complete rewrite of `__start`. See here for commit message 595bb84.
+
+- Added function `__generate_bhyve_slot_string` see commit af0d3b3. Sort of replace `__get_bhyve_cmd` but not really.
+
+- Added function `__generate_bhyve_custom_pci_string` see commit 0beb1dd. This creates PCI devices for bhyve from the `pcidev` properties and then feeds to information to `__generate_bhyve_slot_string`. There is special handling for pass through devices.
+
+- Added function `__generate_bhyve_disk_string` see commit 5acfa78. This creates PCI devices for bhyve for each disk and then feeds to information to `__generate_bhyve_slot_string`. 
+
+- Added function `__generate_bhyve_vnc_string` to generate a PCI string for the frame buffer used for the VNC connection for UEFI guests using VNC console output.
+
+- Deprecated function `_get_bhyve_cmd` replaced by `__generate_bhyve_slot_string`.
+
+- Deprecated function `__get_zfs_pcidev_conf` replaced by `__generate_bhyve_custom_pci_string`.
+
+- Deprecated function `__prepare_guest` by several other functions. See commit 8da6b6d.
+
+- Deprecated functions `__boot`, `__install`, and `__uefi` by completely rewritten `__start`.
+
+- Massive expansion of network handling. See `lib/chyves-network` for functions. See initial commit 89d8bba.
 
 ##### Developer enhancements:
 
@@ -214,7 +300,6 @@ Internal development.
  - Using spaces for code examples in Markdown documents and the `man` page.
  - Using tabs is now the standard for scripts, this makes it easier to edit from a command line text editor. This is to prevent the internal conversation: "Is it two or three spaces after an `if` statement?". The answer is it is a tab every time.
 
-
 - Added "DEVELOPER MODE" changing the value of property "dev_mode" from "off" to either [on|-xvn] actives these features:
   - Display the full `bhyve` command used to start the guests just before executing the same command. This is done in `__boot`, `__start_` and `__uefi`.
   - Allow functions and commands to be called straight from the command line with `chyves dev`. Examples of how this would be used:
@@ -222,3 +307,6 @@ Internal development.
     - `chyves dev __list tap active`
     - `chyves dev "echo $That_tricksy_hobbit_variable"`
   - Using the [`-xvn`] flag(s) instead of the word "on" use the Bourne shell special operation flags. The `-x` shows each ling before it executes. The `-v` flag shows each line as it executes. The `-n` flag reads and populates the variables but does not execute the commands.
+
+
+< Last commit documented on this page: 778172b - DOC: Moar added, lot of big ticket items completed.>
