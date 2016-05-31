@@ -544,7 +544,7 @@ __generate_zvol_disk_options_string() {
 	echo "$_disk_options"
 }
 
-#  get|set chyves: properties
+# Backend interface to set chyves properties with ZFS
 __multi_chyves_zfs_property() {
 	local _action="$1"      # get|set
 	local _property="$2"    # <property name>
@@ -756,6 +756,7 @@ __load_guest_default_parameters() {
 	_GDP_disk_secondarycache="$( __multi_chyves_zfs_property  "get" "disk_secondarycache" "primary" "guests" ".defaults" )"
 }
 
+# Corrects user input when setting RAM properties and size for .defaults
 __get_corrected_byte_nomenclature() {
 	local _var="$1"
 
@@ -783,7 +784,7 @@ __get_corrected_byte_nomenclature() {
 	_CORRECTED_byte_nomenclature="$_num$_suffix"
 }
 
-# Process command line
+# First stage to process command line parameters for chyves
 __parse_cmd () {
   case "$1" in
     version)  __verify_number_of_arguments "1" "$#"
@@ -1054,7 +1055,7 @@ __get_zfs_pcidev_conf() {
 	IFS=$oldifs
 }
 
-# List Guests
+# List various aspects of chyves guests, properties, and other resources
 __list() {
 	local output_type="$1"
 	local _arg2="$2"         # Used for tap and processes
@@ -1559,7 +1560,7 @@ __resource_functions() {
 	fi
 }
 
-# Create guest
+# Create guest(s)
 __create() {
 	local guests="$1"
 	local size="$2"
@@ -1978,7 +1979,7 @@ __destroy() {
 	bhyvectl --destroy --vm=chy-$name
 }
 
-# User interface to set chyves properties
+# Frontend interface to set chyves properties
 __set() {
 	local _name="$3"          # This is script indexed.
 
@@ -2039,7 +2040,7 @@ __set() {
 	done
 }
 
-# User interface to get chyves properties
+# Frontend interface to get chyves properties
 __get() {
 	local prop="$1"
 	local guests="$2"
