@@ -891,10 +891,6 @@ __parse_cmd () {
               __cloneguest "$2" "$3" "$4" "$5"
               exit
     ;;
-    export)   __verify_number_of_arguments "2" "$#" "2"       # Going to be moved to chyves-utils
-              __exportguest "$2"
-              exit
-    ;;
     console)  __verify_number_of_arguments "2" "$#" "3"       # Tmux support soon
               __console "$2" "$3"
               exit
