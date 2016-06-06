@@ -58,7 +58,7 @@ Create `__validate_correct_name_format`
  - 31-4=27 character limit for name (create, clone, rename)
    - `"^[a-zA-Z0-9_.-]{1,27}$"`
 
-Rework `__verify_valid_guest` to referece `_ALL_GUEST_NAMES`
+Rework `__verify_valid_guest` to reference `_ALL_GUEST_NAMES`
 
 Change `__get_corrected_byte_nomenclature` to be a little looser, allow for [a-zA-Z]{0,3} suffix for any potential and then only use the first letter.
 
@@ -77,9 +77,9 @@ Move guest properties to `guests/bguest/.config`?
 
 Add ability to set properties from `__create()`
 - use `shift`
-  - Figure a way to decide how far to shift, probably just a three layer descending if statement.
+  - Figure a way to decide how far to shift, probably just a three layer descending `if` statement.
 
-Write in code for `__cloneguest` to actually support a real clone.
+Write in code for `__cloneguest` to actually support a real clones.
 - How to handle multiple datasets?
 - "origin" ZFS property important
 - `clone` and `clone_assc` properties to keep track of this
