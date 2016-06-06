@@ -8,6 +8,35 @@ Fix `network remove` and likely `network add`.
 Change `__convert_list_to_grep_string` to take both new-line delimited lists and space delimited lists.
 - Really just an addition `tr` call will implement this. BUT test it.
 
+Add way to use non-ISO resources for installation.
+- Use `./`, `../`, or `/` as a trigger.
+
+VNC client
+- `__console_vnc` function
+- Global property
+  - vnc_client=freerdp|custom
+  - vnc_client_cmd=<command-to-start-client-complete-with
+  - vnc_client_action=execute|print
+
+Must create way to have auto mode and manual mode with network design.
+- Global property `network_design_mode=chyves|system`
+
+Change 'offline' mode for dataset to rename the dataset to chyves_offline
+- This will simplify management and reduce a lot of the overhead.
+
+`chyves network import`
+- Import network design layout from current configuration on the host.
+- No guests - simple to import
+- If there are guests
+  - Find tap interfaces for guests
+
+Function `__tap_owner`
+
+Change the way to store tap devices under a bridge membership.
+- Current limit is ~180 devices due to 1024 character limit
+  - tap{n} to t{n}
+  - vale{n} to v{n}
+
 Create `lib/chyves-version`.
 - Does _not_ need to maintain history.
 
@@ -118,10 +147,6 @@ Console changes
   - Get guest console
   - `ps -aux | grep $console`
 
-<strike>FreeNAS verification out of setup and into a function.</strike>
-- Will be used elsewhere to tell user to configure tunables
-- Write code to `grep` FreeNAS config file and see if the tunables are actually set. (This would be another function)
-
 Write check in `/boot/loader.conf` for ppt devices. Should be fairly easy to implement.
 - Maybe check `dmesg` instead?
 
@@ -227,7 +252,11 @@ chyves dataset [pool-name] setup                   Move remaining code from `__s
     - `nat{n}_dhcp`=enable|disabled
     - `nat_gateway_ip_offset`=0.0.0.0/0
 
-#### Not looking like it is possible:
+<strike>FreeNAS verification out of setup and into a function.</strike>
+- Will be used elsewhere to tell user to configure tunables
+- Write code to `grep` FreeNAS config file and see if the tunables are actually set. (This would be another function)
+
+#### Not looking like it is possible within Bourne:
 
 Add `for` loop to reduce code for `zfs get`s in that start sequences and elsewhere
 - Change to global variables with `_guest_$var` variables.
@@ -239,11 +268,30 @@ Create a variable section of commonly used `grep` pipes to increase readability.
 #### Considerations:
 
 Logs?
-- Dual console with one being logged on startup? Is that possible?
+- Dual console with one being logged on startup? <strike>Is that possible?</strike>
 - `echo "blah blah" | tee -a log.txt`
+- `__log "_lvl" "message"`
+  - If -z $_GUEST_name then
+    - echo -n "<time-stamp>" >> /chyves/Logs/YYYYMMDD-global_log
+    - echo "Message to user" | tee > /chyves/Logs/YYYYMMDD-global_log
+  - else
+    - echo -n "<time-stamp>" >> /chyves/Logs/YYYYMMDD-global_log
+    - echo "Message to user" | tee > /chyves/Logs/YYYYMMDD-global_log > /chyves/guests/$_GUEST_name/Logs/YYYYMMDD-global_log
 
-Thoughts on using $1 as a guest name for action???
-- Maybe use "guest" to consolidate the actions?
+```
+stdout_level = level of output.
+            0 off
+            1 minimal
+            2 regular
+            3 verbose
+            4 developer
+log_to_file=yes|no
+log_mode=host|guest|dual
+/chyves/logs
+/chyves/guests/$_GUEST_name/logs
+```
+
+<strike>Thoughts on using $1 as a guest name for action???</strike> Happening - Using two stage for __parse_cmd_main
 
 #### General plan:
 Added comments throughout the code to indicate what is going on.
