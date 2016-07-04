@@ -87,6 +87,7 @@
 # __load_guest_default_parameters()         # Loads .defaults parameters to global variables
 # __multi_chyves_zfs_property()             # Backend interface to set and get chyves properties with ZFS
 # __set()                                   # Frontend interface to set chyves properties
+# __verify_user_input_for_properties()      # Middleware for setting properties, verifies user input for properties.
 #
 ## ../lib/chyves-start-guest               ## Functions for starting guests
 # __generate_bhyve_slot_string()            # Generates a bhyve PCI slot string from $1
