@@ -74,7 +74,7 @@
 # __network()                               # Network sub-command
 # __network_add_dev_to_bridge()             # Adds network device to bridge
 # __network_add_phy_to_bridge()             # Adds outside interface to bridge with error handling
-# __network_remove_dev_to_bridge()          # Removes network device from bridge
+# __network_remove_dev_from_bridge()          # Removes network device from bridge
 # __verify_tap_not_in_use()                 # Verifies tap is not in use on system
 # __verify_vale_system_compat()             # Check if VALE might be possible on system
 # __verify_valid_iface_format()             # Verifies interface is in valid format for type.

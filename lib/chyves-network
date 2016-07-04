@@ -420,7 +420,7 @@ __network_add_phy_to_bridge() {
 }
 
 # Removes network device from bridge
-__network_remove_dev_to_bridge() {
+__network_remove_dev_from_bridge() {
 	local _bridge="$1"
 	local _dev="$2"
 	__verify_valid_system_iface $_bridge -n
