@@ -796,7 +796,7 @@ Console into the installation:
 
 Once installation is done, exit console (~~.) and destroy guest:
 
-  chyves destroy bguest
+  chyves bguest reclaim
 
 Now that the guest is installed, it can be started like usual:
 

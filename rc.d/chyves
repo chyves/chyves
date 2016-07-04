@@ -37,7 +37,7 @@ chyves_start()
 chyves_stop()
 {
 	echo "Stopping all chyves guests..."
-	/usr/local/sbin/chyves scram
+	/usr/local/sbin/chyves all stop
 }
 
 run_rc_command "$1"
