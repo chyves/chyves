@@ -475,6 +475,24 @@ list        Displays information about on general guest info with the no
               from the host, it destroys the guest's VMM resources (bhyvectl
               vernacular).
 
+NETWORK SUB-COMMANDS
+When global property 'network_design_mode' is set to 'auto', these commands are
+used to create and manage network design by storing properties about associate
+network devices and creates bridge and tap interfaces. The sub-commands below
+store properties that are referenced and later used to verify and (re)created
+the network design when starting a guest. The host still requires configuration
+of the vlan and physical interfaces. chyves will handle creating and associating
+the tap interfaces with the appropriate bridge interfaces and also attaching
+those configured vlan and physical interfaces to the bridges while starting a
+guest. Multiple bridges and taps per guest is supported.
+
+  add           chyves network <guest> add {tap|tap{n}|vale{s}[:{p}]}
+                chyves network <guest> add {tap|tap{n}} bridge{n}
+              Used to add a tap or VALE interface to a guest, this also adds the
+              tap interface to the default bridge as set in defaults. When the
+              'tap' keyword is used, the next available tap interface is used.
+              {n} is the tap number, {s} is the VALE switch number, and
+              optionally {p} is the port on the VALE switch.
 
             .config [<pool-name>|primary] List all the config properties for a
                         chyves pool. The word "primary" can be used instead of
@@ -482,19 +500,41 @@ list        Displays information about on general guest info with the no
 
             pools       Lists all the pools and their roles. Helpful when no
                         guests have been created.
+  attach        chyves network bridge{n} attach iface{n}
+              Used to associate a vlan or physical interface with a bridge. Keep
+              in mind that a physical or vlan interface can only be on one
+              bridge group. See ifconfig(8) for details.
 
             processes   Lists all the processes *hyve processes.
+  default       chyves network bridge{n} default
+              Used to set the default bridge to use for newly created guests.
 
             processes [<name>] Lists all the processes *hyve processes for a
                         guest.
+  join          chyves network bridge{n} join tap{n}
+              Used to add a tap to a bridge interface.
 
             bridges     Lists each the bridge with the associated taps and
                         outside interface.
+  migrate       chyves network bridge{n} migrate bridge{n}
+              Used to migrate a set of interfaces from an existing to another
+              bridge interface. If migrating to an existing bridge the external
+              interface is overwritten with the interface from the bridge being
+              migrated from and the tap interface lists are combined.
 
             <guest-property> List the property given for all the guests. See
                         "Guest Properties" section above for a list
+  private       chyves network bridge{n} private
+              Used to set the bridge to private mode. This means there is not an
+              external network connected. This can be useful when sensitive data
+              is being exchanged over a network but not necessarily needing
+              outside access such as a SQL database. This could also be used
+              with NAT. However NAT support is not build into chyves.
 
             tap active  List all the tap interfaces from /dev/tap*
+  remove        chyves network <guest> remove {tap{n}|vale{s}[:{p}]}
+              Used to remove a tap or vale interface from a guest, this also
+              removes tap devices from the bridge configuration.
 
 info        Lists all the guests along with their RAM, CPU, Size,
             OS, Loader, and Description (if -d is passed). To control level of
@@ -671,62 +711,8 @@ dev         Allows for a function to be called direct from command line when
             Double quotes are required for parameters with strings, such as
             commands.
 
-network     Used to store properties about associate network devices and creates
-            bridge and tap interfaces. The sub-commands below store properties
-            that are referenced and later used to recreated the network design
-            when starting a guest. The host still requires configuration of the
-            vlan and physical interfaces. chyves will handle creating and
-            associating the tap interfaces with the appropriate bridge
-            interfaces and also attaching those configured vlan and physical
-            interfaces to the bridges while starting a guest. Multiple bridges
-            and taps per guest is supported.
-
-            add       chyves network {name} add [$null|tap{n}|vale{s}[:{p}]]
-                        Used to add a tap or VALE interface to a guest, this
-                        also adds the tap interface to the default bridge as set
-                        in .defaults. When no value is given for the interface
-                        then the next available tap interface is created and
-                        added. {n} is the tap number, {s} is the VALE switch
-                        number, and optionally {p} is the port on the VALE
-                        switch.
-
-            attach    chyves network bridge{n} attach iface{n}
-                        Used to associate a vlan or physical interface with a
-                        bridge. Keep in mind that a physical or vlan interface
-                        can only be on one bridge group. See ifconfig(8) for
-                        details.
-
-            default   chyves network bridge{n} default
-                        Used to set the default bridge to use for newly created
-                        guests.
-
-            join      chyves network bridge{n} add tap{n}
-                        Used to add a tap to a bridge interface.
-
-            migrate   chyves network bridge{n} migrate bridge{n}
-                        Used to migrate a set of tap interfaces and outside
-                        interface to an existing or new bridge interface. If
-                        migrating to an existing bridge the external interface
-                        is overwritten with the interface from the bridge being
-                        migrated from and the tap interface lists are combined.
-
-            private   chyves network bridge{n} private
-                        Used to set the bridge to private mode. This means there
-                        is not an external network connected. This can be useful
-                        when sensitive data is being exchanged over a network
-                        but not necessarily needing outside access such as a SQL
-                        database. This could also be used with NAT. However NAT
-                        support is not build into chyves.
-
-            remove    chyves network {name} add {tap{n}|vale{s}[:{p}]}
-                        Used to remove a tap or vale interface from a guest,
-                        this also removes tap devices from the bridge
-                        configuration.
-
-            unjoin    chyves network bridge{n} remove tap{n}
-                        Used to remove a tap from a bridge interface.
-
-help        Prints version information and command valid syntax.
+  unjoin        chyves network bridge{n} remove tap{n}
+              Used to remove a tap from a bridge interface.
 
 EXAMPLES
 
