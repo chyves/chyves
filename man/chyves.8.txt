@@ -34,7 +34,6 @@ chyves resize [name] [diskN] [size]
 chyves disks [name]
 chyves snap <name>[@<snapshotname>]
 chyves roll <name>[@<snapshotname>]
-chyves clone {-c|-r} <name> <clonename>
 network {name} {add|remove} [-|tap{n}|vale{n}] [bridge{n}]
 network bridge{n} {add|attach|default|join|migrate|private|remove} [device{n}]
 network bridge{n} {join|unjoin} tap{n}
@@ -43,6 +42,7 @@ network bridge{n} {default|private}
 network bridge{n} migrate bridge{n}
 chyves console <name> [-t]
 chyves conreset
+chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
 chyves <guest>|MG|all reclaim
 chyves help
 
@@ -462,6 +462,44 @@ list        Displays information about on general guest info with the no
                         table.
 
             iso         Lists the ISO resources.
+GUEST SUB-COMMANDS
+
+  clone         chyves <guest> clone <clonename>|MG [-ce|-cu|-ie|-iu] [<pool>]
+              This clones a guest, there are four cloning methods that chyves
+              uses. The cloning method is determined by the clone flag after the
+              clone name(s). The first letter of the flag indicates the clone's
+              dependency on the parent's datasets, the second letter indicates
+              whether new unique properties are created for the clone.
+
+                Dataset dependency:
+                -c    Creates a ZFS clone of the guest's disks. Initially the
+                      clone shares the same blocks as the parent and only a few
+                      KB are consumed to point the clone dataset to the parent's
+                      dataset. This also means, the clones must be deleted
+                      before the parent guest is deleted. See 'chyves list
+                      clones' if you forget which guests are clones. The
+                      [<pool>] parameter is ignored as the clone must reside on
+                      the same pool as it's parent.
+
+                -i    Creates an independent clone which is not dependent on the
+                      parent's datasets. Using the [<pool>] parameter will clone
+                      the guest to the specified pool, otherwise the parent's
+                      pool is used.
+
+                Guest properties
+                -e    Copies the guest properties exactly as the parent's. This
+                      means the parent can not start while the clone is running,
+                      or vise-versa due to the overlapping serial and tap
+                      interfaces.
+
+                -u    Sets new a unique: serial interface, a new tap is created
+                      for each interface of the parent under the same bridge,
+                      VALE interfaces are copied over and ports removed, a new
+                      unique port is used for uefi_vnc_port, and a new UUID
+                      is generated.
+
+              If the cloning method flag is omitted, the default is used as
+              defined in global property 'default_clone_flag', this is initially
 
             firmwares   Lists the firmware resources.
 
@@ -676,16 +714,6 @@ roll        Rollback guest to a snapshot.
             name of the guest and [snapshot] is what you would
             like to name the snapshot.
 
-clone       Clone a guest.
-            This does not clone in the ZFS sense of the word.
-            If you want to use the clone and the original guest at the
-            same time you will need to change the tap, con, and UUID properties
-            or use the -r option to have chyves do this for you.
-            Usage: 'chyves clone {-c|-r} {name} {clonename} [pool]' where {name}
-            is the name of the guest and {clonename} is what you would
-            like to name the new clone, and [pool] is optinally the destination
-            pool for the clone.
-
 console     Consoles into a guest operating system. Utilizes nmdm(4) and
             cu(1) to open a console on a guest operating system. Since
             bhyve(8) does not emulate video. The guests need to be administered
@@ -839,9 +867,21 @@ Take a snapshot of a guest:
   chyves list snapshots
   chyves roll bguest@beforeupdate
 
-Make a replicated clone of a guest:
+Make a true ZFS clone of bguest with unique properties:
 
-  chyves clone -r bguest bclone
+  chyves bguest clone -cu bclone1
+
+Make two true ZFS clones of bguest with same exact properties:
+
+  chyves bguest clone -ce bclone1,bclone2
+
+Make two independent clones of bguest with unique properties:
+
+  chyves bguest clone -iu bclone1,bclone2
+
+Make independent clone of bguest with same exact properties:
+
+  chyves bguest clone -ie bclone1
 
 AUTHOR
 Justin D Holcomb -- @EpiJunkie

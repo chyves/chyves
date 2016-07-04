@@ -24,6 +24,173 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Clone a guest
+__clone_guest() {
+	local _clone_list="$1"
+	local _flag="$2"                  # Indicates method of cloning -ce|-cu|-ie|iu
+	local _dst_pool="$3"
+	local _src_pool="$_GUEST_pool"   # For clarity
+	local _clone_msg="Creating dependent clones ($_clone_list) from $_GUEST_name."
+	local _independent_msg="Creating independent clones ($_clone_list) from $_GUEST_name."
+	local _exact_properties_msg="Clones will share all properties with $_GUEST_name."
+	local _unique_properties_msg="Clones will have unique properties, see man page for details."
+	__load_guest_default_parameters
+
+	#
+	#[ "$_GP_clone" = "child" ] && __fault_detected_exit "Can not clone child clone."
+
+	# Use global clone method if null
+	[ -z "$_flag" ] && local _flag=$_DEFAULT_CLONE_FLAG
+
+	# Verify correct flag is used and coach the user
+	if [ "$_flag" = "-ce" ]; then
+		__log 1 "$_clone_msg"
+		__log 1 "$_exact_properties_msg"
+	elif [ "$_flag" = "-cu" ]; then
+		__log 1 "$_clone_msg"
+		__log 1 "$_unique_properties_msg"
+	elif [ "$_flag" = "-ie" ]; then
+		__log 1 "$_independent_msg"
+		__log 1 "$_exact_properties_msg"
+	elif [ "$_flag" = "-iu" ]; then
+		__log 1 "$_independent_msg"
+		__log 1 "$_unique_properties_msg"
+	else
+		__fault_detected_exit "Invalid flag used '$_flag'. See 'man chyves' for correct flags and details."
+	fi
+
+	# Clones must always be on the same pool.
+	if [ "$_flag" = "-ce" ] || [ "$_flag" = "-cu" ]; then
+		[ "$_dst_pool" != "$_src_pool" ] && __log 1 "Clones are dependent on their parents and must be on the same pool."
+		local _dst_pool=$_src_pool
+
+	# See if destination pool is declared.
+	elif [ -z "$_dst_pool" ]; then
+		local _dst_pool=$_src_pool
+	fi
+
+	__log 2 "Taking snapshot of $_GUEST_name on $_src_pool named @chyves-clone-process-$_UUID_GENERAL_USE"
+	zfs snapshot -r $_src_pool/chyves/guests/$_GUEST_name@chyves-clone-process-$_UUID_GENERAL_USE
+
+	# Multi-guest support.
+	# Eg.: chyves goldenVM clone devteam1,devteam2,devteam3
+	for _cname in `echo "$_clone_list" | tr ',' ' '`
+	do
+		__log 1 "Creating clone '$_cname' from '$_GUEST_name'"
+
+		# Create a true ZFS clone of the guest's datasets
+		if [ "$_flag" = "-ce" ] || [ "$_flag" = "-cu" ]; then
+
+			__log 2 "Creating guest dataset"
+			zfs create $_dst_pool/chyves/guests/$_cname
+
+			__log 2 "Creating log dataset with compression turned on."
+			zfs create -o compression=on $_dst_pool/chyves/guests/$_cname/logs
+
+			__log 2 "Copying guest parameters from $_GUEST_name"
+			zfs send -R $_src_pool/chyves/guests/$_GUEST_name/.config@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$_cname/.config
+
+			__log 2 "Creating ZFS clones of each disk dataset..."
+			for _dataset in `zfs list -H -r -t volume -o name $_src_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
+			do
+				local _dataset_suffix="$( echo "$_dataset" | cut -d '/' -f 5 )"
+				__log 2 "Cloning: $_dataset@chyves-clone-process-$_UUID_GENERAL_USE"
+				__log 2 "     to: $_dst_pool/chyves/guests/$_cname/$_dataset_suffix"
+				zfs clone $_dataset@chyves-clone-process-$_UUID_GENERAL_USE $_dst_pool/chyves/guests/$_cname/$_dataset_suffix
+			done
+
+		# Create an independent clone
+		elif [ "$_flag" = "-ie" ] || [ "$_flag" = "-iu" ]; then
+
+			echo "Cloning $_GUEST_name to $_cname"
+			echo "Verifing $_cname is unused."
+			__verify_correct_guest_name_format "$_cname"    # Exits if name in use.
+
+			echo "Using zfs send to send $_GUEST_name to $_cname"
+			zfs send -R $_src_pool/chyves/guests/$_GUEST_name@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$_cname
+
+			echo "Setting creation stamp on $_cname..."
+			local _creation_stamp="Cloned from $_GUEST_name on $( date ) by chyves $_VERSION_LONG using __clone_guest()"
+			__set_chyves_zfs_property "creation" "$_creation_stamp" "manual" "$_dst_pool/chyves/guests/$_cname"
+		fi
+
+		# Create unique guest properties when -*u is used
+		if [ "$_flag" = "-cu" ] || [ "$_flag" = "-iu" ]; then
+			echo "Setting new properties as part of replication..."
+
+			# Erase network configuration as we will be copying the parent's configuration
+			__set_chyves_zfs_property "net_ifaces" "-" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+
+			# Recreate network design from parent
+			__log 2 "Configuring $_cname network to mimic the design of $_GUEST_name..."
+			for _interface in `echo $_GP_net_ifaces | tr ',' ' '`
+			do
+				__verify_valid_iface_format "$_interface"
+
+				# Get net config for guest
+				local _guest_net_config="$( __return_chyves_zfs_property_value "net_ifaces" "manual" "$_dst_pool/chyves/guests/$_cname/.config" )"
+
+				__log 2 "Mimicking $_interface interface for $_cname."
+				if [ "$_IFACE_type" = "vale" ]; then
+
+					# Remove port config from vale interface
+					local _new_interface="$( echo $_interface | cut -d':' -f1 )"
+
+				elif [ "$_IFACE_type" = "tap" ]; then
+					__log 2 "Getting bridge that $_interface belongs to..." -n
+					__get_parent_bridge_for_tap_chyves $_interface
+					__log 2 "$_PARENT_bridge_for_tap_chyves."
+					__log 2 "Getting next tap interface..." -n
+					__get_next_tap
+					__log 2 "$_NEXT_tap."
+					local _new_interface="$_NEXT_tap"
+					__log 2 "Joining $_new_interface to $_PARENT_bridge_for_tap_chyves... " -n
+					__network_bridge_join "$_PARENT_bridge_for_tap_chyves" "$_new_interface"
+					__log 2 "done."
+				fi
+
+				# Set variable for new net configuration
+				if [ "$_guest_net_config" = "-" ] || [ "$_guest_net_config" = "" ]; then
+					local _guest_net_config="$_new_interface"
+				else
+					local _guest_net_config="$_guest_net_config,$_new_interface"
+				fi
+
+				__set_chyves_zfs_property "net_ifaces" "$_guest_net_config" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+			done
+			__log 2 "Done recreating nework design for $_cname from $_GUEST_name's design."
+
+			__log 2 "Assigning next available unused console interface... $_NEXT_serial"
+			__get_next_serial
+			__set_chyves_zfs_property "serial" "$_NEXT_serial" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+
+			__log 2 "Generating new UUID... " -n
+			__generate_new_uuid_guest_use
+			__log 2 "$_UUID_GUEST_USE"
+			__set_chyves_zfs_property "uuid" "$_UUID_GUEST_USE" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+		fi
+		__log 1 "Completed clone of $_cname from $_GUEST_name."
+		echo "" # Create visual space for next multi-guest.
+	done
+
+	# Deleting snapshot for independent clone
+	if [ "$_flag" = "-ie" ] || [ "$_flag" = "-iu" ]; then
+		__log 1 "Deleting snapshot on $_src_pool"
+		if [ -z "$_src_pool" ]; then
+			__fault_detected_exit "Something went wrong, \$_src_pool variable is empty. Aborting before running zfs destroy command. Please report to the chyves developers."
+		else
+			zfs destroy -rR $_src_pool/chyves/guests/$_GUEST_name@chyves-clone-process-$_UUID_GENERAL_USE
+			if [ "$?" = 0 ]; then
+				echo "Successfully deleted snapshot for clone."
+			else
+				echo "Unsuccessfully deleted snapshot on $_src_pool"
+				echo "To delete, run this manually: zfs destroy -rR $_src_pool/chyves/guests/$_GUEST_name@chyves-clone-process-$_UUID_GENERAL_USE"
+			fi
+		fi
+	fi
+	__log 1 "Successfully cloned $_GUEST_name to $_clone_list."
+}
+
 # Set new UUID in _UUID_GUEST_USE
 __set_new_uuid_guest_use() {
 	_UUID_GUEST_USE="$(/bin/uuidgen)"
@@ -143,95 +310,24 @@ __create() {
 	done
 }
 
-# Clone a guest
-__cloneguest() {
-	local flag="$1"  # Only -r used to replicate, -c is arbitrary
-	local name="$2"
-	local clones="$3"
-	local _dst_pool="$4"
-	__get_pool_for_guest $name
-	local _src_pool="$_GUEST_pool"
-
-	# Verify -c or -f flag used.
-	if [ "$flag" = "-c" ];then
-		echo "Using the cloning method (-c) is not recommended as the UUID, tap interface, and console interface remain the same. Dragons be ahead."
-		echo "It is recommended to use the replication method (-r) as these properties are regenerated."
-		local _clone_type="(clone-only)"
-	elif [ "$flag" = "-r" ]; then
-		local _clone_type="(replication)"
-	else
-		__fault_detected_exit "Invalid flag used \"$flag\", valid flags are \"-c\" or \"-r\". See 'man chyves' for more information."
-	fi
-
-	# See if destination pool is declared.
-	if [ -z "$_dst_pool" ]; then
-		local _dst_pool=$_src_pool
-	else
-		__verify_valid_pool "$_dst_pool" "-c"
-	fi
 # Verify the guest name meets the naming requirements
 __verify_correct_guest_name_format() {
 	local _guest_list="$1"
 
-	echo "Taking $name snapshot on $_src_pool name @chyves-clone-process-$_UUID_GENERAL_USE"
-	zfs snap -r $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
 	[ "$( echo "$_guest_list" | tr ',' '\n' | sort -k1 | uniq -c | sort -r -k1 | head -n1 | awk '{ printf $1; }' )" -gt 1 ] && __fault_detected_exit "Guest name repeated in command."
 
-	# Multi-guest support.
-	# Eg.: chyves clone goldenVM devteam1,devteam2,devteam3 dev-pool
-	for cname in `echo "$clones" | tr ',' ' '`
 	for _guest_to_check in `echo "$_guest_list" | tr ',' ' '`
 	do
-		echo "Cloning $name to $cname"
-		echo "Verifing $cname is unused."
-		__verify_valid_guest "$cname"    # Exits if name in use.
-
-		echo "Using zfs send to send $name to $cname"
-		zfs send -R $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$cname
-
-		echo "Setting creation stamp on $cname..."
-		local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
-		__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
 		# Check if guest name is forbidden
 		[ -n  "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_FORBIDDEN_GREP_STRING" )" ] && __fault_detected_exit "\"$_guest_to_check\" name is forbidden."
 
-		# Future use
-		#__multi_chyves_zfs_property "set" "clone"       "$pool" "guests" "$name" "-"
-		#__multi_chyves_zfs_property "set" "clone_assc"  "$pool" "guests" "$name" "-"
 		# Check for valid guest name and length
 		[ -z "$( echo "$_guest_to_check" | grep -E "^[a-zA-Z0-9_.-]{1,27}$" )" ] && __fault_detected_exit "Unsuitable name: '$_guest_to_check', must be alphanumeric between 1 and 27 characters and optionally can contain dashes '-', underscores '_', and or periods '.'."
 
-		# Change con, tap, and UUID properties if -r is used
-		if [ "$flag" = "-r" ]; then
-			echo "Setting new properties as part of replication..."
-			echo "Generating new UUID"
-			__set_new_uuid_guest_use
-			echo "Grabbing next unused tap interface"
-			__get_next_tap
-			echo "Grabbing next unused console interface"
-			__get_next_console
-			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "$_NEXT_tap"
-			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "$_NEXT_console"
-			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
 		# Check if guest name in use on active pool.
 		if [ -n "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_ALL_GREP_STRING" )" ]; then
 			[ "$_DEVELOPER_MODE" != "off" ] && echo "Guest names all grep string: $_GUEST_NAMES_ALL_GREP_STRING"
 			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
-		echo "Cloning $_clone_type from $name to $cname complete."
 	done
-
-	echo "Deleting snapshot on $_src_pool"
-	if [ -z "$_src_pool" ]; then
-		__fault_detected_exit "Something went wrong, \$_src_pool variable is empty. Aborting before running zfs destroy command. Please report to the chyves developers."
-	else
-		zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
-		if [ "$?" = 0 ]; then
-			echo "Sucessfully deleted snapshot for clone."
-		else
-			echo "Unsuccessfully deleted snapshot on $_src_pool"
-			echo "To delete, run this manually: zfs destroy -rR $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE"
-		fi
-	fi
-	echo "Sucessfully cloned $name to $clones."
 }
