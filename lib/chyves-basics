@@ -28,9 +28,6 @@
 
 }
 
-# Show version
-__version() {
-	echo "chyves ${_VERSION_LONG}"
 }
 
 # Print help page
@@ -223,3 +220,7 @@ __root_credentials_required() {
 	[ "$( id -u )" != 0 ] && __fault_detected_exit "'$@' command requires root credentials!"
 }
 
+# Show version
+__version() {
+	__log 1 "chyves ${_VERSION_LONG}"
+}
