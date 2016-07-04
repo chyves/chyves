@@ -92,6 +92,10 @@
 # __start()                                 # All inclusive start function
 # __verify_iommu_capable()                  # Verify I/O MMU (iommu) for guests using PCI passthrough
 #
+## ../lib/chyves-guest-stop                ## Functions for stopping and recovering VMM resouces.
+# __destroy_guest_vmm_resouces()            # Destroy a guest's VMM resources and also force an unclean shutdown.
+# __stop_guest_gracefully()                 # Gracefully stop a guest
+#
 ## ../lib/chyves-updates                   ## Function for checking for updates.
 # __check_for_chyves_update                 # Check for chyves updated
 #
@@ -728,47 +732,6 @@ __resource_functions() {
 	elif [ "$_subfunction" = "list" ] && [ "$_function" = "iso" ]; then
 		__list "iso"
 	fi
-}
-
-# Gracefully stop a guest
-__stop() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-	local pid=$(pgrep -fx "bhyve: chy-$name")
-	echo "Stopping $name..."
-	kill $pid
-}
-
-# Force kill -9 everyting matching $name and destroy
-# THIS WILL KILL EVERYTHING MATCHING $NAME
-__forcekill() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-
-	# Display current running processes for guest
-	__list processes $name | grep -v "/bin/sh /usr/local/sbin/chyves forcekill"
-
-	read -p "[WARNING] Are you sure you want to kill all processes above? [y/N]? " an </dev/tty
-	case "$an" in
-		y|Y|yes) 	local pids="$(pgrep -f $name)"
-			for apid in "$pids"; do
-				kill -9 $apid
-			done
-			bhyvectl --force-poweroff --vm=chy-$name
-			bhyvectl --destroy --vm=chy-$name
-		;;
-		*) echo "No action taken."
-	esac
-}
-
-
-# Destroy guest
-__destroy() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-	echo "Destroying $name..."
-	bhyvectl --force-poweroff --vm=chy-$name
-	bhyvectl --destroy --vm=chy-$name
 }
 
 # Add a new disk to guest

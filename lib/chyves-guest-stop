@@ -1,0 +1,116 @@
+#!/bin/sh
+
+# Copyright (c) 2015, pr1ntf (Trent Thompson) All rights reserved.
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Gracefully stop a guest
+__stop_guest_gracefully() {
+	local _guest_list="$1"
+
+	# Replace keyword 'all' with guest list.
+	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
+
+	# Multi-guest support.
+	# Eg.: chyves guest1,guest2,guest3 stop
+	for _guest in `echo "$_guest_list" | tr ',' ' '`
+	do
+
+		local _pid=$(pgrep -fx "bhyve: chy-$_guest")
+		if [ -n "$_pid" ]; then
+			__log 1 "Stopping $_guest..."
+			kill $_pid
+		else
+			__log 1 "$_guest not running."
+		fi
+	done
+}
+
+# Reclaims a guest's VMM resources and also force an unclean shutdown.
+__destroy_guest_vmm_resouces() {
+	local _guest_list="$1"
+	local _force="$2"
+
+	# Replace keyword 'all' with guest list.
+	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
+
+	# Multi-guest support.
+	# Eg.: chyves guest1,guest2,guest3 reclaim
+	for _guest in `echo "$_guest_list" | tr ',' ' '`
+	do
+		_GUEST_name="$_guest"
+		local _bhyvectl_force_poweroff_exit_code=
+		local _bhyvectl_destroy_exit_code=
+		local _force_status=0
+		local _guest_pid=
+
+		# Go to next iteration when VMM resources are not consumed.
+		if [ -e "/dev/vmm/chy-$_GUEST_name" ]; then
+		else
+			__log 1 "No VMM resources to reclaim from $_GUEST_name."
+			continue
+		fi
+
+		__log 1 "Reclaiming VMM resources from $_GUEST_name."
+
+		local _guest_pid="$( __return_guest_bhyve_pid )"
+		__log 3 "Guest pid: $_guest_pid"
+
+		if [ -n "$_guest_pid" ]; then
+			__log 2 "Forcing unclean shutdown of $_GUEST_name..." -n
+			while [ "$_force_status" != 1 ]
+			do
+				[ -z "$( echo "$_guest_pid" | grep -E '^[0-9]' )" ] && break 2
+
+				[ "$_force" = "force" ] && kill -9 $_guest_pid
+
+				bhyvectl --force-poweroff --vm=chy-$_GUEST_name
+
+				# Save the bhyvectl exit code
+				local _bhyvectl_force_poweroff_exit_code="$?"
+				__log 3 "\$bhyvectl_force_poweroff_exit_code: bhyvectl_force_poweroff_exit_code"
+
+				if [ "$_bhyvectl_force_poweroff_exit_code" -eq 0 ]; then
+					local _force_status=1
+					__log 2 " done."
+				else
+					__log 2 "." -n
+				fi
+			done
+		fi
+
+		if [ -e "/dev/vmm/chy-$_GUEST_name" ]; then
+			__log 2 "Destroying VMM resources for $_GUEST_name..." -n
+			bhyvectl --destroy --vm=chy-$_GUEST_name
+
+			# Save the bhyvectl exit code
+			local _bhyvectl_destroy_exit_code="$?"
+
+			if [ "$_bhyvectl_destroy_exit_code" -eq 0 ]; then
+				__log 2 " done."
+			else
+				__log 2 "Failed to reclaim VMM resources from $_GUEST_name"
+			fi
+		fi
+	done
+}
