@@ -131,7 +131,7 @@ _KERNEL_MODULES=$(printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" 
 _NUMBER_OF_ALL_GUESTS=$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -v .defaults | wc -l )
 _GUEST_NAMES_FORBIDDEN_GREP_STRING="^.config$|^.defaults$|^all$|^clone$|^console$|^create$|^dataset$|^defaults$|^delete$|^destroy$|^disk$|^firmware$|^get$|^global$|^guests$|^info$|^iso$|^list$|^network$|^primary$|^reclaim$|^rename$|^reorder$|^reset$|^set$|^snapshot$|^start$|^stop$|^stop$"
 _PCI_SLOT_START=4
-_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING='0|3|31'
+_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING='^0$|^3$|^31$'
 _LIBRARY_PATH=/usr/local/lib/chyves
 
 ##### More global variables set in __preflight_check #####
