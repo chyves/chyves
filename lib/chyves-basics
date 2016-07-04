@@ -24,15 +24,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# See whether given command is readonly
-# and therefore doesn't need root credentials
-__readonly_cmd() {
-    case "$1" in
-        help|-h|get|getall|info|list|version) echo "0"
-            ;;
-        *) echo "1"
-            ;;
-    esac
 }
 
 }
@@ -225,3 +216,10 @@ __parse_cmd_ingress() {
 		;;
 	esac
 }
+# Checks to see if running with root credentials is required.
+__root_credentials_required() {
+
+	# See if running with root credentials. -u flag for id 'Display the effective user ID as a number.'
+	[ "$( id -u )" != 0 ] && __fault_detected_exit "'$@' command requires root credentials!"
+}
+
