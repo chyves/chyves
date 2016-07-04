@@ -35,122 +35,6 @@ __readonly_cmd() {
     esac
 }
 
-# First stage to process command line parameters for chyves
-__parse_cmd () {
-  case "$1" in
-    version)  __verify_number_of_arguments "1" "$#"
-              __version
-              exit
-    ;;
-    setup)    __verify_number_of_arguments "2" "$#" "2"
-              __setup "$2"
-              exit
-    ;;
-    list)     __verify_number_of_arguments "1" "$#" "3"
-              __list "$2" "$3"
-              exit
-    ;;
-    info)     __verify_number_of_arguments "1" "$#" "2"
-              __info "$2"
-              exit
-    ;;
-    firmware) __verify_number_of_arguments "2" "$#" "5"
-              __resource_functions "firmware" "$2" "$3" "$4"
-              exit
-    ;;
-    iso)      __verify_number_of_arguments "2" "$#" "5"
-              __resource_functions "iso" "$2" "$3" "$4"
-              exit
-    ;;
-    create)   __verify_number_of_arguments "2" "$#" "4"
-              __create "$2" "$3" "$4"
-              exit
-    ;;
-    start)    __verify_number_of_arguments "2" "$#" "3"
-              __start "$2" "$3"
-              exit
-    ;;
-    stop)     __verify_number_of_arguments "2" "$#" "2"
-              __stop "$2"
-              exit
-    ;;
-    forcekill) __verify_number_of_arguments "2" "$#" "2"
-               __forcekill "$2"
-               exit
-    ;;
-    scram)    __verify_number_of_arguments "1" "$#" "1"
-              __scram
-              exit
-    ;;
-    rename)   __verify_number_of_arguments "3" "$#" "3"
-              __resource_functions "guest" "rename" "$2" "$3"
-              exit
-    ;;
-    delete)   __verify_number_of_arguments "2" "$#" "2"
-              __resource_functions "guest" "delete" "$2"
-              exit
-    ;;
-    set)      __verify_number_of_arguments "3" "$#"           # Technically unlimited number of properties can be set.
-              __set "$@"
-              exit
-    ;;
-    get)      __verify_number_of_arguments "2" "$#" "3"
-              __get "$2" "$3"
-              exit
-    ;;
-    add)      __verify_number_of_arguments "3" "$#" "3"
-              __add "$2" "$3"
-              exit
-    ;;
-    remove)   __verify_number_of_arguments "3" "$#" "4"
-              __remove "$2" "$3" "$4"
-              exit
-    ;;
-    resize)   __verify_number_of_arguments "4" "$#" "4"
-              __resize "$2" "$3" "$4"
-              exit
-    ;;
-    disks)    __verify_number_of_arguments "2" "$#" "2"       # Can be consolidated to __list()
-              __disks "$2"
-              exit
-    ;;
-    snap)     __verify_number_of_arguments "2" "$#" "2"       # Needs a rework
-              __snapguest "$2"
-              exit
-    ;;
-    roll)     __verify_number_of_arguments "2" "$#" "2"       # Needs a rework
-              __rollguest "$2"
-              exit
-    ;;
-    clone)    __verify_number_of_arguments "3" "$#" "5"
-              __cloneguest "$2" "$3" "$4" "$5"
-              exit
-    ;;
-    console)  __verify_number_of_arguments "2" "$#" "3"       # Tmux support soon
-              __console "$2" "$3"
-              exit
-    ;;
-    conreset) __verify_number_of_arguments "1" "$#" "1"       # Can be built to reset just one console
-              __conreset
-              exit
-    ;;
-    help|-h)  __help
-              exit
-    ;;
-    dev)      [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves set dev_mode=on .config primary'"
-              [ "$_DEVELOPER_MODE" != "on" ] && set "$_DEVELOPER_MODE"
-              $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
-              [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
-              exit
-    ;;
-    network)  __verify_number_of_arguments "2" "$#" "5"
-              __network "$2" "$3" "$4" "$5"
-              exit
-    ;;
-    *)        __help
-              __fault_detected_exit "Unrecognized command: $1. See above for list of correct sub-commands."
-    ;;
-  esac
 }
 
 # Show version
@@ -223,8 +107,121 @@ chyves <guest>|MG|all reclaim
 
 EOT
 }
+
+# First stage to process command line parameters for chyves
+__parse_cmd_ingress() {
+
+	# First stage of commands.
+	case "_$1" in
+		_dataset)      shift 1
+		              __parse_cmd_dataset $@
+		              exit
+		;;
+		_dev)         [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves .config set dev_mode=on'"
+		              [ "$_DEVELOPER_MODE" != "on" ] && set "$_DEVELOPER_MODE"
+		               $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
+		              [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
+		              exit
+		;;
+		_firmware)    __parse_cmd_resources $@
+		              exit
+		;;
+		_help|_-h|_)  __help
+		              exit
+		;;
+		_info)        __verify_number_of_arguments "1" "$#" "2"
+		              __info "$2"
+		              exit
+		;;
+		_iso)         __parse_cmd_resources $@
+		              exit
+		;;
+		_list)        shift 1
+		              __parse_cmd_list $@
+		              exit
+		;;
+		_network)     shift 1
+		              __parse_cmd_network $@
+		              exit
+		;;
+		_version)     __verify_number_of_arguments "1" "$#"
+		              __version
+		              exit
+		;;
+	esac
+
+	# Parameter $1 is likely a guest name - Stage 1 - create command
+	if [ "$2" = "create" ]; then                                                 # Completely verified
+		__root_credentials_required
+		__verify_number_of_arguments "2" "$#" "4"
+		__verify_correct_guest_name_format "$1"
+		[ -n "$4" ] && __verify_valid_pool "$4" "-c"
+		__create "$1" "$3" "$4"
+		exit
+	fi
+
+	# Guest ($1) should already exists for the commands below
+	__verify_guests $1
+
+	# Parameter $1 is likely a guest name - Stage 2 - Guest exists
+	case "$2" in
+		clone)    __root_credentials_required                                      # Mostly verified
+		          __verify_number_of_arguments "3" "$#" "5"
+		          __verify_correct_guest_name_format "$3"
+		          __load_one_guest_parameters "$1"
+		          [ -n "$5" ] && __verify_valid_pool "$5" "-c"
+		          __clone_guest "$3" "$4" "$5"
+		          exit
+		;;
+		console)  __parse_cmd_console "$@"                                          # Completely verified
+		          exit
+		;;
+		delete)   __root_credentials_required                                      # Mostly verified
+		          __verify_number_of_arguments "2" "$#" "2"
+		          __guest_delete "$1"
+		          exit
+		;;
+		disk)     __parse_cmd_disk "$@"                                            # Mostly verified
+		          exit
+		;;
+		get)      __verify_number_of_arguments "2" "$#" "3"
+		          __get "$1" "$3"
+		          exit
+		;;
+		set)      __root_credentials_required
+		          __verify_number_of_arguments "3" "$#"
+		          __set "$@"
+		          exit
+		;;
+		start)    __root_credentials_required                                      # Mostly verified
+		          __verify_number_of_arguments "2" "$#" "3"
+		          [ -n "$3" ] && __verify_resource "ISO/$3"
+		          __start "$1" "$3"
+		          exit
+		;;
+		stop)     __root_credentials_required
+		          __verify_number_of_arguments "2" "$#" "3"
+		          [ -n "$3" ] && [ "$3" = "force" ] && __destroy_guest_vmm_resouces "$1" "$3" && exit
+		          __stop_guest_gracefully "$1"
+		          exit
+		;;
 		reclaim)  __root_credentials_required                                      # Mostly verified
 		          __verify_number_of_arguments "2" "$#" "2"
 		          __destroy_guest_vmm_resouces "$1"
 		          exit
 		;;
+		rename)   __root_credentials_required
+		          __verify_number_of_arguments "3" "$#" "3"
+		          __verify_correct_guest_name_format "$3"
+		          __load_one_guest_parameters "$1"
+		          __guest_rename "$3"
+		          exit
+		;;
+		snapshot) __parse_cmd_snapshot "$@"
+		          exit
+		;;
+		*)        __help
+		          __fault_detected_exit "Unrecognized command: $@. See above for list of correct commands and syntax."
+		;;
+	esac
+}

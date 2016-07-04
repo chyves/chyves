@@ -36,8 +36,8 @@
 #
 ## ../lib/chyves-basics                    ## Functions that are basic to chyves functionality
 # __help()                                  # Print help page
-# __parse_cmd()                             # First stage to process command line parameters for chyves
 # __readonly_cmd()                          # Check to see if supplied command is read-only.
+# __parse_cmd_ingress()                     # First stage to process command line parameters for chyves
 # __version()                               # Show version
 #
 ## ..lib/chyves-creation                   ## Functions used to create guests in some port or another
@@ -1075,4 +1075,4 @@ __conreset() {
 
 __preflight_check "$1"
 
-__parse_cmd "$@"
+__parse_cmd_ingress "$@"
