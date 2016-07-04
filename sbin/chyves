@@ -42,6 +42,13 @@
 #
 ## ..lib/chyves-creation                   ## Functions used to create guests in some port or another
 # __cloneguest()                            # Clone a guest
+## ../lib/chyves-guest-console             ## Functions dealing with serial console
+# __console_reset()                         # Kill PIDs for cu sessions
+# __console_run()                           # Run console
+# __console_tmux()                          # Run console in tmux
+# __get_guest_console_pid()                 # Get PID of console
+# __verify_console_not_in_use()             # Check console is in use by PID
+#
 # __create()                                # Create guest(s)
 # __get_next_console()                      # Return the next console to use
 # __get_next_tap()                          # Return the next tap interface to use
@@ -847,32 +854,6 @@ __rollguest() {
 	else
 		echo "Not a valid guest name"
 	fi
-}
-
-# Run console
-__console() {
-	local name="$1"
-	local _flag="$2"
-	__get_pool_for_guest "$name"
-	local dataset="${_GUEST_pool}/chyves/guests/${name}"
-	local con="$(zfs get -H -o value chyves:con $dataset)"
-	echo "Starting console on $name..."
-	echo "~~. to escape console [uses cu(1) for console]"
-	cu -l /dev/${con}B -s 9600
-
-}
-
-# Reset all consoles. This kills the cu(1)
-__conreset() {
-	__list con
-	echo "Processes to kill:"
-	ps -aux | grep cu
-	read -p "[WARNING] Are you sure you want to kill all processes cu console processes above? [y/N]? " an </dev/tty
-	case "$an" in
-	  y|Y|yes) killall cu
-	  ;;
-	  *) echo "No action taken."
-	esac
 }
 
 __preflight_check "$1"

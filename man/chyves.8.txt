@@ -40,9 +40,9 @@ network bridge{n} {join|unjoin} tap{n}
 network bridge{n} attach {vlan-iface{n}|physical-iface{n}|private}
 network bridge{n} {default|private}
 network bridge{n} migrate bridge{n}
-chyves console <name> [-t]
-chyves conreset
 chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
+chyves <guest> console
+chyves <guest>|MG|all console {reset|tmux|vnc}
 chyves <guest>|MG|all reclaim
 chyves help
 
@@ -446,20 +446,58 @@ Manually Setting Properties - Expert Level:
 
 SUB-COMMANDS
 version     Prints the current running version of chyves
+TMUX SUPPORT
+Utilization of tmux is provided under the command 'chyves <guest> console tmux'.
+
+chyves utilizes tmux by creating a session called "chyves", then creates a
+window named after the guest, then splits that window into two panes. The left
+pane is used to manage the guest and the right pane is the serial console for
+the guest. If a window named after the guest already exists, then the command
+is inserted into the active pane for that guest window and then the session is
+joined or rather 'attached' in tmux's parlance. Each additional guest has a
+window created under the same 'chyves' named session. See tmux(1) for full
+details on use.
 
 setup       Installs ZFS datasets and properties on pool.
             Usage: 'chyves setup [pool]'
             Where [pool] is the pool you want to install chyves on.
+To use a command for tmux, enter: 'Ctrl + b (release-keys) <command>'. Where
+Ctrl + b is the modifier, (release-keys) is literally releasing the Ctrl and
+b keys, and <command> is the case sensitive letter or command to type in.
+Sometimes this is written as 'C-m' where 'm' means modifier. In this man page,
+the abbreviated syntax used is 'C-b'. Below are necessary tmux commands for
+basic use with chyves:
 
 list        Displays information about on general guest info with the no
             argument, "iso" will display ISOs resources, "snapshots" will
             display snapshots for all guests, "tap" will display all taps
             including inactive taps, "tap active" will list only active taps,
             and "con" will display configured consoles.
+While in a tmux session:
+  C-b n   Go to next guest window.
+  C-b p   Go to previous guest window.
+  C-b l   Go to last guest window.
+  C-b w   List all available guest windows and select which to go to.
+  C-b (left-arrow)    Move cursor to the pane to the left
+  C-b (right-arrow)   Move cursor to the pane to the right
+  C-b (up-arrow)      Move cursor to the pane above
+  C-b (down-arrow)    Move cursor to the pane below
+  C-b c   Create a new window
+  C-b %   Split the current pane vertically
+  C-b "   Split the current pane horizontally
+  C-b x   Kill current window
+  C-b d   Detach from tmux session, remains opened in background.
+  C-b D   Detach other connections from session. Good if a session is opened
+          from a smaller resolution client in one location. Disconnecting it
+          will maximum the screen use on the local connection.
 
             $null       Lists properties about the guests and their disks
                         using flags OS, Loader, and Description in a per pool
                         table.
+When not in a tmux session:
+  tmux attach -t chyves   Reattach to the tmux session named 'chyves'.
+  tmux at                 Reattach to the last tmux session
+
 
             iso         Lists the ISO resources.
 GUEST SUB-COMMANDS
@@ -500,6 +538,8 @@ GUEST SUB-COMMANDS
 
               If the cloning method flag is omitted, the default is used as
               defined in global property 'default_clone_flag', this is initially
+  console     See GUEST'S CONSOLE SUB-SUB-COMMANDS section below.
+
 
             firmwares   Lists the firmware resources.
 
@@ -512,6 +552,39 @@ GUEST SUB-COMMANDS
               Reclaims a guest's VMM resources. This does not delete a guest
               from the host, it destroys the guest's VMM resources (bhyvectl
               vernacular).
+
+  GUEST'S CONSOLE SUB-SUB-COMMANDS
+  Manage a guest through a console using various methods described below. The
+  primary method for managing guests is through a serial interface. On supported
+  hosts and UEFI guests, video emulation is possible through an internal VNC
+  server attached to a frame buffer. See UEFI GOP SUPPORT above. All other
+  guests need to be administered via a serial communication device.
+
+    $null         chyves <guest> console
+                Establishes a serial connection to a guest using cu(1) via the
+                nmdm(4) device as configure in the 'con' property. To escape the
+                cu connection, press tilde (~) twice, then period (.), sometimes
+                hitting ENTER before that sequence is required. If that fails to
+                exit the console, try pressing tilde (~), then press Control + d
+                (^d). If all else fails then use 'chyves <guest> console reset'.
+
+    reset         chyves <guest>|MG console reset
+                Resets the serial connection for a guest by using 'kill' against
+                the cu processes associated with the guest as set by the 'con'
+                property.
+
+    tmux          chyves <guest>|MG console tmux
+                Creates a tmux session named chyves, then creates a window named
+                after the guest, and then creates a vertically splits the window
+                with two panes. The right pane is intended for guest management
+                and the left pane contains the serial interface which is started
+                with 'chyves <guest> console'. See TMUX SUPPORT section above.
+
+    vnc           chyves <guest>|MG console vnc
+                Requires a UEFI guest that is configured for VNC use on a host
+                that supports UEFI graphics support. See UEFI GOP SUPPORT above.
+                Opens a X11 VNC client to the guest using the vnc_client*
+                global properties. See VNC CLIENT SUPPORT section above.
 
 NETWORK SUB-COMMANDS
 When global property 'network_design_mode' is set to 'auto', these commands are
@@ -714,21 +787,6 @@ roll        Rollback guest to a snapshot.
             name of the guest and [snapshot] is what you would
             like to name the snapshot.
 
-console     Consoles into a guest operating system. Utilizes nmdm(4) and
-            cu(1) to open a console on a guest operating system. Since
-            bhyve(8) does not emulate video. The guests need to be administered
-            via a serial communication device. Since chyves uses cu(1), you will
-            need to press the tilde (~) twice then period (.) to exit the
-            console. To exit type "~~." quickly, sometimes hitting Enter is
-            required first. If that fails exit the console, try pressing tilde
-            (~) then press Control + D (^D). Note that on some machines, you
-            cannot escape the console. See conreset below to escape all
-            consoles.
-            Usage: 'chyves console [name]' where [name] is the name
-            of the guest operating system.
-
-conreset    Kills all running instances of "cu".
-
 dev         Allows for a function to be called direct from command line when
             developing for chyves. Requires dev_mode to be set with something
             other than "off". This is globally set on the primary pool on
@@ -743,7 +801,6 @@ dev         Allows for a function to be called direct from command line when
               Used to remove a tap from a bridge interface.
 
 EXAMPLES
-
 Example of a multi-pool dataset hierarchy:
 
   prim_pool/chyves/guests/
@@ -806,7 +863,7 @@ Install the FreeBSD guest bguest:
 
 Console into the installation:
 
-  chyves console bguest
+  chyves bguest console
 
 Once installation is done, exit console (~~.) and destroy guest:
 

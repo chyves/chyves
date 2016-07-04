@@ -212,6 +212,49 @@ __parse_cmd_ingress() {
 		;;
 	esac
 }
+
+# Command parser for console tasks
+__parse_cmd_console() {
+
+	# Verify/Load console kernel module (nmdm).
+	if [ "$_AUTO_LOAD_KERNEL_MODS" = "yes" ]; then
+		__verify_kernel_module_loaded nmdm -l      # This checks and loads the missing nmdm module.
+	else
+		__verify_kernel_module_loaded nmdm         # This only checks but does not load nmdm module.
+	fi
+
+	if [ -z "$3" ]; then
+		__load_one_guest_parameters "$1"
+	else
+		__verify_guests "$1"
+	fi
+
+	# chyves $_GUEST_name console $1
+	case "_$3" in
+		_)        __verify_number_of_arguments "2" "$#" "2"
+		          __console_run
+		          exit
+		;;
+		_reset)   __verify_number_of_arguments "3" "$#" "3"
+		          __console_reset "$1"
+		          exit
+		;;
+		_tmux)    __verify_number_of_arguments "3" "$#" "3"
+		          __verify_binary_available tmux
+		          __console_tmux $1
+		          exit
+		;;
+		_vnc)     __verify_number_of_arguments "3" "$#" "3"
+		          __verify_binary_available $_VNC_CLIENT_BINARY
+		          __console_vnc_client
+		          exit
+		;;
+		*)        __help
+		          __fault_detected_exit "Unrecognized syntax: $@. See above for sub-commands and syntax."
+		;;
+	esac
+}
+
 # Checks to see if running with root credentials is required.
 __root_credentials_required() {
 

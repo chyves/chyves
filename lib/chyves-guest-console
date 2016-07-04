@@ -1,0 +1,174 @@
+#!/bin/sh
+
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Kill PIDs for cu sessions based
+__console_reset() {
+	local _guest_list _pid
+	local _guest_list="$1"
+
+	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
+
+	# Multi-guest support.
+	# Eg.: chyves guest1,guest2,guest3 console reset
+	for _guest_to_reset_con in `echo "$_guest_list" | tr ',' ' '`
+	do
+		__load_guest_parameters "$_guest_to_reset_con"
+		__get_guest_console_pid
+
+		[ "$_guest_to_reset_con" = defaults ] && __fault_detected_warning_continue "Can not reset console for 'defaults'."
+		[ "$_guest_to_reset_con" = global ] && __fault_detected_warning_continue "Can not reset console for 'global'."
+
+		# Active console
+		if [ -n "$_GP_serial_pid" ]; then
+			echo -n "Killing console ($_GP_serial) processes for $_GUEST_name... "
+			kill $_GP_serial_pid
+
+			# Handling for exit code of kill
+			if [ "$?" -eq "0" ]; then
+				echo "done."
+			else
+				echo "unsuccessful."
+			fi
+
+		# No active console
+		else
+			echo "No console active for $_GUEST_name."
+		fi
+	done
+}
+
+# Run console
+__console_run() {
+	__verify_console_not_in_use
+	__log 1 "Starting console for $_GUEST_name..."
+	echo "To escape type: ~~."
+	echo "            or: [Enter] ~~."
+	echo "            or: [Ctrl]+D ~."
+	echo "            or: [Enter] ~ [Ctrl]+D"
+	echo "See cu(1) for more information."
+	cu -s 9600 -l /dev/${_GP_serial}B
+}
+
+# Run console in tmux
+__console_tmux() {
+	local _guest_list _tmux_session_exists_exit_code _tmux_window_exists_exit_code _void
+	local _guest_list="$1"
+
+	( tmux detach ) &
+
+	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
+
+	# Check if tmux session named "chyves" exists
+	tmux has-session -t chyves > /dev/null 2>&1
+	local _tmux_session_exists_exit_code="$?"
+
+	# Start tmux session when one is not running and detach
+	if [ "$_tmux_session_exists_exit_code" != 0 ]; then
+		( sleep 1 && tmux detach ) &
+		tmux new-session -s chyves
+		sleep 2
+	fi
+
+	# Multi-guest support.
+	# Eg.: chyves guest1,guest2,guest3 console tmux
+	for _guest in `echo "$_guest_list" | tr ',' ' '`
+	do
+		local _tmux_window_exists_exit_code=""
+		__load_guest_parameters "$_guest"
+
+		[ "$_guest" = defaults ] && __fault_detected_warning_continue "Can not connect console to defaults."
+		[ "$_guest" = global ] && __fault_detected_warning_continue "Can not connect console to global."
+
+		echo "On guest: $_GUEST_name"
+
+		# Check if tmux has a window opened for guest
+		tmux select-window -t "$_GUEST_name"
+		# > /dev/null 2>&1
+		local _tmux_window_exists_exit_code="$?"
+
+		# Create named tmux window
+		if [ "$_tmux_window_exists_exit_code" != 0 ]; then
+
+			tmux new-window -n $_GUEST_name
+
+			# Finish building tmux split environment
+			tmux split-window -h
+
+			__verify_console_not_in_use -no-exit
+			[ -z "$_CONSOLE_in_use" ] && tmux send -t chyves "chyves $_GUEST_name console" ENTER
+
+			tmux select-pane -t left
+			tmux send -t left "chyves list iso" ENTER
+			tmux send -t left "chyves $_GUEST_name start "
+
+		# Inform user guest already has window and then attach to window.
+		else
+			echo "Guest already has a named tmux window."
+			echo "Please run 'chyves $_GUEST_name console' manually from desired pane."
+			echo "Press enter to open tmux session in $_GUEST_name window..."
+			read _void
+			tmux select-pane -t right
+			tmux send -t chyves "chyves $_GUEST_name console"
+		fi
+	done
+
+	tmux attach-session -t chyves
+}
+
+# Get PID of console
+__get_guest_console_pid() {
+	local _flag _pid
+	local _flag="$1"
+	local _pid="$( pgrep -fx "cu -s 9600 -l /dev/${_GP_serial}B" )"
+	# Valid flags are:
+	# null    Return nothing or the PID
+	# -h      [human] for a "YES (pid)" or "NO" indicator
+
+	if [ "$_flag" = "-h" ]; then
+		if [ -n "$_pid" ]; then
+			_GP_serial_pid="$_GP_serial (A)"
+		else
+			_GP_serial_pid="$_GP_serial"
+		fi
+	elif [ -n "$_pid" ]; then
+		_GP_serial_pid="$_pid"
+	fi
+}
+
+# Check console is in use by PID
+__verify_console_not_in_use() {
+	local _flag _pid
+	local _flag="$1"
+	__get_guest_console_pid
+	_CONSOLE_in_use=
+
+	if [ -n "$_GP_serial_pid" ]; then
+		if [ "$_flag" != "-no-exit" ]; then
+			__fault_detected_exit "Console ($_GP_serial) already in use by $_GUEST_name. \nTo reset the console run: chyves $_GUEST_name console reset"
+		else
+			_CONSOLE_in_use=1
+		fi
+	fi
+}
