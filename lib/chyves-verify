@@ -1,0 +1,199 @@
+#!/bin/sh
+
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Verify all modules in $_KERNEL_MODULES
+__verify_all_kernel_modules(){
+	local _flag="$1"
+	# Valid _flag are:
+	# $null   [no flag used] check only
+	# -l      [load] Load module if not loaded
+	# -u      [unload] Unload module
+
+	if [ -z "$_flag" ] || [ "$_flag" = "-l" ] || [ "$_flag" = "-u" ]; then
+		for _module in $_KERNEL_MODULES ; do
+			__log 3 "Checking module: $_module"
+			__verify_kernel_module_loaded "$_module" "$_flag"
+		done
+	fi
+}
+
+# Verify that a binary is available
+__verify_binary_available() {
+	local _binary_to_check_for="$1"
+	local _path_to_binary=$( which ${_binary_to_check_for} )
+
+	if [ ! -x "${_path_to_binary}" ]; then
+		__fault_detected_exit "Failed to find executable binary: '$_binary_to_check_for'"
+	fi
+}
+
+# This will be used for general use.
+__verify_guests() {
+	local _flag _guest_list
+	local _guest_list="$1"
+
+	[ "$_guest_list" = "all" ] && return 0
+	[ "$_guest_list" = "defaults" ] && return 0
+	[ "$_guest_list" = "global" ] && return 0
+
+	for _guest_to_check in `echo "$_guest_list" | tr ',' ' '`
+	do
+
+		# Check to see if guest name used more than once
+		if [ "$( zfs list -H -d 3 -t filesystem -r -o name | grep -c -w "chyves/guests/$_guest_to_check" )" -gt "1" ]; then
+			__fault_detected_exit "More than one \"$_guest_to_check\" exists on system within active pools and guests."
+		fi
+
+		# Exit if not active guest
+		[ -z "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_ALL_GREP_STRING" )" ] && __fault_detected_exit "Invalid guest name ${_guest_to_check} supplied."
+	done
+}
+
+# Verify kernel module loaded
+__verify_kernel_module_loaded() {
+	local _module="$1"
+	local _flags="$2"
+	local _status=$(kldstat -v | grep $_module )
+	# Valid _flags are:
+	# $null   [no flag used] check only
+	# -l      [load] Load module if not loaded
+	# -u      [unload] Unload module
+
+	# When erroring out the following message is displayed:
+	# kldload: can't load $_module: No such file or directory
+	if [ -z "$_status" ]; then
+		if [ "$_flags" = "-l" ]; then
+			kldload $_module
+			sleep 3
+			__verify_kernel_module_loaded "$_module"
+		else
+			__fault_detected_exit "Kernel module '$_module' not loaded. Run 'chyves setup kmod=1'"
+		fi
+	elif [ "$_flags" = "-u" ]; then
+		kldunload -v $_module
+		__log 3 "Kernel module '$_module' loaded."
+	else
+		# echo "Kernel module '$_module' already loaded."
+	fi
+}
+
+# Verifies the number of parameters and exits if met or exceeded
+__verify_number_of_arguments() {
+	local _number_of_minimum_parameters=$1        # Minimum number of parameters
+	local _number_of_supplied_parameters=$2       # As counted by "$#"
+	local _number_of_maximum_parameters=$3        # (Optional) Maximum number of parameters
+
+	# While $3 is optional, it does need a value if not set.
+	[ -z "${_number_of_maximum_parameters}" ] && local _number_of_maximum_parameters=$_number_of_supplied_parameters
+
+	if [ "${_number_of_supplied_parameters}" -lt "${_number_of_minimum_parameters}" ] || [ "${_number_of_supplied_parameters}" -gt "${_number_of_maximum_parameters}" ]; then
+		__help
+		__fault_detected_exit "Incorrect number of parameters used. Please see above for correct syntax."
+	fi
+}
+
+# Verifies only once guest is supplied
+__verify_one_guest_supplied() {
+	local _in_question=$1
+	[ -n "$( echo "$_in_question" | grep '\,' )" ] && __fault_detected_exit "This command does not support multi-guest."
+}
+
+# Verify valid ZFS dataset
+__verify_valid_dataset() {
+	local _flag _pool _string _zfs_list_exit_code
+	local _string="$1"
+	local _flag="$2"
+
+	# Simply code elsewhere by detect
+	local _test_if_resource="$( echo "$_string" | grep -E "ISO/|Firmware/" )"
+	if [ -n "$_test_if_resource" ]; then
+		local _pool="$_PRIMARY_POOL"
+	else
+		local _pool="$_GUEST_pool"
+	fi
+
+	# 'zfs get' will return a non-zero exit code if dataset does not exist
+	zfs get type $_pool/chyves/$_string > /dev/null 2>&1
+	local _zfs_list_exit_code="$?"
+
+	#
+	if [ "$_flag" = "-check_not_in_use" ]; then
+		[ "$_zfs_list_exit_code" = 0 ] && __fault_detected_exit "ZFS dataset already exists: $_pool/chyves/$_string"
+	else
+		[ "$_zfs_list_exit_code" != 0 ] && __fault_detected_exit "Invalid dataset: '$_string'"
+	fi
+}
+
+# Validates if a given pool name exists.
+__verify_valid_pool() {
+	local _flags _pool_to_check
+	local _pool_to_check="$1"
+	local _flags="$2"
+	# Valid _flags are:
+	# $null   [no flag used] Validates the supplied pool is in fact a ZFS pool
+	# -p      [primary] Validates the supplied pool has the primary role set
+	# -c      [chyves] Validates the supplied pool is setup for chyves
+	# -n      [no-exit] Escape from a normally fatal exit.
+
+	# "primary" needs to be converted to the primary pool name to pass this verification
+	[ "$_pool_to_check" = "primary" ] && local _pool_to_check=$_PRIMARY_POOL
+
+	# Check to see if pool exists
+	zfs list -H $_pool_to_check > /dev/null 2>&1
+
+	# Pool exists
+	if [ "$?" = 0 ]; then
+
+		# Check to see if the pool has been setup for chyves
+		if [ -n "$(echo $_flags | grep -E "c|p" )" ]; then
+			zfs list -H ${_pool_to_check}/chyves > /dev/null 2>&1
+			if [ "$?" = 0 ]; then
+				if [ -n "$(echo $_flags | grep 'n')" ] && [ -n "$(echo $_flags | grep "c" )" ]; then  # If -n flag is used, exit.
+					__fault_detected_exit "${_pool_to_check} has been setup with chyves."
+				fi
+			else
+				if [ -z "$(echo $_flags | grep 'n')" ] && [ -n "$(echo $_flags | grep "c" )" ]; then  # If -n flag is not used, exit.
+					__fault_detected_exit "${_pool_to_check} has not been setup with chyves."
+				fi
+			fi
+		fi
+
+		# Check to see if the pool is in the primary dataset_role
+		if [ -n "$( echo $_flags | grep 'p' )" ] && [ "$( zfs get -H -o value chyves:dataset_role $_pool_to_check/chyves/.config )" != "primary" ]; then
+			if [ -z "$( echo $_flags | grep 'n' )" ]; then  # If -n flag is not used, exit.
+				__fault_detected_exit "${_pool_to_check} is not a primary pool."
+			fi
+		elif [ -n "$( echo $_flags | grep 'n' )" ]; then # If -n flag is used and the pool is primary then exit.
+			__fault_detected_exit "${_pool_to_check} is the primary pool, this "
+		fi
+
+	# Pool does not exist
+	else
+		# If -n flag is not used, exit.
+		if [ -z "$( echo $_flags | grep 'n' )" ]; then
+			__fault_detected_exit "Invalid pool name supplied."
+		fi
+	fi
+}

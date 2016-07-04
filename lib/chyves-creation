@@ -169,13 +169,18 @@ __cloneguest() {
 	else
 		__verify_valid_pool "$_dst_pool" "-c"
 	fi
+# Verify the guest name meets the naming requirements
+__verify_correct_guest_name_format() {
+	local _guest_list="$1"
 
 	echo "Taking $name snapshot on $_src_pool name @chyves-clone-process-$_UUID_GENERAL_USE"
 	zfs snap -r $_src_pool/chyves/guests/$name@chyves-clone-process-$_UUID_GENERAL_USE
+	[ "$( echo "$_guest_list" | tr ',' '\n' | sort -k1 | uniq -c | sort -r -k1 | head -n1 | awk '{ printf $1; }' )" -gt 1 ] && __fault_detected_exit "Guest name repeated in command."
 
 	# Multi-guest support.
 	# Eg.: chyves clone goldenVM devteam1,devteam2,devteam3 dev-pool
 	for cname in `echo "$clones" | tr ',' ' '`
+	for _guest_to_check in `echo "$_guest_list" | tr ',' ' '`
 	do
 		echo "Cloning $name to $cname"
 		echo "Verifing $cname is unused."
@@ -187,10 +192,14 @@ __cloneguest() {
 		echo "Setting creation stamp on $cname..."
 		local creation_stamp="Cloned from $name on $( date ) by chyves $_VERSION_LONG using __cloneguest()"
 		__multi_chyves_zfs_property "set" "creation" "$_dst_pool" "guests" "$cname" "$creation_stamp"
+		# Check if guest name is forbidden
+		[ -n  "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_FORBIDDEN_GREP_STRING" )" ] && __fault_detected_exit "\"$_guest_to_check\" name is forbidden."
 
 		# Future use
 		#__multi_chyves_zfs_property "set" "clone"       "$pool" "guests" "$name" "-"
 		#__multi_chyves_zfs_property "set" "clone_assc"  "$pool" "guests" "$name" "-"
+		# Check for valid guest name and length
+		[ -z "$( echo "$_guest_to_check" | grep -E "^[a-zA-Z0-9_.-]{1,27}$" )" ] && __fault_detected_exit "Unsuitable name: '$_guest_to_check', must be alphanumeric between 1 and 27 characters and optionally can contain dashes '-', underscores '_', and or periods '.'."
 
 		# Change con, tap, and UUID properties if -r is used
 		if [ "$flag" = "-r" ]; then
@@ -204,6 +213,10 @@ __cloneguest() {
 			__multi_chyves_zfs_property "set" "tap" "$_dst_pool" "guests" "$cname" "$_NEXT_tap"
 			__multi_chyves_zfs_property "set" "con" "$_dst_pool" "guests" "$cname" "$_NEXT_console"
 			__multi_chyves_zfs_property "set" "uuid" "$_dst_pool" "guests" "$cname" "$_UUID_GUEST_USE"
+		# Check if guest name in use on active pool.
+		if [ -n "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_ALL_GREP_STRING" )" ]; then
+			[ "$_DEVELOPER_MODE" != "off" ] && echo "Guest names all grep string: $_GUEST_NAMES_ALL_GREP_STRING"
+			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
 		echo "Cloning $_clone_type from $name to $cname complete."
 	done
