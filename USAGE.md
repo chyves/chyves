@@ -108,10 +108,9 @@ You can also set a description that contain spaces will need to be double quoted
 ```
 chyves bguest set description="A chyves guest."
 ```
-It is always prudent to `stop` (and then `destroy` in some cases) a guest before changing settings. `chyves` runs off the current state of the properties and not the settings the guest started with.
-Destroying a guest does not `delete` a guest from the host, it `destroys` the guest resources that are consumed by the `VMM` kernel module.
+It is always prudent to `stop` (and then `reclaim` in some cases) a guest before changing settings. `chyves` runs off the current state of the properties and not the settings the guest started with.
 ```
-chyves bguest destroy
+chyves bguest reclaim
 ```
 
 Get a specific guest property:

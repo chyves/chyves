@@ -83,10 +83,6 @@ __parse_cmd () {
               __scram
               exit
     ;;
-    destroy)  __verify_number_of_arguments "2" "$#" "2"
-              __destroy "$2"
-              exit
-    ;;
     rename)   __verify_number_of_arguments "3" "$#" "3"
               __resource_functions "guest" "rename" "$2" "$3"
               exit
@@ -191,7 +187,6 @@ chyves
   stop <name>
   forcekill <name>
   scram
-  destroy <name>
   rename <name> <newname>
   delete <name>
   set <property1>=<value> {<name>|.defaults|.config} [<property2>=<value>]...
@@ -225,6 +220,12 @@ Syntax nomenclature:
                     followed by any combination, in any order. (Eg: "-gca" is
                     valid.)
  name             - chyves guest name
+chyves <guest>|MG|all reclaim
 
 EOT
 }
+		reclaim)  __root_credentials_required                                      # Mostly verified
+		          __verify_number_of_arguments "2" "$#" "2"
+		          __destroy_guest_vmm_resouces "$1"
+		          exit
+		;;

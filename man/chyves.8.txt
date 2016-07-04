@@ -25,7 +25,6 @@ chyves start <name>[,<name2>[,name3]] [iso-resource]
 chyves stop <name>
 chyves forcekill <name>
 chyves scram
-chyves destroy <name>
 chyves rename <name> <newname>
 chyves delete <name>
 chyves set <property1>=<value> {<name>|.defaults} [prop2=value]...
@@ -45,6 +44,7 @@ network bridge{n} {default|private}
 network bridge{n} migrate bridge{n}
 chyves console <name> [-t]
 chyves conreset
+chyves <guest>|MG|all reclaim
 chyves help
 
 SYNTAX NOMENCLATURE:
@@ -471,6 +471,11 @@ list        Displays information about on general guest info with the no
 
             .config     Lists all the .config properties for all the chyves
                         pools.
+  reclaim       chyves <guest>|MG reclaim
+              Reclaims a guest's VMM resources. This does not delete a guest
+              from the host, it destroys the guest's VMM resources (bhyvectl
+              vernacular).
+
 
             .config [<pool-name>|primary] List all the config properties for a
                         chyves pool. The word "primary" can be used instead of
@@ -574,11 +579,6 @@ forcekill   Forces the guest to stop. Runs kill -9 and destroys the guest
             do not have access to.
 
 scram       Gracefully stop all bhyve guests. Does not destroy resources.
-
-destroy     Destroys a guest's VMM resources.
-            Usage: 'chyves destroy [name]' where [name] is the name
-            of the guest operating system. Destroying a guest does
-            not [delete] a guest from the host, it destroys the guest in VMM.
 
 rename      Renames the guest
             Usage: 'chyves rename [name] [newname]' where [name] is the
