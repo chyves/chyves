@@ -57,7 +57,6 @@ chyves
   start <name>[,<name2>[,name3]] [iso-resource]
   stop <name>
   forcekill <name>
-  scram
   rename <name> <newname>
   delete <name>
   set <property1>=<value> {<name>|.defaults|.config} [<property2>=<value>]...

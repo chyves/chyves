@@ -913,15 +913,6 @@ __forcekill() {
 	esac
 }
 
-# Gracefully shut down all guests via ACPI (Does not destroy)
-__scram() {
-	echo "Shutting down all guests..."
-	local pids="$(pgrep -f chy-)"
-	for apid in "$pids"; do
-		kill $apid
-	done
-	wait_for_pids $pids
-}
 
 # Destroy guest
 __destroy() {

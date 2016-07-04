@@ -24,7 +24,6 @@ chyves create <name> [size] [pool]
 chyves start <name>[,<name2>[,name3]] [iso-resource]
 chyves stop <name>
 chyves forcekill <name>
-chyves scram
 chyves rename <name> <newname>
 chyves delete <name>
 chyves set <property1>=<value> {<name>|.defaults} [prop2=value]...
@@ -577,8 +576,6 @@ forcekill   Forces the guest to stop. Runs kill -9 and destroys the guest
             in VMM. USE WITH EXTREME CAUTION AND AS A LAST RESORT. Can be
             used to kill guests stuck at the GRUB console that you
             do not have access to.
-
-scram       Gracefully stop all bhyve guests. Does not destroy resources.
 
 rename      Renames the guest
             Usage: 'chyves rename [name] [newname]' where [name] is the
