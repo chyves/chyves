@@ -42,7 +42,7 @@ __get_bridge_members_on_system() {
 # Get outside interface for bridge
 __get_bridge_phy_iface_chyves() {
 	local _bridge="$1"
-	_BRIDGE_phy_iface_chyves=$( __multi_chyves_zfs_property "get" "${_bridge}_phy_attach" "primary" ".config" | tr ',' '\n' )
+	_BRIDGE_phy_iface_chyves=$( __return_chyves_zfs_property_value "${_bridge}_phy_attach" "global" | tr ',' '\n' )
 
 	if [ $_BRIDGE_phy_iface_chyves = "-" ]; then
 		__fault_detected_exit "Outside interface not configured for $_bridge. Please set to 'private' if no vlan or physical interface is going to be attached."
@@ -98,7 +98,7 @@ __get_pid_locking_tap() {
 # Get a list of taps on a bridge in chyves properties
 __get_tap_list_for_bridge_on_chyves() {
 	local _bridge="$1"
-	_TAP_list_for_bridge_on_chyves=$( __multi_chyves_zfs_property "get" "${_bridge}_tap_members" "primary" ".config" | tr ',' '\n' )
+	_TAP_list_for_bridge_on_chyves=$( __return_chyves_zfs_property_value "${_bridge}_tap_members" "global" | tr ',' '\n' )
 }
 
 # Network sub-command

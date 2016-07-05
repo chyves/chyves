@@ -1,0 +1,219 @@
+#!/bin/sh
+
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Pulls CPU section from boot dmesg
+__return_cpu_section_from_dmesg() {
+	grep -B 100 "real memory" /var/run/dmesg.boot | grep -v "real memory" | grep -A 20 "CPU:"
+}
+
+# Check bhyve process running status
+__return_guest_bhyve_pid() {
+	local _flags=$1
+	local _bhyve_process_running=$( pgrep -fx "bhyve: chy-$_GUEST_name$" )
+	# Valid flags are:
+	# null    Return nothing or the PID
+	# -h      [human] for a "YES (pid)" or "NO" indicator
+
+	if [ "$_flags" = "-human-readable" ]; then
+		if [ -n "$_bhyve_process_running" ]; then
+			echo "YES ($_bhyve_process_running)"
+		else
+			echo "NO"
+		fi
+	elif [ -n "$_bhyve_process_running" ]; then
+		echo "$_bhyve_process_running"
+	fi
+}
+
+# Check bhyve process running status
+__return_guest_bhyveload_pid() {
+	local _flags=$1
+	local _bhyveload_process_running=$( pgrep -fx "bhyveload.*chy-$_GUEST_name$" )
+	# Valid flags are:
+	# null    Return nothing or the PID
+	# -h      [human] for a "YES (pid)" or "NO" indicator
+
+	if [ "$_flags" = "-human-readable" ]; then
+		if [ -n "$_bhyveload_process_running" ]; then
+			echo "YES ($_bhyveload_process_running)"
+		else
+			echo "NO"
+		fi
+	elif [ -n "$_bhyveload_process_running" ]; then
+		echo "$_bhyveload_process_running"
+	fi
+}
+
+# Get path for dataset
+__return_guest_dataset_mountpoint() {
+	zfs list -H -t filesystem -o mountpoint $_GUEST_pool/chyves/guests/$_GUEST_name
+}
+
+# Return a list of guests' disks
+__return_guest_disk_list() {
+	local _flags _disks_string
+	local _flags="$1"
+	# -space
+	# -comma
+	# -grep
+	# -new-line
+
+	local _disks_string="$( zfs list -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | sort -k1V | cut -d'/' -f5 )"
+
+	if [ "$_flags" = "-new-line" ]; then
+		echo "$_disks_string"
+	elif [ "$_flags" = "-comma" ]; then
+		echo "$_disks_string" | tr '\n' ','
+	elif [ "$_flags" = "-grep" ]; then
+		echo "$_disks_string" | tr '\n' '|'
+	elif [ "$_flags" = "-space" ]; then
+		echo "$_disks_string" | tr '\n' ' '
+	fi
+}
+
+# Check bhyve process running status
+__return_guest_grub_bhyve_pid() {
+	local _flags=$1
+	local _grub_bhyve_process_running=$( pgrep -fx "grub-bhyve.*chy-$_GUEST_name$" )
+	# Valid flags are:
+	# null    Return nothing or the PID
+	# -h      [human] for a "YES (pid)" or "NO" indicator
+
+	if [ "$_flags" = "-human-readable" ]; then
+		if [ -n "$_grub_bhyve_process_running" ]; then
+			echo "YES ($_grub_bhyve_process_running)"
+		else
+			echo "NO"
+		fi
+	elif [ -n "$_grub_bhyve_process_running" ]; then
+		echo "$_grub_bhyve_process_running"
+	fi
+}
+
+# Get a list of guests on system
+__return_guest_list() {
+	local _pool="$1"   # Optional
+	local _flag="$2"
+
+	if [ -z "$_pool" ] || [ "$_pool" = "-" ]; then
+		local _string="$( zfs list -H -d 3 -t filesystem -r -o name | grep chyves/guests/ | grep -v .defaults | cut -d'/' -f4 | sort -V | sed '/^$/d' )"
+	else
+		local _string="$( zfs list -H -d 3 -t filesystem -r -o name $_pool/chyves/guests | grep -v .defaults | cut -d'/' -f4 | uniq | sort -V | sed '/^$/d' )"
+	fi
+
+	echo "$_string"
+}
+
+# Displays the boot priority of a guest "YES (xxx)" where xxx is the priority
+__return_guest_rcboot_priority() {
+	local _flags _rcboot_property
+	local _flags=$1
+	local _rcboot_property="$( __return_chyves_zfs_property_value "rcboot" "guest" )"
+
+	if [ "$_flags" = "-human-readable" ]; then
+		if [ "$_rcboot_property" = "-" ] || [ "$_rcboot_property" -eq '0' ]; then
+			echo "NO"
+		else
+			echo "YES ($_rcboot_property)"
+		fi
+	elif [ -n "$_bhyve_process_running" ]; then
+		echo "$_rcboot_property"
+	fi
+}
+
+# Displays the snapshot list for a guest
+__return_guest_snapshot_list_level1() {
+	zfs list -H -d 1 -t snapshot -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d '/' -f4- | cut -d '@' -f2 | sed '/^$/d' | awk '{ print "@"$1 }'
+}
+
+# Displays the snapshot list for a guest
+__return_guest_snapshot_list_level2() {
+	zfs list -H -d 2 -t snapshot -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d '/' -f4- | sed '/^$/d'
+}
+
+# Displays the last snapshot for a guest
+__return_guest_snapshot_last() {
+	__return_guest_snapshot_list_level1 | tail -n1
+}
+
+# Check VMM resource allocation status
+__return_guest_vmm_allocated() {
+	local _flags=$1
+	local _vmm_dev="/dev/vmm/chy-$_GUEST_name"
+	# Valid flags are:
+	# null    Return nothing or a 1
+	# -h      [human] for a "YES" or "NO" indicator
+
+	if [ "$_flags" = "-human-readable" ]; then
+		if [ -e "$_vmm_dev" ]; then
+			echo "YES"
+		else
+			echo "NO"
+		fi
+	elif [ -e "$_vmm_dev" ]; then
+		echo "1"
+	fi
+}
+
+# Return a new line delimited string as a comma delimited string
+__return_new_line_delimit_as_comma_string() {
+	echo "$@" | tr ' ' '\n' | tr '\n' ',' | sed -e 's/,$//'
+}
+
+# Return a new line delimited string as a grep delimited string
+__return_new_line_delimit_as_grep_string() {
+	echo "$@" | tr ' ' '\n' | awk '{ print "^"$1"$" }' | tr '\n' '|' | sed -e 's/\|$//'
+}
+
+# Return a new line delimited string as a space delimited string
+__return_new_line_delimit_as_space_string() {
+	echo "$@" | tr ' ' '\n' | tr '\n' ' '
+}
+
+# Checks to see if on FreeNAS
+# The web UI references this file to display the version
+__return_one_if_freenas() {
+	if [ -e "$_OS_VERSION_FREENAS" ]; then
+		local OS=$( echo "$_OS_VERSION_FREENAS" | cut -d - -f1 )
+		if [ "$OS" = "FreeNAS" ]; then
+			echo 1
+		fi
+	fi
+}
+
+# Gets pool names from ZFS with flag options for active/inactive
+__return_pools_active() {
+	echo "$( zfs list -H -d 2 -t filesystem -r -o name | grep chyves | cut -d'/' -f1 | uniq )"
+}
+
+# Gets pool names from ZFS with flag options for active/inactive
+__return_pools_all() {
+	echo "$( zfs list -H -d 2 -t filesystem -r -o name | grep chyves | cut -d'/' -f1 | uniq )"
+}
+
+# Gets pool names from ZFS with flag options for active/inactive
+__return_pools_offline() {
+	echo "$( zfs list -H -d 2 -t filesystem -r -o name | grep chyves_offline | cut -d'/' -f1 | uniq )"
+}

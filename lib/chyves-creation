@@ -298,7 +298,7 @@ __get_next_serial() {
 __get_next_tap() {
 	local _taplast="$( zfs get -H -o value chyves:net_ifaces | grep -v - | tr ',' '\n' | grep tap | sort -V | tail -n1 | cut -c 4- )"
 	if [ -z $_taplast ]; then
-		local _tap_num="$( __multi_chyves_zfs_property "get" "tap_start_offset" "primary" ".config" )"
+		local _tap_num="$( __return_chyves_zfs_property_value "tap_start_offset" "global" )"
 	else
 		local _tap_num="$( expr $_taplast + 1 )"
 	fi
@@ -309,7 +309,7 @@ __get_next_tap() {
 __get_next_vnc_port() {
 	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 )"
 	if [ -z $_vnc_port_last ]; then
-		local _vnc_port_last="$( __multi_chyves_zfs_property "get" "uefi_vnc_port_start_offset" "primary" ".config" )"
+		local _vnc_port_last="$( __return_chyves_zfs_property_value "uefi_vnc_port_start_offset" "global" )"
 	else
 		local _vnc_port_last="$( expr $_vnc_port_last + 1 )"
 	fi
