@@ -399,11 +399,19 @@ __start() {
 
 		# bhyveload
 		if [ "$_GP_loader" = "bhyveload" ]; then
-			echo "bhyveload."
+			__log 2 "bhyveload."
 
-			echo -n "Generating command string for bhyveload... "
-			_LOADER_cmd="bhyveload $_GP_wire_memory -m $_GP_ram -d /chyves/ISO/$_media/$_media -c /dev/${_GP_con}A chy-$_guest"
-			echo "done."
+			__log 2 "Generating command string for bhyveload... " -n
+			if [ -n "$_media" ]; then
+				__log 2 "using $_media as boot device... " -n
+				local _media_string_bhyveload="/chyves/ISO/$_media/$_media"
+			else
+				__gvset_first_disk
+				__log 2 "using $_FIRST_disk as boot device... " -n
+				local _media_string_bhyveload="/dev/zvol/$_GUEST_pool/chyves/guests/$_GUEST_name/$_FIRST_disk"
+			fi
+			_LOADER_cmd="bhyveload $_GUEST_wire_memory -m $_GP_ram -d $_media_string_bhyveload -c /dev/${_GP_serial}A chy-$_guest"
+			__log 2 "done."
 
 			__log 2 "Generating bhyve PCI string for disks... " -n
 			__generate_bhyve_disk_string $_GUEST_name
