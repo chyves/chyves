@@ -267,8 +267,9 @@ __generate_grub_bhyve_command() {
 	local _guest="$1"
 	local _iso="$2"
 	[ -n "$_iso" ] && local _media="/chyves/ISO/$_iso/$_iso"
+	__gvset_guest_pool "$_guest"
+	__gvset_first_disk
 	__verify_binary_available "grub-bhyve"
-	local _disk0="$_GUEST_pool/chyves/guests/$_guest/disk0"
 
 	# Create a device map for none custom OSes
 	[ $_GP_os != "custom" ] && __generate_generic_device_map "$_GUEST_mountpoint" "$_GUEST_pool/chyves/guests/$_guest/$_FIRST_disk" "$_media"
