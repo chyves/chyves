@@ -434,7 +434,7 @@ __start() {
 			__log 2 "UEFI."
 
 			# Check if firmware is set for guest
-			[ $_GP_fw = '-' ] && __fault_detected_exit "You must set a firmware resource name to boot a UEFI guest..."
+			[ $_GP_uefi_firmware = '-' ] && __fault_detected_exit "You must set a firmware resource name to boot a UEFI guest..."
 
 			__log 2 "Generating bhyve string for UEFI firmware... " -n
 			_BHYVE_uefi_firmware_string="-l bootrom,/chyves/Firmware/$_GP_uefi_firmware/$_GP_uefi_firmware"
