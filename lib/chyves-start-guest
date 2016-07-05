@@ -264,7 +264,7 @@ __generate_grub_bhyve_command() {
 
 	# Boot from optical media when present.
 	if [ -n "$_media" ]; then
-		echo "Booting from optical media."
+		__log 2 "Booting grub-bhyve guest from optical media."
 		if [ $_GP_os = "openbsd59" ]; then
 			printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_GP_path}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GP_wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$_guest"
@@ -298,7 +298,7 @@ __generate_grub_bhyve_command() {
 
 	# Boot from hard drive.
 	else
-		echo "Booting from hard drive."
+		__log 2 "Booting grub-bhyve guest from hard drive."
 		if [ $_GP_os = "openbsd59" ]; then
 			printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GP_path}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GP_wire_memory -m ${_GP_path}/device.map -r host -d ${_GP_path} -c /dev/${_GP_con}A -M $_GP_ram chy-$_guest"
@@ -345,24 +345,24 @@ __start() {
 	do
 		__get_pool_for_guest "$_guest"
 		__verify_valid_guest "$_guest" "$_GUEST_pool" -s
-		echo "Preparing to start guest: $_guest"
-		echo -n "Loading guest parameters... "
-		__load_guest_parameters $_guest
-		echo "done."
-
-		echo -n "Checking if guest is running... "
-		[ -n "$( __check_bhyve_process_running $_guest )" ] && __fault_detected_exit "Guest ($_guest) already running."
-		echo "not running."
 
 		echo -n "Checking if VMM resources allocated... "
 		[ "$( __check_vmm_alocated $_guest )" ] && __fault_detected_exit "\nVMM resources already allocated. The guest likely did not exit the bhyve process correctly when shutting down or restarting. Please destroy the VMM resources before starting the guest with: chyves destroy $_guest"
+		__log 1 "Preparing to start guest: $_guest"
+		__log 2 "Loading guest parameters... " -n
+		__load_guest_parameters "$_guest"
+		__log 2 "done."
+
+		__log 2 "Checking if guest is running... " -n
+		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest ($_GUEST_name) already running."
+		__log 2 "not running."
 		# Maybe just check if grub-bhyve is running for this guest instead?
-		echo "not allocated."
+		__log 2 "not allocated."
 
 		# Exit if starting a non-FreeBSD guest on an Intel host missing the UG CPU feature
 		[ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ] && __get_cpu_section_from_dmesg && __fault_detected_exit "Missing CPU feature UG, can only start FreeBSD guests."
 
-		echo -n "Checking which type of loader to use... "
+		__log 2 "Checking which type of loader to use... " -n
 
 		# bhyveload
 		if [ "$_GP_loader" = "bhyveload" ]; then
@@ -372,58 +372,58 @@ __start() {
 			_LOADER_cmd="bhyveload $_GP_wire_memory -m $_GP_ram -d /chyves/ISO/$_media/$_media -c /dev/${_GP_con}A chy-$_guest"
 			echo "done."
 
-			echo -n "Generating bhyve PCI string for disks... "
-			__generate_bhyve_disk_string $_guest
-			echo "done."
+			__log 2 "Generating bhyve PCI string for disks... " -n
+			__generate_bhyve_disk_string $_GUEST_name
+			__log 2 "done."
 
 		# grub-bhyve
 		elif [ "$_GP_loader" = "grub-bhyve" ]; then
-			echo "grub-bhyve."
+			__log 2 "grub-bhyve."
 
-			echo -n "Generating command string for grub-bhyve... "
+			__log 2 "Generating command string for grub-bhyve... " -n
 			__generate_grub_bhyve_command "$_guest" "$_media"    # _LOADER_cmd is set here.
-			echo "done."
+			__log 2 "done."
 
-			echo -n "Generating bhyve PCI string for disks... "
-			__generate_bhyve_disk_string $_guest
-			echo "done."
+			__log 2 "Generating bhyve PCI string for disks... " -n
+			__generate_bhyve_disk_string $_GUEST_name
+			__log 2 "done."
 
 		# uefi
 		elif [ "$_GP_loader" = "uefi" ]; then
-			echo "UEFI."
+			__log 2 "UEFI."
 
 			# Check if firmware is set for guest
 			[ $_GP_fw = '-' ] && __fault_detected_exit "You must set a firmware resource name to boot a UEFI guest..."
 
-			echo -n "Generating bhyve string for UEFI firmware... "
-			_BHYVE_uefi_firmware_string="-l bootrom,/chyves/Firmware/$_GP_fw/$_GP_fw"
-			echo "done."
+			__log 2 "Generating bhyve string for UEFI firmware... " -n
+			_BHYVE_uefi_firmware_string="-l bootrom,/chyves/Firmware/$_GP_uefi_firmware/$_GP_uefi_firmware"
+			__log 2 "done."
 
 			# Optical Media is required by UEFI
 			[ -z "$_media" ] && local _media="null.iso"
 
-			echo -n "Generating bhyve PCI string for disks... "
-			__generate_bhyve_disk_string $_guest
-			echo "done."
+			__log 2 "Generating bhyve PCI string for disks... " -n
+			__generate_bhyve_disk_string $_GUEST_name
+			__log 2 "done."
 
 			# Special handling for VNC console
 			if [ "$_GP_uefi_console_output" = "vnc" ]; then
 
-				echo -n "Generating bhyve PCI string for VNC console... "
+				__log 2 "Generating bhyve PCI string for VNC console... " -n
 				__generate_bhyve_vnc_string
 				_BHYVE_console_string="$_BHYVE_vnc_string"
-				echo "done."
+				__log 2 "done."
 
 				# Attach USB 3.0 Mouse? - Only useful for VNC.
-				echo -n "Generating bhyve PCI string for mouse... "
+				__log 2 "Generating bhyve PCI string for mouse... " -n
 				if [ "$_GP_uefi_mouse_type" = "usb3" ]; then
-					echo "xHCI mouse... "
+					__log 2 "xHCI mouse... " -n
 					local _uefi_usb3_mouse_string="xhci,tablet"
 					__generate_bhyve_slot_string "$_uefi_usb3_mouse_string"
 					_BHYVE_uefi_usb3_string="$_BHYVE_slot_string"
-					echo "done."
+					__log 2 "done."
 				else
-					echo "PS/2 mouse... done."
+					__log 2 "PS/2 mouse... done."
 				fi
 			fi
 		fi
@@ -434,24 +434,25 @@ __start() {
 		# Attach media if present. Always use 3 due to UEFI requiring ahci devices on PCI slots 3-6 && simplicity.
 		[ -n "$_media" ] && _BHYVE_optical_media_string="-s 3,ahci-cd,/chyves/ISO/$_media/$_media"
 
-		echo "Generating bhyve string for network devices... "
-		__generate_bhyve_net_string $_guest
-		echo "   ...done."
+		__log 2 "Generating bhyve string for network devices... "
+		__generate_bhyve_net_string $_GUEST_name
+		__log 2 "   ...done."
 
-		echo -n "Generating bhyve string for custom PCI devices (if any)... "
-		__generate_bhyve_custom_pci_string "$_GUEST_pool/chyves/guests/$_guest"
-		echo "done."
+		__log 2 "Generating bhyve string for custom PCI devices (if any)... " -n
+		__generate_bhyve_custom_pci_string "$_GUEST_pool/chyves/guests/$_GUEST_name"
+		__log 2 "done."
 
 		# Print the command to start the UEFI guest when $_DEVELOPER_MODE is not "off".
 		if [ "$_DEVELOPER_MODE" != "off" ]; then
-			echo "loader command ($_GP_loader):"
-			echo "$_LOADER_cmd"
-			echo "bhyve command:"
-			echo "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge -s 31,lpc $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string chy-$_guest"
+			__log 3 "loader command ($_GP_loader):"
+			__log 3 "$_LOADER_cmd"
+			__log 3 "bhyve command:"
+			__log 3 "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_GUEST_name"
 		fi
 
 		# Start this portion in a seperated process
 		(
+			__log 1 "Starting $_GUEST_name"
 			# Use while loop to make sure guest will reboot correctly.
 			while [ 1 ]
 			do
@@ -463,11 +464,10 @@ __start() {
 
 					# Save the loader exit code
 					local _loader_exit_code="$?"
-
-					[ "$_DEVELOPER_MODE" != "off" ] && echo "Exit code for $_GP_loader guest '$_guest' was '$_loader_exit_code'"
+					__log 3 "Exit code for $_GP_loader guest '$_GUEST_name' was '$_loader_exit_code'"
 
 					# Only exit codes of "0" are properly functioning.
-					[ "$_loader_exit_code" -ne 0 ] && __fault_detected_exit "$_GP_loader exited with a '$_loader_exit_code' code. '0' is the expected code for proper booting. Halting boot process for $_guest."
+					[ "$_loader_exit_code" -ne 0 ] && __fault_detected_exit "$_GP_loader exited with a '$_loader_exit_code' code. '0' is the expected code for proper booting. Halting boot process for $_GUEST_name."
 				fi
 
 				# Execute bhyve - Blank variables just create additional whitespace which is ignored.
@@ -476,16 +476,17 @@ __start() {
 
 				# Save bhyve's exit code
 				local _bhyve_exit_code="$?"
-
-				[ "$_DEVELOPER_MODE" != "off" ] && echo "Exit code for bhyve guest '$_guest' was '$_bhyve_exit_code'"
+				__log 3 "Exit code for bhyve guest '$_GUEST_name' was '$_bhyve_exit_code'"
 
 				# Only reboots will exit with a code "0", all other exit codes need to destroy the VMM resources and exit
 				if [ "$_bhyve_exit_code" != 0 ]; then
+					__log 1 "Powering off $_GUEST_name... "
+					__log 2 "Reclaiming $_GUEST_name VMM resources... "
 					bhyvectl --destroy --vm=chy-$_guest
 					exit $_bhyve_exit_code
 				fi
 
-				echo "Rebooting chyves guest: $_guest... "
+				__log 1 "Rebooting $_GUEST_name... "
 				sleep 5
 			done
 		) &
