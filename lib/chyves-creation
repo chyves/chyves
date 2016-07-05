@@ -211,6 +211,7 @@ __create() {
 	for _guest in `echo "$_guest_list" | tr ',' ' '`
 	do
 		__get_next_tap
+		__get_next_serial
 		__generate_new_uuid_guest_use
 		_GUEST_name="$_guest"
 		local _creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
@@ -265,15 +266,15 @@ __generate_zvol_disk_options_string() {
 	echo "$_disk_options"
 }
 
-# Return the next console to use
-__get_next_console() {
-	local _conlast="$( zfs get -H -o value chyves:con | grep -v - | sort -V | tail -n1 | cut -c 5- )"
+# Return the next serial interface to use
+__get_next_serial() {
+	local _conlast="$( zfs get -H -o value chyves:serial | grep -v - | sort -V | tail -n1 | cut -c 5- )"
 	if [ -z $_conlast ]; then
-		local _conlast="$( __multi_chyves_zfs_property "get" "console_start_offset" "primary" ".config" )"
+		local _conlast="$( __return_chyves_zfs_property_value "console_start_offset" "global" )"
 	else
 		local _conlast="$( expr $_conlast + 1 )"
 	fi
-	_NEXT_console="nmdm$_conlast"
+	_NEXT_serial="nmdm$_conlast"
 }
 
 # Return the next tap interface to use
@@ -298,7 +299,6 @@ __get_next_vnc_port() {
 	_NEXT_vnc_port="$_vnc_port_last"
 }
 
-		__get_next_console
 # Verify the guest name meets the naming requirements
 __verify_correct_guest_name_format() {
 	local _guest_list="$1"
