@@ -105,12 +105,12 @@
 # __set()                                   # Frontend interface to set chyves properties
 # __verify_user_input_for_properties()      # Middleware for setting properties, verifies user input for properties.
 #
-## ../lib/chyves-start-guest               ## Functions for starting guests
 ## ../lib/chyves-snapshot                  ## Functions that deal with chyves snapshots
 # __destroy_guest_snapshot()                # Destroy guest snapshot(s)
 # __rollback_guest_snapshot()               # Rollback guest snapshot
 # __snapshot_guest()                        # Creat a snapshot for guest
 #
+## ../lib/chyves-guest-start               ## Functions for starting guests
 # __generate_bhyve_slot_string()            # Generates a bhyve PCI slot string from $1
 # __generate_bhyve_custom_pci_string()      # Generates a bhyve slot string for custom PCI devices
 # __generate_bhyve_disk_string()            # Generates a bhyve slot string for disks
