@@ -541,10 +541,9 @@ GUEST SUB-COMMANDS
 
               If the cloning method flag is omitted, the default is used as
               defined in global property 'default_clone_flag', this is initially
+              set to '-iu' as it is the safest and more performant.
+
   console     See GUEST'S CONSOLE SUB-SUB-COMMANDS section below.
-
-
-            firmwares   Lists the firmware resources.
 
             snapshots   Lists all of the snapshots for all the guests. Does not
                         show snapshots of disks (they are there, though).
