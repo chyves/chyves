@@ -492,6 +492,7 @@ __start() {
 
 		echo ""                           # Create visual space for next multi-guest.
 		_PCI_slot="$_PCI_SLOT_START"      # Reset $_PCI_slot value for next multi-guest.
+		_BHYVE_console_string=""          # Reset $_BHYVE_console_string value for next multi-guest.
 	done
 }
 
