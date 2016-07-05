@@ -429,7 +429,7 @@ __start() {
 		fi
 
 		# Declare console if UEFI VNC did not set this value
-		[ -z "$_BHYVE_console_string" ] && _BHYVE_console_string="-l com1,/dev/${_GP_con}A"
+		[ -z "$_BHYVE_console_string" ] && _BHYVE_console_string="-l com1,/dev/${_GP_serial}A"
 
 		# Attach media if present. Always use 3 due to UEFI requiring ahci devices on PCI slots 3-6 && simplicity.
 		[ -n "$_media" ] && _BHYVE_optical_media_string="-s 3,ahci-cd,/chyves/ISO/$_media/$_media"
