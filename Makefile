@@ -44,6 +44,11 @@ install:
 	$(INSTALL) -c $(.OBJDIR)/lib/* $(PREFIX)/$(LIB_DIR)/
 	$(INSTALL) -c $(.OBJDIR)/man/$(MAN_FILE).gz $(PREFIX)/$(MAN_DIR)/
 
+# General use:
+installrc:
+	@echo Enabling chyves on boot
+	-/usr/sbin/sysrc -q $(PROJECT_NAME)_enable=YES
+
 deinstall:
 	$(RM) -f $(PREFIX)/$(BIN_DIR)/$(SCRIPT_NAME)
 	$(RM) -f $(PREFIX)/$(RC_DIR)/$(SCRIPT_NAME)
