@@ -259,14 +259,14 @@ __generate_generic_device_map() {
 	local _disk="$2"
 	local _iso="$3"
 	printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
-	printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
+	[ -n "$_iso" ] && printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
 }
 
 # Generates grub-bhyve command used to start guest.
 __generate_grub_bhyve_command() {
 	local _guest="$1"
-	local _media="/chyves/ISO/$2/$2"
-	__get_pool_for_guest "$_guest"
+	local _iso="$2"
+	[ -n "$_iso" ] && local _media="/chyves/ISO/$_iso/$_iso"
 	__verify_binary_available "grub-bhyve"
 	local _disk0="$_GUEST_pool/chyves/guests/$_guest/disk0"
 
