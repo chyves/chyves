@@ -192,12 +192,12 @@ __preflight_check() {
 
 	# CPU feature check
 	# First check to see if EPT/RVI is available then complain if "unrestricted guests" is not found on an Intel CPU.
-	if [ -n "$( __get_cpu_section_from_dmesg | grep 'Features2=' | grep 'POPCNT' )" ]; then
-		if [ -n "$( __get_cpu_section_from_dmesg | grep 'CPU:' | grep 'Intel' )" ] && [ -z "$( __get_cpu_section_from_dmesg | grep 'VT-x:' | grep 'UG' )" ]; then
-			echo "This CPU lacks the 'UG' feature of EPT. This is required by bhyve to run to the full extent."
-			echo "Due to this missing CPU feature: a guest is limited to one virtual CPU and starting UEFI guests is disabled."
-			echo "See CPU feature flags below:"
-			__get_cpu_section_from_dmesg
+	if [ -n "$( __return_cpu_section_from_dmesg | grep 'Features2' | grep 'POPCNT' )" ]; then
+		if [ -n "$( __return_cpu_section_from_dmesg | grep 'Origin' | grep 'GenuineIntel' )" ] && [ -z "$( __return_cpu_section_from_dmesg | grep 'VT-x:' | grep 'UG' )" ]; then
+			__log 1 "This CPU lacks the 'UG' feature of EPT. This is required by bhyve to run to the full extent."
+			__log 1 "Due to this missing CPU feature: a guest is limited to one virtual CPU and starting UEFI guests is disabled."
+			__log 1 "See CPU feature flags below:"
+			__return_cpu_section_from_dmesg
 			# Insert way to disable this warning later on.
 			_CPU_MISSING_UG=1
 		fi
