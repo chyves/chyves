@@ -102,6 +102,42 @@ __generate_bhyve_disk_string() {
 	_BHYVE_disk_string="$_BHYVE_slot_string"
 }
 
+# Generate bhyve slot string for network devices.
+__generate_bhyve_net_string() {
+	local name="$1"
+	__gvset_guest_pool "$name"
+
+	# Setup interfaces if any are configured.
+	local _net_ifaces="$( __return_chyves_zfs_property_value "net_ifaces" "guest" )"
+	for _iface in `echo $_net_ifaces | tr ',' '\n'`
+	do
+		[ "$_iface" = "-" ] && continue
+
+		__verify_valid_system_iface $_iface -c
+
+		if [ "$_IFACE_type" = "vale" ]; then
+			[ -z "$_VALE_system_compat" ] && __verify_vale_system_compat
+		elif [ "$_IFACE_type" = "tap" ]; then
+			__get_parent_bridge_for_tap_chyves $_iface
+			__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
+			__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+		else
+			__fault_detected_exit "Only tap and VALE network interfaces can be attached to bhyve guests. $_iface was detected as a $_IFACE_type interface."
+		fi
+
+		# Add a virtio-net pci device for the tap
+		local _mac="$( __return_chyves_zfs_property_value "${_iface}_mac" "guest" )"
+		if [ $_mac = "-" ] || [ -z "$_mac" ]; then
+			local _string="$_string virtio-net,$_iface"
+		else
+			_string="$_string virtio-net,${_iface},mac=${_mac}"
+		fi
+	done
+
+	__generate_bhyve_slot_string "$_string"
+	_BHYVE_net_string="$_BHYVE_slot_string"
+}
+
 # Generates a bhyve PCI slot string from $1
 __generate_bhyve_slot_string() {
 	local _in_string="$1"                                                 # Required, contains string that is space separated
@@ -297,42 +333,6 @@ __generate_grub_bhyve_command() {
 			_LOADER_cmd="grub-bhyve $_GP_wire_memory -m ${_GP_path}/device.map -r hd0,msdos1 -c /dev/${_GP_con}A -M $_GP_ram chy-$_guest"
 		fi
 	fi
-}
-
-# Generate bhyve slot string for network devices.
-__generate_bhyve_net_string() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-
-	# Setup interfaces if any are configured.
-	local _net_ifaces="$( __multi_chyves_zfs_property "get" "net_ifaces" "$_GUEST_pool" "guests" "$name" )"
-	for _iface in `echo $_net_ifaces | tr ',' '\n'`
-	do
-		[ "$_iface" = "-" ] && continue
-
-		__verify_valid_system_iface $_iface -c
-
-		if [ "$_IFACE_type" = "vale" ]; then
-			[ -z "$_VALE_system_compat" ] && __verify_vale_system_compat
-		elif [ "$_IFACE_type" = "tap" ]; then
-			__get_parent_bridge_for_tap_chyves $_iface
-			__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
-			__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
-		else
-			__fault_detected_exit "Only tap and vale interfaces can be attached to bhyve guests. $_iface was detected as a $_IFACE_type interface."
-		fi
-
-		# Add a virtio-net pci device for the tap
-		local _mac="$( __multi_chyves_zfs_property "get" "${_iface}_mac" "$_GUEST_pool" "guests" "$name" )"
-		if [ $_mac = "-" ] || [ -z "$_mac" ]; then
-			local _string="$_string virtio-net,$_iface"
-		else
-			_string="$_string virtio-net,${_iface},mac=${_mac}"
-		fi
-	done
-
-	__generate_bhyve_slot_string "$_string"
-	_BHYVE_net_string="$_BHYVE_slot_string"
 }
 
 # All inclusive start function
