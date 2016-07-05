@@ -158,11 +158,11 @@ __generate_bhyve_slot_string() {
 	[ -z "$_max_slot" ] && local _max_slot=$( expr 30 - $_PCI_slot )
 
 	# Choose whether or not to use PCI functions or only use on device per slot
-	if [ $_num_devices -gt "$_max_slot" ] || [ "$_use_pci_funcions" = "yes" ]; then
-		local _per_slot=$( expr $_num_devices / $_max_slot - 1 )
+	if [ "$_num_devices" -gt "$_max_slot" ] || [ "$_use_pci_funcions" = "yes" ]; then
+		local _per_slot=$( expr $_max_slot / $_num_devices )
 
 		# Tell user that chyves can not exceed bhyve's eight PCI functions per PCI slot limit.
-		if [ "$_per_slot" -gt 7 ]; then
+		if [ "$_per_slot" -gt 7 ] || [ "$_use_pci_funcions" = "yes" ]; then
 			echo "More devices than available PCI Slots and PCI functions can provide, some devices will not be attached."
 			local _per_slot=7
 		fi
@@ -175,6 +175,8 @@ __generate_bhyve_slot_string() {
 	# Create the string.
 	for _str in $_in_string
 	do
+
+		local _device_counter="$( expr 1 + $_device_counter )"
 		# Skip these off limit PCI slot numbers
 		[ -n "$( echo "$_PCI_slot" | grep -E "$_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING" )" ] && _PCI_slot="$( expr $_PCI_slot + 1)"
 
@@ -186,7 +188,11 @@ __generate_bhyve_slot_string() {
 		fi
 
 		# String generation - where the magic happens
-		local _out_string="$_out_string -s ${_PCI_SLOT}:${_func},${_str}"
+		if [ "$_func" = 0 ]; then
+			local _out_string="$_out_string -s ${_PCI_slot},${_str}"
+		else
+			local _out_string="$_out_string -s ${_PCI_slot}:${_func},${_str}"
+		fi
 
 		# Must meet or be under bhyve's limit of 0-7 functions per PCI slot
 		if [ "$_func" -eq "$_per_slot" ]; then
@@ -213,6 +219,11 @@ __generate_bhyve_slot_string() {
 
 		# Increment PCI function number.
 		else
+
+			# Increment the PCI_slot number for the next device type when not ending on the last PCI function number
+			[ "$_device_counter" = "$_num_devices" ] && _PCI_slot=$( expr $_PCI_slot + 1)
+
+			# Increment the PCI function number
 			local _func=$( expr $_func + 1)
 		fi
 	done
