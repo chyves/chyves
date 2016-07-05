@@ -231,13 +231,6 @@ __load_library_files() {
 	done
 }
 
-# Function used to exit with a message.
-__fault_detected_exit() {
-  local message="$1"
-  echo "Critical error detected. Exiting for following reason:"
-  echo -e "${message}"
-  exit 1
-}
 
 	if [ -z "$_library_to_load" ]; then
 		local _library_to_load="$_common_library"
@@ -250,6 +243,12 @@ __fault_detected_exit() {
 
 }
 
+# Function used to exit with a message.
+__fault_detected_exit() {
+	local message="$1"
+	__log 1 "Critical error detected. Exiting for following reason:"
+	__log 1 "$1" -e
+	exit 1
 }
 
 # Coverts a list to string that can be used for grep
