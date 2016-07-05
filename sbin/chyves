@@ -263,23 +263,52 @@ __fault_detected_warning_break() {
 	break $1
 }
 
+# Logs to file or screen.
+__log() {
+	local _echo_option _full_timestamp _guest_log_path _host_log_path _message _output_level
+	local _output_level="$1"
+	local _message="$2"
+	local _echo_option="$3"
+	local _full_timestamp="$( date +%Y%m%d-%k:%M.%S )"
 
+	# Handling for pre-chyves setup on pool
+	[ -z "$_STDOUT_LEVEL" ] && _STDOUT_LEVEL=2
+	[ -z "$_LOG_MODE" ] && _LOG_MODE=host
 
+	# Print output to screen
+	if [ "$_output_level" -le "$_STDOUT_LEVEL" ] && [ "$_STDOUT_LEVEL" -ne 0 ]; then
 
+		if [ "$_LAST_log_echo_option" = "-n" ]; then
+			echo $_echo_option "$_message"
 		else
+			echo $_echo_option "[$_output_level] $_message"
 		fi
 
+		_LAST_log_echo_option="$_echo_option"
 	fi
 
+	[ -z "$_PRIMARY_POOL" ] && return
 
+	# Log to message to file(s)
+	if [ "$_LOG_TO_FILE" = "yes" ]; then
 
+		# If _GUEST_name is set, then set the variable to record to the guest path.
+		if [ -n "$_GUEST_name" ]; then
+			if [ "$_LOG_MODE" = "guest" ] || [ "$_LOG_MODE" = "dual" ]; then
+				if [ -e "$_GUEST_mountpoint" ]; then
+					local _guest_log_path="$_GUEST_mountpoint/logs/$_DATE_YM.log"
 				fi
 			fi
 		fi
 
+		# If host or dual mode is set, then set varible to record
+		if [ "$_LOG_MODE" = "host" ] || [ "$_LOG_MODE" = "dual" ]; then
+			if [ -e "/chyves" ] ; then
+				local _host_log_path="/chyves/logs/$_DATE_YM.log"
 			fi
 		fi
 
+		echo "$_full_timestamp - [$_output_level] - $_message" | tee -a $_host_log_path $_guest_log_path > /dev/null
 	fi
 }
 
