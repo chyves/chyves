@@ -151,11 +151,11 @@ __generate_bhyve_slot_string() {
 	# Return when empty string is provided but erase $_BHYVE_slot_string beforehand.
 	[ -z "$_in_string" ] && _BHYVE_slot_string="" && return 0
 
-	# Populate $_PCI_SLOT if empty.
-	[ -z "$_PCI_SLOT" ] && _PCI_SLOT="$_PCI_SLOT_START"
+	# Populate $_PCI_slot if empty.
+	[ -z "$_PCI_slot" ] && _PCI_slot="$_PCI_SLOT_START"
 
 	# This will dwindle down the number of max device if not specified.
-	[ -z "$_max_slot" ] && local _max_slot=$( expr 30 - $_PCI_SLOT )
+	[ -z "$_max_slot" ] && local _max_slot=$( expr 30 - $_PCI_slot )
 
 	# Choose whether or not to use PCI functions or only use on device per slot
 	if [ $_num_devices -gt "$_max_slot" ] || [ "$_use_pci_funcions" = "yes" ]; then
@@ -176,10 +176,10 @@ __generate_bhyve_slot_string() {
 	for _str in $_in_string
 	do
 		# Skip these off limit PCI slot numbers
-		[ -n "$( echo "$_PCI_SLOT" | grep -E "$_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING" )" ] && _PCI_SLOT="$( expr $_PCI_SLOT + 1)"
+		[ -n "$( echo "$_PCI_slot" | grep -E "$_OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING" )" ] && _PCI_slot="$( expr $_PCI_slot + 1)"
 
 		# Exit if above bhyve's maximum number of PCI slots but return the value of what is available. 31 is always used by the lpc
-		if [ "$_PCI_SLOT" -gt 30 ]; then
+		if [ "$_PCI_slot" -gt 30 ]; then
 			echo "Can not attach any additional PCI devices to guest per bhyve, attaching what can be attached."
 			_BHYVE_slot_string="$_out_string"
 			return 0
@@ -195,7 +195,7 @@ __generate_bhyve_slot_string() {
 			local _func=0
 
 			# Increment PCI Slot number
-			_PCI_SLOT=$( expr $_PCI_SLOT + 1)
+			_PCI_slot=$( expr $_PCI_slot + 1)
 
 			# Increase counter for MAX slot checker
 			local _max_slot_count=$( expr $_max_slot_count + 1)
@@ -500,6 +500,6 @@ __start() {
 		) &
 
 		echo ""                           # Create visual space for next multi-guest.
-		_PCI_SLOT="$_PCI_SLOT_START"      # Reset $_PCI_SLOT value for next multi-guest.
+		_PCI_slot="$_PCI_SLOT_START"      # Reset $_PCI_slot value for next multi-guest.
 	done
 }
