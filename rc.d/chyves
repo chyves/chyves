@@ -17,24 +17,23 @@ rcvar=chyves_enable
 # read configuration and set defaults
 load_rc_config "$name"
 : ${chyves_enable="NO"}
-: ${chyves_flags=""}
 
-start_cmd="chyves_start"
-stop_cmd="chyves_stop"
+start_cmd="__chyves_start"
+stop_cmd="__chyves_stop"
 
-chyves_start()
+__chyves_start()
 {
 	echo "Starting chyves guests..."
-	/usr/local/sbin/chyves setup ${chyves_flags}
 	sleep 8 # Sleeping for network to come up.
-	guestlist="$( zfs get -H -t filesystem -o name,value chyves:rcboot | grep chyves/guests/ | sort -k2nr -k1 | awk '{ if ($2 > 0) print $1; }' )"
-	for i in $guestlist ; do
-		/usr/local/sbin/chyves start $i
-		sleep 3
-	done
+	local _previous_stdout_level="$( /usr/local/sbin/chyves list global | grep stdout_level | awk '{ print $3 }' )"
+	/usr/local/sbin/chyves global set stdout_level=1
+	local _guestlist="$( zfs get -H -t filesystem -o name,value chyves:rcboot | grep -E 'chyves/guests/.*/.config' | sort -k2nr -k1 | grep -v -E '\s-$' | awk '$2 > 0 {print $1}' | cut -d'/' -f4 | sort | uniq | tr '\n' ',' )"
+	/usr/local/sbin/chyves $_guestlist start
+	sleep 3
+	/usr/local/sbin/chyves global set stdout_level="$_previous_stdout_level"
 }
 
-chyves_stop()
+__chyves_stop()
 {
 	echo "Stopping all chyves guests..."
 	/usr/local/sbin/chyves all stop
