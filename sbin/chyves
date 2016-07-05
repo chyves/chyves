@@ -222,26 +222,25 @@ __preflight_check() {
 	fi
 }
 
-# Loads the library files from list contained in $_LIBRARY_PATH and exits if any are missing
+# Loads the library file(s) and exits if any are missing.
 __load_library_files() {
-	for _lib_file in chyves-basics chyves-creation chyves-informational chyves-network chyves-properties chyves-start-guest chyves-updates
-	do
-		if [ -e "$_LIBRARY_PATH/$_lib_file" ]; then
-			. "$_LIBRARY_PATH/$_lib_file"
-		else
-			__fault_detected_exit "\n\n\nMissing chyves library file $_lib_file from $_LIBRARY_PATH\n\n\n"
-		fi
-	done
-}
-
+	local _library_to_load="$1"
+	local _common_library=""
 
 	if [ -z "$_library_to_load" ]; then
 		local _library_to_load="$_common_library"
 	fi
 
+	for _lib_file in basics guest-console guest-creation guest-disk guest-snapshot guest-start guest-stop informational network properties resources return updates verify
 	do
+		__log 3 "Loading library file: $_lib_file" -n
+		if [ -e "$_LIBRARY_PATH/chyves-$_lib_file" ]; then
+			. "$_LIBRARY_PATH/chyves-$_lib_file"
+			__log 3 "done."
 		else
+			__fault_detected_exit "\n\n\nMissing chyves library file 'chyves-$_lib_file' from '$_LIBRARY_PATH'\n\n\n"
 		fi
+	done
 }
 
 # Function used to continue with a message.
