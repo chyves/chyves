@@ -166,27 +166,15 @@ __preflight_check() {
 	# Load library files
 	__load_library_files
 
-	# Check for out of date datasets when not running setup.
-	if [ ! -z "$_OLD_VERSION_DATASETS" ] && [ "$1" != "setup" ]; then
-	  __fault_detected_exit "Out of date chyves\' dataset(s) version found. \nPlease install sysutils/chyves-utils and then run: \nchyves-upgrade"
-	fi
-
 	# Check to see if more than one pool has the primary role set.
 	if [ "$( zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep -c "primary" )" -gt 1 ]; then
 		__fault_detected_exit "More than one primary pool set, fix it!"
 	fi
 
 	# Check for out of date datasets when not running setup.
-	if [ ! -z "$_OLD_VERSION_DATASETS" ] && [ "$1" != "setup" ]; then
-		echo "Out of date chyves\' dataset(s) version found."
-		echo "Please install sysutils/chyves-utils and then run:"
-		echo "chyves-upgrade"
-		exit 1
-	fi
-
-	# Check to see if running with elevated credentials
-	if [ $(__readonly_cmd "$1") != "0" -a "$(whoami)" != "root" ] ; then
-		echo "The $1 command needs root credentials!"
+	if [ -n "$_OLD_VERSION_DATASETS" ] && [ "$1" != "dataset" ]; then
+		__log 1 "Out of date chyves' dataset(s) version found."
+		__log 1 "Running 'chyves dataset <pool> upgrade' is required before chyves is functional."
 		exit 1
 	fi
 
