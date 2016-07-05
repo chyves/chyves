@@ -241,6 +241,10 @@ __load_library_files() {
 		fi
 }
 
+# Function used to continue with a message.
+__fault_detected_warning_continue() {
+	__log 1 "[WARNING] $1" -e
+	continue
 }
 
 # Function used to exit with a message.
@@ -251,6 +255,10 @@ __fault_detected_exit() {
 	exit 1
 }
 
+# Function used to break with a message.
+__fault_detected_warning_break() {
+	__log 1 "[WARNING] $2" -e
+	break $1
 }
 
 
