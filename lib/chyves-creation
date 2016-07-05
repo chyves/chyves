@@ -211,6 +211,7 @@ __create() {
 	for _guest in `echo "$_guest_list" | tr ',' ' '`
 	do
 		__get_next_tap
+		__generate_new_uuid_guest_use
 		_GUEST_name="$_guest"
 		local _creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
 
@@ -245,7 +246,7 @@ __create() {
 }
 
 # Set new UUID in _UUID_GUEST_USE
-__set_new_uuid_guest_use() {
+__generate_new_uuid_guest_use() {
 	_UUID_GUEST_USE="$(/bin/uuidgen)"
 }
 
@@ -298,7 +299,6 @@ __get_next_vnc_port() {
 }
 
 		__get_next_console
-		__set_new_uuid_guest_use
 # Verify the guest name meets the naming requirements
 __verify_correct_guest_name_format() {
 	local _guest_list="$1"
