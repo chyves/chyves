@@ -351,16 +351,3 @@ EOT
 		fi
 	)
 }
-
-# List disks for a guest
-__disks() {
-	local name="$1"
-	__get_pool_for_guest "$name"
-	local dataset="${_GUEST_pool}/chyves/guests/${name}"
-	(
-	echo "Listing disks for $name..."
-	printf "diskN\tSize\n"
-	zfs list -H -o name,volsize | grep -E "chyves.*$name.*disk" | \
-		cut -d '/' -f4
-	) | column -t
-}

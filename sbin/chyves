@@ -42,6 +42,11 @@
 #
 ## ..lib/chyves-creation                   ## Functions used to create guests in some port or another
 # __cloneguest()                            # Clone a guest
+## ../lib/chyves-disks                     ## Functions handling disk functions
+# __add_guest_disk()                        # Add a new disk to guest
+# __delete_guest_disk()                     # Delete disk from guest
+# __resize_guest_disk()                     # Resize a disk
+#
 ## ../lib/chyves-guest-console             ## Functions dealing with serial console
 # __console_reset()                         # Kill PIDs for cu sessions
 # __console_run()                           # Run console
@@ -741,86 +746,7 @@ __resource_functions() {
 	fi
 }
 
-# Add a new disk to guest
-__add() {
-	local name="$1"
-	local size="$2"
-	__get_pool_for_guest "$name"
-	__load_guest_default_parameters
-	local _disk_options=$( __generate_zvol_disk_options_string )
-	local dataset="${_GUEST_pool}/chyves/guests/${name}"
-	# Find the last disk number and increment one
-	local lastdisk="$(zfs list -H | grep chyves/guests/$name | grep disk | cut -d '/' -f4 | cut -f1 | sort -V | cut -c5- | tail -n1)"
-	local newdisk="$(expr $lastdisk + 1)"
-
-	echo "Creating new zvol for $name..."
-	zfs create -V $size $_disk_options $_GUEST_pool/chyves/guests/$name/disk$newdisk
-
-	# Find the last pcidev and increment by one
-	local lastpci="$(zfs get -H all | grep chyves/guests/$name | grep pcidev | cut -f2 | cut -d ':' -f3 | sort -V | tail -n1)"
-	if [ -z $lastpci ]; then
-		local newpci='1'
-	else
-		local newpci="$(expr $lastpci + 1)"
-	fi
-	zfs set chyves:pcidev:$newpci=ahci-hd,/dev/zvol/$pool/chyves/guests/$name/disk$newdisk $dataset
-}
-
-# Remove disk from guest
-__remove() {
-	local flagone="$1"          # -f | name
-	local flagtwo="$2"          # name | diskN
-	local flagthree="$3"        # diskN | null
-	if [ $flagone = "-f" ]; then
-		echo "Removing $flagthree from $flagtwo"
-		local pool="$(zfs list -H -o name | grep $flagtwo | grep $flagthree | cut -d '/' -f 1)"
-		local pciprop="$(zfs get -H all $pool/chyves/guests/$flagtwo | grep pcidev | grep $flagthree | cut -f2 )"
-		# Make sure it's a valid pcidev property as to not shoot foot
-		if [ -z $pciprop ]; then
-			echo "Not a valid PCIDEV property"
-		else
-			zfs inherit  -r $pciprop $pool/chyves/guests/$flagtwo
-			zfs destroy $pool/chyves/guests/$flagtwo/$flagthree
 		fi
-	else
-		local pool="$(zfs list -H -o name | grep $flagone | grep $flagtwo | cut -d '/' -f 1)"
-		local pciprop="$(zfs get -H all $pool/chyves/guests/$flagone | grep pcidev | grep $flagtwo | cut -f2 )"
-		# Make sure it's a valid pcidev property as to not shoot foot
-		if [ -z $pciprop ]; then
-			echo "Not a valid PCIDEV property"
-		else
-			read -p "Are you sure you want to remove $flagtwo from $flagone [Y/N]? " an </dev/tty
-			case "$an" in
-				y|Y)	zfs inherit  -r $pciprop $pool/chyves/guests/$flagone
-					zfs destroy $pool/chyves/guests/$flagone/$flagtwo
-				;;
-				*) echo "Not removed..."
-				;;
-			esac
-		fi
-	fi
-}
-
-# Resize a disk
-__resize(){
-	local name="$1"
-	local disk="$2"
-	local size="$3"
-	__get_pool_for_guest "$name"
-	local dataset="${_GUEST_pool}/chyves/guests/${name}"
-	# Check if guest exists
-	echo "Resizing $disk to $size"
-	if [ -d /chyves/$_GUEST_pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running $name )" ]; then
-			zfs set volsize=$size $_GUEST_pool/chyves/guests/$name/$disk
-		else
-			echo "Please stop the guest first"
-		fi
-	else
-		echo "Not a valid guest name"
-	fi
-}
 
 	fi
 }

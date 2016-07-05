@@ -1,0 +1,119 @@
+#!/bin/sh
+
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Add a new disk to guest
+__add_guest_disk() {
+	local _size="$1"
+	__generate_zvol_disk_options_string
+	__get_next_disk_number
+	__load_guest_default_parameters
+
+	if [ -z "$_size" ]; then
+		local _size="$_GDP_size"
+	fi
+
+	# Find the last disk number and increment one
+	if [ -z "$_disk_number" ]; then
+		local _disk_number="$_NEXT_disk_number"
+	fi
+
+	__log 1 "Creating $_size disk$_disk_number for $_GUEST_name using these option: $_ZVOL_disk_options_string... " -n
+	zfs create -V $_size $_ZVOL_disk_options_string $_GUEST_pool/chyves/guests/$_GUEST_name/disk$_disk_number
+
+	if [ "$?" = 0 ]; then
+		__log 1 "done."
+	else
+		__log 1 "ERROR creating disk."
+	fi
+
+	if [ -n "$( __return_guest_bhyve_pid )" ]; then
+		echo "Guest is running. Shutdown the guest and then start the guest with chyves. The disk bhyve strings need to be regenerated."
+	fi
+}
+
+# Delete disk from guest
+__delete_guest_disk() {
+	local _disk="$1"
+
+	# Verify the disk exists
+	__verify_valid_dataset "guests/$_GUEST_name/$_disk"
+
+	# Check if guest is running because zfs will not be able to remove the disk if so.
+	if [ -n "$( __return_guest_bhyve_pid )" ]; then
+		__fault_detected_exit "Guest is running, please shutdown the guest before removing the disk."
+	fi
+
+	# Prompt user and handle either response.
+	read -p "Do you want to delete $_disk on $_GUEST_name? This is NOT reversible, nor will snapshots will NOT be able to undo this action. Are you sure? [Y/N]? " an </dev/tty
+	case "$an" in
+		y|Y)  __log 1 "Deleting $_disk from $_GUEST_name... " -n
+		      zfs destroy $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk
+
+	        # Handling for exit code
+	        if [ "$?" -eq "0" ]; then
+	          __log 1 "done."
+	        else
+	          __log 1 "unsuccessful."
+	        fi
+		;;
+		*)    __log 1 "$_disk was not removed from $_GUEST_name."
+		;;
+	esac
+}
+
+# Resize a disk
+__resize_guest_disk() {
+	local _disk="$1"
+	local _size="$2"
+	__gvset_user_input_to_bytes $_size
+	# Verify the disk exists
+	__verify_valid_dataset "guests/$_GUEST_name/$_disk"
+
+	# Check if guest is running because zfs will not be able to resize the disk if so.
+	if [ -n "$( __return_guest_bhyve_pid )" ]; then
+		__fault_detected_exit "Guest is running, please shutdown the guest before resizing the disk."
+	fi
+
+	local _current_size="$( zfs get -H -p -o value volsize $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk )"
+	local _desired_size="$_USER_input_to_bytes"
+
+	# Give warning when trying to reduce the size.
+	if [ "$_desired_size" -lt "$_current_size" ]; then
+		echo "It is not recommended to reduce the size of a guest disk. Data loss is possible and the guest partition table needs to be reconfigure prior to these changes."
+		echo "Press enter to continue or Ctrl + c to cancle."
+		read _void
+	fi
+
+	# Check if guest exists
+	__log 1 "Resizing $_disk to $size... " -n
+	zfs set volsize=$_desired_size $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk
+
+	# Handling for exit code
+	if [ "$?" -eq "0" ]; then
+		__log 1 "done."
+	else
+		__log 1 "unsuccessful."
+	fi
+}

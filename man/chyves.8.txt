@@ -28,10 +28,6 @@ chyves rename <name> <newname>
 chyves delete <name>
 chyves set <property1>=<value> {<name>|.defaults} [prop2=value]...
 chyves get {<property>|all} <name>
-chyves add [name] [size] [[pool]]
-chyves remove [-f] [name] [diskN]
-chyves resize [name] [diskN] [size]
-chyves disks [name]
 network {name} {add|remove} [-|tap{n}|vale{n}] [bridge{n}]
 network bridge{n} {add|attach|default|join|migrate|private|remove} [device{n}]
 network bridge{n} {join|unjoin} tap{n}
@@ -41,6 +37,12 @@ network bridge{n} migrate bridge{n}
 chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
 chyves <guest> console
 chyves <guest>|MG|all console {reset|tmux|vnc}
+chyves <guest> disk add [<size>]
+chyves <guest> disk disk{n} description <description>
+chyves <guest> disk disk{n} notes <note>
+chyves <guest> disk delete disk{n}
+chyves <guest> disk resize disk{n} <new-size>
+chyves <guest> disk list
 chyves <guest>|MG|all reclaim
 chyves <guest> snapshot [<@snapshotname>]
 chyves <guest> snapshot delete <@snapshotname>
@@ -589,6 +591,28 @@ GUEST SUB-COMMANDS
                 Opens a X11 VNC client to the guest using the vnc_client*
                 global properties. See VNC CLIENT SUPPORT section above.
 
+  GUEST'S DISK SUB-SUB-COMMANDS
+
+    add           chyves <guest> disk add [size]
+                Adds a new disk to the guest. The [size] field is optional, the
+                defaults is used if not specified.
+
+    description   chyves <guest> disk disk{n} description <description>
+                Sets a description property for a disk.
+
+    list          chyves <guest> disk list
+                Lists the disks attached to a guest.
+
+    notes         chyves <guest> disk disk{n} notes <note>
+                Sets a notes property for a disk.
+
+    remove        chyves <guest> disk remove disk{n}
+                Removes a disk from the guest.
+
+    resize        chyves <guest> disk resize disk{n} <new-size>
+                Resizes a disk. THIS CAN BREAK THINGS ON THE GUEST IF SIZE
+                REDUCED.
+
   GUEST'S SNAPSHOT SUB-SUB-COMMANDS
   Keep in mind that due to the way ZFS volumes work, when taking a snapshot all
   the bits must be able to be rewritten. This means if you have a 8GB chyves
@@ -619,6 +643,8 @@ GUEST SUB-COMMANDS
                 snapshot and the given snapshot name, those are displayed before
                 last deletion. A guest can not be rollback past a clone snapshot
                 point until those clones are deleted.
+
+  disks       List disks.
 
   snapshots   Lists all of the top level snapshots for all the guests. Does not
               show snapshots of disks (they are there, though).
@@ -790,32 +816,6 @@ get         Gets ZFS properties for guests
             properties are displayed.
             Usage: 'chyves get all' All properties are displayed.
             See properties section above for more detail.
-
-add         Adds a new disk to the guest.
-            Usage: 'chyves add [name] [size] [[pool]]' where [name] is
-            the name of the guest, [size] is the size of the
-            virtual block device in '16G' format where the capital G
-            signifies gigabytes. If pool is specified, the disk gets
-            added on that pool
-
-remove      Removes a disk from the guest. Cannot be disk0.
-            Usage: 'chyves remove [name] [diskN]' where [name] is
-            the name of the guest, [diskN] is the disk you would
-            like to remove from the guest. See 'chyves disks' for
-            a list of disks for a guest. If [-f] is supplied before the
-            [name], there is no prompt to remove.
-
-resize      Resizes a disk. THIS CAN BREAK THINGS ON THE GUEST.
-            Usage: 'chyves resize [name] [diskN] [size]' where [name] is
-            the name of the guest, [diskN] is the disk you would
-            like to remove from the guest, and [size] is the size
-            of the virtual block device in '16G' format where the
-            capital G signifies gigabytes.
-            See 'chyves disks' for a list of disks for a guest
-
-disks       Lists the disks attached to a guest.
-            Usage: 'chyves disks [name]' where [name] is the name
-            of the guest operating system.
 
 dev         Allows for a function to be called direct from command line when
             developing for chyves. Requires dev_mode to be set with something

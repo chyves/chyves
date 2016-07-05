@@ -270,6 +270,55 @@ __parse_cmd_console() {
 	esac
 }
 
+# Command parser for disk manipulations on guests
+__parse_cmd_disk() {
+	__root_credentials_required
+	__load_one_guest_parameters "$1"
+
+	# chyves $_GUEST_name disk <command> $4
+	case "$3" in
+		add)      __verify_number_of_arguments "3" "$#" "4"
+		          __add_guest_disk "$4"
+		          exit
+		;;
+		delete)   __verify_number_of_arguments "4" "$#" "4"
+		          __delete_guest_disk "$4"
+		          exit
+		;;
+		list)     __verify_number_of_arguments "3" "$#" "3"
+		          __info "-zdn" "$1"
+		          exit
+		;;
+		resize)   __verify_number_of_arguments "5" "$#" "5"
+		          __resize_guest_disk "$4" "$5"
+		          exit
+		;;
+	esac
+
+	# chyves $_GUEST_name disk <command> $4
+	case "$4" in
+		description)  __verify_number_of_arguments "5" "$#" "5"
+		              local _value="$5"
+		              __verify_valid_dataset "guests/$_GUEST_name/$3"
+		              __verify_user_input_for_properties "description" "$5" "guests"
+		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
+		              __set_chyves_zfs_property "description" "$_value" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$3"
+		              exit
+		;;
+		notes)        __verify_number_of_arguments "5" "$#" "5"
+		              local _value="$5"
+		              __verify_valid_dataset "guests/$_GUEST_name/$3"
+		              __verify_user_input_for_properties "notes" "$5" "guests"
+		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
+		              __set_chyves_zfs_property "notes" "$_value" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$3"
+		              exit
+		;;
+	esac
+
+	__help
+	__fault_detected_exit "Unrecognized syntax: $@. See above for sub-commands and syntax."
+}
+
 # Command parser for snapshots
 __parse_cmd_snapshot() {
 	local _single_guest="$1"
