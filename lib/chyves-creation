@@ -191,6 +191,59 @@ __clone_guest() {
 	__log 1 "Successfully cloned $_GUEST_name to $_clone_list."
 }
 
+# Create guest(s)
+__create() {
+	local _disk_size _guest_list _pool
+	local _guest_list="$1"
+	local _disk_size="$2"
+	_GUEST_pool="$3"
+	__load_guest_default_parameters
+	__generate_zvol_disk_options_string
+
+	# If size not declared in command line, use .default's
+	[ -z $_disk_size ] && local _disk_size="$_GDP_size"
+
+	# If pool not set use primary
+	[ -z "$_GUEST_pool" ] && _GUEST_pool="$_PRIMARY_POOL"
+
+	# Multi-guest support.
+	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
+	for _guest in `echo "$_guest_list" | tr ',' ' '`
+	do
+		__get_next_tap
+		_GUEST_name="$_guest"
+		local _creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
+
+		__log 1 "Creating $_GUEST_name..."
+		__log 2 "Creating dataset on $_GUEST_pool"
+		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name
+		zfs create -o mountpoint=none $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+		__log 2 "Creating log dataset with compression turned on."
+		zfs create -o compression=on $_GUEST_pool/chyves/guests/$_GUEST_name/logs
+		__log 2 "Creating $_disk_size disk0 with options: $_ZVOL_disk_options_string"
+		zfs create -V $_disk_size $_ZVOL_disk_options_string $_GUEST_pool/chyves/guests/$_GUEST_name/disk0
+		__log 2 "Setting guest properties:"
+		__set_chyves_zfs_property "bargs"        "$_GDP_bargs" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "cpu"          "$_GDP_cpu" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "template"     "$_GDP_template" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "loader"       "$_GDP_loader" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "os"           "$_GDP_os" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "ram"          "$_GDP_ram" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "rcboot"       "$_GDP_rcboot" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "serial"       "$_NEXT_serial" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "creation"     "$_creation_stamp" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "description"  "-" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "net_ifaces"   "$_NEXT_tap" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "notes"        "-" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__set_chyves_zfs_property "uuid"         "$_UUID_GUEST_USE" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+
+		__log 2 "Adding $_NEXT_tap to $_GDP_bridge"
+		__network_bridge_join "$_GDP_bridge" "$_NEXT_tap"
+		__log 1 "$_GUEST_name created."
+		echo ""  # Create visual space for next multi-guest.
+	done
+}
+
 # Set new UUID in _UUID_GUEST_USE
 __set_new_uuid_guest_use() {
 	_UUID_GUEST_USE="$(/bin/uuidgen)"
@@ -244,72 +297,8 @@ __get_next_vnc_port() {
 	_NEXT_vnc_port="$_vnc_port_last"
 }
 
-# Create guest(s)
-__create() {
-	local guests="$1"
-	local size="$2"
-	local pool="$3"
-	__load_guest_default_parameters
-	local creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
-	local _disk_options="$( __generate_zvol_disk_options_string )"
-
-	# If size not declared in command line, use .default's
-	[ -z $size ] && local size="$_GDP_size"
-
-	# Check on pool
-	if [ -z "${pool}" ]; then
-		local pool="${_PRIMARY_POOL}"
-	else
-		__verify_valid_pool "$pool" -c
-	fi
-
-	# Multi-guest support.
-	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
-	for name in `echo "$guests" | tr ',' ' '`
-	do
-		__get_next_tap
 		__get_next_console
-		__get_next_vnc_port
-		__verify_valid_guest "$name"
 		__set_new_uuid_guest_use
-
-		echo "Creating $name..."
-		echo "Creating dataset on $pool"
-		zfs create $pool/chyves/guests/$name
-		echo "Creating $size disk0 with options: $_disk_options"
-		zfs create -V $size $_disk_options $pool/chyves/guests/$name/disk0
-		echo "Creating properties:"
-		__multi_chyves_zfs_property "set" "bargs"       "$pool" "guests" "$name" "$_GDP_bargs"
-		__multi_chyves_zfs_property "set" "cpu"         "$pool" "guests" "$name" "$_GDP_cpu"
-		__multi_chyves_zfs_property "set" "fw"          "$pool" "guests" "$name" "$_GDP_fw"
-		__multi_chyves_zfs_property "set" "guest_role"  "$pool" "guests" "$name" "$_GDP_guest_role"
-		__multi_chyves_zfs_property "set" "loader"      "$pool" "guests" "$name" "$_GDP_loader"
-		__multi_chyves_zfs_property "set" "os"          "$pool" "guests" "$name" "$_GDP_os"
-		__multi_chyves_zfs_property "set" "ram"         "$pool" "guests" "$name" "$_GDP_ram"
-		__multi_chyves_zfs_property "set" "rcboot"      "$pool" "guests" "$name" "$_GDP_rcboot"
-
-		__multi_chyves_zfs_property "set" "con"         "$pool" "guests" "$name" "$_NEXT_console"
-		__multi_chyves_zfs_property "set" "creation"    "$pool" "guests" "$name" "$creation_stamp"
-		__multi_chyves_zfs_property "set" "description" "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "notes"       "$pool" "guests" "$name" "-"
-		__multi_chyves_zfs_property "set" "net_ifaces"  "$pool" "guests" "$name" "$_NEXT_tap"
-		__multi_chyves_zfs_property "set" "uuid"        "$pool" "guests" "$name" "$_UUID_GUEST_USE"
-
-		__multi_chyves_zfs_property "set" "uefi_console_output"                  "$pool" "guests" "$name" "$_GDP_uefi_console_output"
-		__multi_chyves_zfs_property "set" "uefi_mouse_type"                      "$pool" "guests" "$name" "$_GDP_uefi_mouse_type"
-		__multi_chyves_zfs_property "set" "uefi_vnc_port"                        "$pool" "guests" "$name" "$_NEXT_vnc_port"
-		__multi_chyves_zfs_property "set" "uefi_vnc_ip"                          "$pool" "guests" "$name" "$_GDP_uefi_vnc_ip"
-		__multi_chyves_zfs_property "set" "uefi_vnc_res"                         "$pool" "guests" "$name" "$_GDP_uefi_vnc_res"
-		__multi_chyves_zfs_property "set" "uefi_pause_until_vnc_client_connect"  "$pool" "guests" "$name" "$_GDP_uefi_vnc_pause"
-
-		echo "Adding $_NEXT_tap to $_GDP_bridge"
-		__network "$_GDP_bridge" join "$_NEXT_tap"
-		echo "$name created."
-		echo ""  # Create visual space for next multi-guest.
-
-	done
-}
-
 # Verify the guest name meets the naming requirements
 __verify_correct_guest_name_format() {
 	local _guest_list="$1"
