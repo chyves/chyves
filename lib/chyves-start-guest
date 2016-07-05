@@ -247,10 +247,8 @@ __generate_bhyve_vnc_string() {
 	# VNC Pause boot until connect
 	[ "$_GP_uefi_vnc_pause" = "yes" ] && local _string="${_string},wait"
 
-	__generate_bhyve_slot_string "$_string"
-	_BHYVE_vnc_string="$_BHYVE_slot_string"
-}
-
+	# Assign to global variable
+	_BHYVE_vnc_string="$_string"
 }
 
 # Creates device.map for guest and places in /chyves/guests/$_guest/device.map
