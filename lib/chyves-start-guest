@@ -24,6 +24,52 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Generates a bhyve slot string for disks
+__generate_bhyve_disk_string() {
+	local _guest="$1"
+	__gvset_guest_pool "$_guest"
+
+	# Find number of disk for guest
+	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_guest | sort -k1V )"
+	local _num_of_disks="$( echo $_disks_dataset_list | grep -c "" )"
+
+	[ "$_num_of_disks" = 0 ] && echo "Guest has no disks." && return 0
+
+	# Create device list for bhyve
+	for _disk_dataset in `echo $_disks_dataset_list | tr '\n' ' '`
+	do
+		# See man page Manually Setting Properties section for more info.
+		local _virtio_block_options=$( zfs get -H -o value chyves:virtio_block_options "$_disk_dataset" )
+
+		# Typical handling
+		if [ -z "$_virtio_block_options" ] || [ "$_virtio_block_options" = "-" ]; then
+
+			# Pull the blocksize on the ZFS volume to optimize performance.
+			#local _disk_blocksize="$( zfs get -H -p -o value volblocksize "$_disk_dataset" )"
+			#local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,sectorsize=$_disk_blocksize"
+
+			# Temporary as only 512 byte size works.
+			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset"
+
+		# Handling if the expert property (virtio_block_options) is set. See man page Manually Setting Properties section for more info.
+		else
+			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,$_virtio_block_options"
+			local _virtio_block_options=""
+		fi
+	done
+
+	# UEFI can only use PCI slots 3-7 for ACHI devices, PCI slot 3 is used for optical, 3 slots remaining for disks.
+	if [ "$_GP_loader" = "uefi" ] && [ "$_num_of_disks" -gt 3 ]; then
+		__generate_bhyve_slot_string $_string 3
+
+	# Other loader types do no have this restriction.
+	else
+		__generate_bhyve_slot_string "$_string"
+	fi
+
+	_BHYVE_disk_string="$_BHYVE_slot_string"
+}
+
 # Generates a bhyve PCI slot string from $1
 __generate_bhyve_slot_string() {
 	local _in_string="$1"                                                 # Required, contains string that is space separated
@@ -136,49 +182,6 @@ __generate_bhyve_custom_pci_string() {
 	done
 
 	_BHYVE_custom_pci_string="$_processed_string"
-}
-
-# Generates a bhyve slot string for disks
-__generate_bhyve_disk_string() {
-	local _guest="$1"
-	__get_pool_for_guest "$_guest"
-
-	# Find number of disk for guest
-	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_guest )"
-	local _num_of_disks="$( echo $_disks_dataset_list | wc -l )"
-
-	[ -z "$_num_of_disks" ] && echo "Guest has no disks." && return 0
-
-	# Create device list for bhyve
-	for _disk_dataset in `echo $_disks_dataset_list | tr '\n' ' '`
-	do
-		# See man page Manually Setting Properties section for more info.
-		local _virtio_block_options=$( zfs get -H -o value chyves:virtio_block_options "$_disk_dataset" )
-
-		# Typical handling
-		if [ -z "$_virtio_block_options" ] || [ "$_virtio_block_options" = "-" ]; then
-
-			# Pull the blocksize on the ZFS volume to optimize performance.
-			local _disk_blocksize="$( zfs get -H -o value volblocksize "$_disk_dataset" )"
-			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,sectorsize=$_disk_blocksize"
-
-		# Handling if the expert property (virtio_block_options) is set. See man page Manually Setting Properties section for more info.
-		else
-			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,$_virtio_block_options"
-			local _virtio_block_options=""
-		fi
-	done
-
-	# UEFI can only use PCI slots 3-7 for ACHI devices, 3 is used for optical.
-	if [ "$_GP_loader" = "uefi" ] && [ "$_num_of_disks" -gt 2 ]; then
-		__generate_bhyve_slot_string $_string "3"
-
-	# Other loader types do no have this restriction.
-	else
-		__generate_bhyve_slot_string $_string
-	fi
-
-	_BHYVE_disk_string="$_BHYVE_slot_string"
 }
 
 # Generates bhyve slot string for UEFI GOP code

@@ -263,7 +263,24 @@ __generate_zvol_disk_options_string() {
 	[ "${_GDP_disk_primarycache}" != "inherit" ] && local _disk_options="$_disk_options -o primarycache=$_GDP_disk_primarycache"
 	[ "${_GDP_disk_secondarycache}" != "inherit" ] && local _disk_options="$_disk_options -o secondarycache=$_GDP_disk_secondarycache"
 
-	echo "$_disk_options"
+	_ZVOL_disk_options_string="$_disk_options"
+}
+
+# Return the first disk for a guest
+__gvset_first_disk() {
+	local _disk_first="$( zfs list -H -t volume -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d'/' -f5 | sort -V | head -n1 )"
+	_FIRST_disk="$_disk_first"
+}
+
+# Return the next disk for a guest
+__get_next_disk_number() {
+	local _disk_last="$( zfs list -H -t volume -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d'/' -f5 | sed 's/disk//g' | sort -V | tail -n1 )"
+	if [ -z $_disk_last ]; then
+		local _disk_last=0
+	else
+		local _disk_last="$( expr $_disk_last + 1 )"
+	fi
+	_NEXT_disk_number="$_disk_last"
 }
 
 # Return the next serial interface to use
