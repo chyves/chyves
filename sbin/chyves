@@ -62,9 +62,20 @@
 # __set_new_uuid_guest_use()                # Set new UUID in _UUID_GUEST_USE
 #
 ## ../lib/chyves-informational             ## Functions to display information about chyves to the user
-# __disks()                                 # List disks for a guest
-# __info()                                  # List various aspects of chyves guests, properties, and other resources
-# __list()                                  # Display info about all guests.
+# __list_active_taps()                      # Displays active tap via /dev
+# __list_bridges                            # List bridges
+# __list_clones                             # List clones
+# __list_clones_sub()                       # Backend for 'chyves list clones', spiders through each supplied guest name for child clones.
+# __list_defaults()                         # List properties set in .defaults
+# __list_firmwares()                        # List Firmware resources. Using "firmware" lists the property firmware rather than the resource
+# __list_global_properties()                # List properties set in .config
+# __list_iso()                              # List ISO firmware resources.
+# __list_pools()                            # List pools and roles
+# __list_processes()                        # List processes
+# __list_properties()                       # Dynamically lists the guest chyves properties
+# __list_single_property()                  # Lists a property for all active guests. See "chyves list properties" for options
+# __list_snapshots()                        # List snapshots
+# __info()                                  # Display info about all guests.
 #
 ## ../lib/chyves-network                   ## Functions for network related tasks
 # __exit_if_tap_locked()                    # Exits if tap is locked by a process/guest
