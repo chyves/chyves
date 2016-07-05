@@ -344,7 +344,6 @@ __start() {
 	for _guest in `echo $_guests_list | tr ',' ' '`
 	do
 		__get_pool_for_guest "$_guest"
-		__verify_valid_guest "$_guest" "$_GUEST_pool" -s
 
 		echo -n "Checking if VMM resources allocated... "
 		[ "$( __check_vmm_alocated $_guest )" ] && __fault_detected_exit "\nVMM resources already allocated. The guest likely did not exit the bhyve process correctly when shutting down or restarting. Please destroy the VMM resources before starting the guest with: chyves destroy $_guest"
@@ -352,6 +351,11 @@ __start() {
 		__log 2 "Loading guest parameters... " -n
 		__load_guest_parameters "$_guest"
 		__log 2 "done."
+
+		if [ "$_GP_template" = "yes" ]; then
+			__log 1 "$_GUEST_name is set as a template, not starting guest.\n"
+			continue
+		fi
 
 		__log 2 "Checking if guest is running... " -n
 		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest ($_GUEST_name) already running."
