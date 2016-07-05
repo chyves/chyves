@@ -471,7 +471,7 @@ __start() {
 				fi
 
 				# Execute bhyve - Blank variables just create additional whitespace which is ignored.
-				bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge -s 31,lpc $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string chy-$_guest
+				bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest
 				# Is it not the least bit amusing this tool exists because of the <insert-judgemental-adjective> of not want to enter the command above by hand.
 
 				# Save bhyve's exit code
