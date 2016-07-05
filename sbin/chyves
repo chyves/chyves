@@ -90,6 +90,11 @@
 # __verify_user_input_for_properties()      # Middleware for setting properties, verifies user input for properties.
 #
 ## ../lib/chyves-start-guest               ## Functions for starting guests
+## ../lib/chyves-snapshot                  ## Functions that deal with chyves snapshots
+# __destroy_guest_snapshot()                # Destroy guest snapshot(s)
+# __rollback_guest_snapshot()               # Rollback guest snapshot
+# __snapshot_guest()                        # Creat a snapshot for guest
+#
 # __generate_bhyve_slot_string()            # Generates a bhyve PCI slot string from $1
 # __generate_bhyve_custom_pci_string()      # Generates a bhyve slot string for custom PCI devices
 # __generate_bhyve_disk_string()            # Generates a bhyve slot string for disks
@@ -817,37 +822,6 @@ __resize(){
 	fi
 }
 
-# Snapshot a guest
-__snapguest() {
-	local fullsnap="$1"
-	local name="$(echo $fullsnap | cut -d '@' -f1)"
-	__get_pool_for_guest "$name"
-	echo "Taking snapshot $fullsnap"
-	zfs snap -r $_GUEST_pool/chyves/guests/$fullsnap
-}
-
-# Rollback guest
-__rollguest() {
-	local fullsnap="$1"
-	local name="$(echo $fullsnap | cut -d '@' -f1)"
-	__get_pool_for_guest "$name"
-	local snap="$(echo $fullsnap | cut -d '@' -f2)"
-	local disklist="$(zfs list -H | grep chyves/guests/$name | grep disk | \
-				cut -f1 | cut -d '/' -f4-)"
-	# Check if guest exists
-	echo "Rolling back to $fullsnap"
-	if [ -d /chyves/$_GUEST_pool/guests/$name ] || [ -d /chyves/guests/$name ]; then
-		# Check to make sure guest isn't running
-		if [ -z "$( __check_bhyve_process_running $name )" ]; then
-			zfs rollback -rR $_GUEST_pool/chyves/guests/$fullsnap
-			for disk in $disklist ; do
-				zfs rollback -rR $_GUEST_pool/chyves/guests/$name/$disk@$snap
-			done
-		else
-			echo "Please stop the guest first"
-		fi
-	else
-		echo "Not a valid guest name"
 	fi
 }
 

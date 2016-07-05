@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Copyright (c) 2016, Justin D Holcomb All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Destroy guest snapshot(s)
+__destroy_guest_snapshot() {
+	local _snapshot_name="$1"
+	__log 1 "Destroying $_snapshot_name on dataset..."
+
+	# Snapshot does exist, now rollback
+	zfs destroy -r $_GUEST_pool/chyves/guests/$_GUEST_name$_snapshot_name
+	if [ "$?" != 0 ]; then
+		__log 1 "unable to completely destroy the snapshot '$_snapshot_name' from '$_GUEST_pool/chyves/guests/$_GUEST_name'"
+	else
+		__log 1 "...done."
+	fi
+}
+
+# Rollback guest snapshot
+__rollback_guest_snapshot() {
+	local _snapshot_name="$1"
+	__log 1 "Rolling back to $_snapshot_name on dataset..."
+
+	# Get each dataset to rollback on. No recursive function for zfs rollback.
+	for _dataset in `zfs list -H -t volume,filesystem -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
+	do
+		__log 2 "...on dataset: $_dataset " -n
+
+		# Check to see if dataset exists
+		zfs get type $_dataset$_snapshot_name > /dev/null 2>&1
+		if [ "$?" != 0 ]; then
+			__log 1 "snapshot ($_snapshot_name) does not exist on dataset '$_dataset'"
+		else
+
+			# Snapshot does exist, now rollback
+			zfs rollback -r $_dataset$_snapshot_name
+			if [ "$?" != 0 ]; then
+				__log 1 "unable to rollback '$_dataset$_snapshot_name'"
+			else
+				__log 2 "...done."
+			fi
+		fi
+	done
+	__log 1 "done."
+}
+
+# Creat a snapshot for guest
+__snapshot_guest() {
+	local _snapshot_name="$1"
+	__log 1 "Taking recursive snapshot: $_snapshot_name"
+	zfs snapshot -r $_GUEST_pool/chyves/guests/$_GUEST_name$_snapshot_name
+}

@@ -32,8 +32,6 @@ chyves add [name] [size] [[pool]]
 chyves remove [-f] [name] [diskN]
 chyves resize [name] [diskN] [size]
 chyves disks [name]
-chyves snap <name>[@<snapshotname>]
-chyves roll <name>[@<snapshotname>]
 network {name} {add|remove} [-|tap{n}|vale{n}] [bridge{n}]
 network bridge{n} {add|attach|default|join|migrate|private|remove} [device{n}]
 network bridge{n} {join|unjoin} tap{n}
@@ -44,6 +42,9 @@ chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
 chyves <guest> console
 chyves <guest>|MG|all console {reset|tmux|vnc}
 chyves <guest>|MG|all reclaim
+chyves <guest> snapshot [<@snapshotname>]
+chyves <guest> snapshot delete <@snapshotname>
+chyves <guest> snapshot rollback [<@snapshotname>]
 chyves help
 
 SYNTAX NOMENCLATURE:
@@ -553,6 +554,8 @@ GUEST SUB-COMMANDS
               from the host, it destroys the guest's VMM resources (bhyvectl
               vernacular).
 
+  snapshot    See GUEST'S SNAPSHOT SUB-SUB-COMMANDS section below.
+
   GUEST'S CONSOLE SUB-SUB-COMMANDS
   Manage a guest through a console using various methods described below. The
   primary method for managing guests is through a serial interface. On supported
@@ -585,6 +588,43 @@ GUEST SUB-COMMANDS
                 that supports UEFI graphics support. See UEFI GOP SUPPORT above.
                 Opens a X11 VNC client to the guest using the vnc_client*
                 global properties. See VNC CLIENT SUPPORT section above.
+
+  GUEST'S SNAPSHOT SUB-SUB-COMMANDS
+  Keep in mind that due to the way ZFS volumes work, when taking a snapshot all
+  the bits must be able to be rewritten. This means if you have a 8GB chyves
+  disk with 6GB written to it and you take a snapshot, there will be 14GB
+  reserved for the disk until the snapshot is deleted. If another 2GB is written
+  and another snapshot is taken, then 16GB will be consumed and so forth.
+
+    $null        chyves <guest> snapshot [@snapshot]
+                Takes a snapshot of a guest and it's child datasets. Auto
+                generates a name when no name is given. Must start with an
+                '@' sign. Appends '-LIVE-SYSTEM' to the snapshot name when the
+                guest is running to both auto-generate and user supplied names.
+
+    delete        chyves <guest> delete [@snapshot]
+                  chyves <guest> delete [@snapshot%[snapshot]]
+                Deletes a snapshot or a range of snapshots. Use the '%' symbol
+                to indicate a range of snapshots to be deleted. If a second name
+                is not specified then then all snapshots are deleted up to the
+                specified snapshot name. If a first name is not specified, then
+                the latest top level guest snapshot is destroyed. Before
+                deletion the amount of of space that will be recovered is
+                displayed.
+
+    rollback      chyves <guest> snapshot rollback [@snapshot]
+                Rolls back a guest and it's datasets to a previous snapshot
+                state. When no name is given, the latest snapshot is the
+                rollback point. If there are multiple snapshots in-between the
+                snapshot and the given snapshot name, those are displayed before
+                last deletion. A guest can not be rollback past a clone snapshot
+                point until those clones are deleted.
+
+  snapshots   Lists all of the top level snapshots for all the guests. Does not
+              show snapshots of disks (they are there, though).
+
+  snapshots <guest>  Lists all of the snapshots for a guest. Does show snapshots
+              of disks and other child datasets.
 
 NETWORK SUB-COMMANDS
 When global property 'network_design_mode' is set to 'auto', these commands are
@@ -777,16 +817,6 @@ disks       Lists the disks attached to a guest.
             Usage: 'chyves disks [name]' where [name] is the name
             of the guest operating system.
 
-snap        Take a snapshot of a guest.
-            Usage: 'chyves snap [name]@[snapshot]' where [name] is the
-            name of the guest and [snapshot] is what you would
-            like to name the snapshot.
-
-roll        Rollback guest to a snapshot.
-            Usage: 'chyves roll [name]@[snapshot]' where [name] is the
-            name of the guest and [snapshot] is what you would
-            like to name the snapshot.
-
 dev         Allows for a function to be called direct from command line when
             developing for chyves. Requires dev_mode to be set with something
             other than "off". This is globally set on the primary pool on
@@ -920,9 +950,9 @@ Install and run a Debian guest:
 
 Take a snapshot of a guest:
 
-  chyves snap bguest@beforeupdate
+  chyves bguest snapshot @beforeupdate
   chyves list snapshots
-  chyves roll bguest@beforeupdate
+  chyves bguest snapshot rollback @beforeupdate
 
 Make a true ZFS clone of bguest with unique properties:
 

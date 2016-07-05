@@ -65,10 +65,6 @@ __list() {
 		echo "Listing Firmware..."
 		zfs list -H -r $pool/chyves/Firmware | cut -f1 | cut -d '/' -f 4 | sed 1d
 
-	# List snapshots
-	elif [ "${output_type}" = "snapshots" ]; then
-		echo "Listing snapshots..."
-		zfs list -H -t snapshot | grep chyves/guests | grep -v ".defaults" | cut -f1 | cut -d '/' -f4- | sed '/^$/d'
 
 	# List properties set in .config
 	elif [ "${output_type}" = ".config" ]; then
@@ -169,6 +165,18 @@ __list() {
 			done
 		done
 		) | column -t
+	fi
+}
+
+# List snapshots
+__list_snapshots() {
+
+	if [ -z "$_GUEST_name" ]; then
+		echo "Listing top level snapshots..."
+		zfs list -H -d 4 -t snapshot -o name | grep chyves/guests | grep -v -E ".defaults|.config" | cut -d '/' -f4- | sed '/^$/d'
+	else
+		echo "Listing all $_GUEST_name snapshots..."
+		__return_guest_snapshot_list_level2
 	fi
 }
 

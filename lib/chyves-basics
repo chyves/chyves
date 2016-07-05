@@ -255,6 +255,95 @@ __parse_cmd_console() {
 	esac
 }
 
+# Command parser for snapshots
+__parse_cmd_snapshot() {
+	local _single_guest="$1"
+	local _arg3="$3"
+	local _rollback_to_snapshot="$4"
+	#local _arg3="$( echo $3 | cut -d '@' -f2 )"
+	#local _rollback_to_snapshot="$( echo $4 | cut -d '@' -f2 )"
+	__verify_number_of_arguments "2" "$#" "4"
+	__root_credentials_required
+	__load_one_guest_parameters "$_single_guest"
+
+	# Rollback guest
+	if [ "$_arg3" = "rollback" ]; then
+		local _latest_snapshot="$( __return_guest_snapshot_last )"
+		[ -z "$_rollback_to_snapshot" ] && local _rollback_to_snapshot="$_latest_snapshot"
+		[ -z "$_rollback_to_snapshot" ] && __fault_detected_exit "No snapshots taken for $_GUEST_name"
+		__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
+
+		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "$_GUEST_name must be stopped before rolling back snapshot."
+
+		__log 1 "The recursive snapshots to be deleted:"
+
+		# List the snapshots that will be deleted by rollingback
+		for _dataset in `zfs list -H -t volume,filesystem -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
+		do
+			zfs list -H -d 1 -t snapshot -o name $_dataset | grep -A999999 -w "$_dataset$_rollback_to_snapshot" | grep -v -w "$_dataset$_rollback_to_snapshot" | cut -d'/' -f4- | awk '{ print "   "$1 }'
+		done
+
+		read -p "[WARNING] Do you want to delete all data created after the snapshot including the recursive snapshot above: [y/N]? " _delete_or_no </dev/tty
+
+		case "$_delete_or_no" in
+			y|Y|yes)  # Send to backend
+			          __rollback_guest_snapshot "$_rollback_to_snapshot"
+			;;
+			*) __log 1 "$_GUEST_name was not rolled back."
+		esac
+		exit
+
+	# Delete a guest's snapshot
+	elif [ "$_arg3" = "delete" ]; then
+		__verify_number_of_arguments "3" "$#" "4"
+		local _snapshot_name="$4"
+		[ -z "$_snapshot_name" ] && local _snapshot_name="$( __return_guest_snapshot_last )"
+		[ -z "$_snapshot_name" ] && __fault_detected_exit "No snapshots taken for $_GUEST_name"
+
+		# Verify snapshots exists and split if a range is specified.
+		# Using this method allows deleting non-top level guest snapshots, such as the ones created for clones.
+		zfs destroy -rnv $_GUEST_pool/chyves/guests/$_GUEST_name$_snapshot_name > /dev/null 2>&1
+		if [ "$?" != 0 ]; then
+			__fault_detected_exit "Invalid snapshot name."
+		else
+
+			# Print the snapshots to be destroyed. The '-n' flag is to do a dry-run ("No-op").
+			__log 1 "The recursive snapshots to be deleted:"
+			zfs destroy -rnv $_GUEST_pool/chyves/guests/$_GUEST_name$_snapshot_name
+		fi
+
+		read -p "[WARNING] Do you want to delete the above snapshots: [y/N]? " _delete_or_no </dev/tty
+		case "$_delete_or_no" in
+			y|Y|yes)  # Send to backend
+			          __destroy_guest_snapshot "$_snapshot_name"
+			;;
+			*) __log 1 "$_GUEST_pool/chyves/guests/$_GUEST_name$_snapshot_name was not destroyed."
+		esac
+		exit
+
+	# Take snapshot of guest
+	elif [ -z "$_arg3" ] || [ -n "$( echo "$_arg3" | grep -E '^@' )" ]; then
+		local _snapshot_name="$_arg3"
+
+		# Give generic name when not supplied.
+		[ -z "$_snapshot_name" ] && local _snapshot_name="@chyves-auto-named-snapshot-$_DATE_YMDMHS"
+
+		# Run input verification
+		[ -z "$( echo "$_snapshot_name" | grep -E '^\@[-0-9a-zA-Z._]{1,}$' )" ] && __fault_detected_exit "Incorrect snapshot name format. Must start with an '@' and can contain number, letters, dashes '-', periods '.', and/or underscores '_'."
+
+		# Append a message indicating system was running when bhyve pid detected.
+		[ -n "$( __return_guest_bhyve_pid )" ] && local _snapshot_name="${_snapshot_name}-LIVE-SYSTEM"
+
+		# Send to backend
+		__snapshot_guest "$_snapshot_name"
+		exit
+
+	else
+		__help
+		__fault_detected_exit "Unknown snapshot command."
+	fi
+}
+
 # Checks to see if running with root credentials is required.
 __root_credentials_required() {
 
