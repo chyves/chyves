@@ -202,18 +202,27 @@ __preflight_check() {
 		echo "Run setup to install chyves dataset on a pool."
 		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
 	else
-		_DEVELOPER_MODE=$( __multi_chyves_zfs_property                       "get" "dev_mode"                             "primary" ".config" )
-		_RESTRICT_NEW_PROPERTY_NAMES=$( __multi_chyves_zfs_property          "get" "restrict_new_property_names"          "primary" ".config" )
-		_VLAN_IFACE_BASE_NAME=$( __multi_chyves_zfs_property                 "get" "vlan_iface_base_name"                 "primary" ".config" )
-		_TAP_UP_BY_DEFAULT=$( __multi_chyves_zfs_property                    "get" "tap_up_by_default"                    "primary" ".config" )
-		_AUTO_LOAD_KERNEL_MODS=$( __multi_chyves_zfs_property                "get" "auto_load_kernel_mods"                "primary" ".config" )
-		_CONSOLIDATE_BHYVE_PCI_DEVICES=$( __multi_chyves_zfs_property        "get" "consolidate_bhyve_pci_devices"        "primary" ".config" )
-		_CHECK_FOR_UPDATES=$( __multi_chyves_zfs_property                    "get" "check_for_updates"                    "primary" ".config" )
-		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS=$( __multi_chyves_zfs_property    "get" "check_for_updates_timeout_seconds"    "primary" ".config" )
-		_CHECK_FOR_UPDATES_LAST_CHECK=$( __multi_chyves_zfs_property         "get" "check_for_updates_last_check"         "primary" ".config" )
-		_CHECK_FOR_UPDATES_LAST_CHECK_STATUS=$( __multi_chyves_zfs_property  "get" "check_for_updates_last_check_status"  "primary" ".config" )
-		_CHECK_FOR_UPDATES_UNIQUE_ID=$( __multi_chyves_zfs_property          "get" "check_for_updates_unique_id"          "primary" ".config" )
+		_AUTO_LOAD_KERNEL_MODS="$( __return_chyves_zfs_property_value                "auto_load_kernel_mods"                "global" )"
+		_CONSOLIDATE_BHYVE_PCI_DEVICES="$( __return_chyves_zfs_property_value        "consolidate_bhyve_pci_devices"        "global" )"
+		_CHECK_FOR_UPDATES="$( __return_chyves_zfs_property_value                    "check_for_updates"                    "global" )"
+		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS="$( __return_chyves_zfs_property_value    "check_for_updates_timeout_seconds"    "global" )"
+		_CHECK_FOR_UPDATES_LAST_CHECK="$( __return_chyves_zfs_property_value         "check_for_updates_last_check"         "global" )"
+		_CHECK_FOR_UPDATES_LAST_CHECK_STATUS="$( __return_chyves_zfs_property_value  "check_for_updates_last_check_status"  "global" )"
+		_CHECK_FOR_UPDATES_UNIQUE_ID="$( __return_chyves_zfs_property_value          "check_for_updates_unique_id"          "global" )"
 		_CHECK_FOR_UPDATES_URL="$_PROJECT_URL_GIT/raw/${_VERSION_BRANCH}/lib/chy-version"
+		_DEFAULT_CLONE_FLAG="$( __return_chyves_zfs_property_value                   "default_clone_flag"                   "global" )"
+		_DEFAULT_INFO_FLAGS="$( __return_chyves_zfs_property_value                   "default_info_flags"                   "global" )"
+		_DEFAULT_LIST_FLAGS="$( __return_chyves_zfs_property_value                   "default_list_flags"                   "global" )"
+		_DEVELOPER_MODE="$( __return_chyves_zfs_property_value                       "dev_mode"                             "global" )"
+		_GUEST_NAMES_ACTIVE="$( __return_new_line_delimit_as_comma_string $( __return_guest_list ) )"
+		_GUEST_NAMES_ALL_GREP_STRING="$( __return_new_line_delimit_as_grep_string $( __return_guest_list ) )"
+		_LOG_MODE="$( __return_chyves_zfs_property_value                             "log_mode"                             "global" )"
+		_LOG_TO_FILE="$( __return_chyves_zfs_property_value                          "log_to_file"                          "global" )"
+		_NETWORK_DESIGN_MODE="$( __return_chyves_zfs_property_value                  "network_design_mode"                  "global" )"
+		_RESTRICT_NEW_PROPERTY_NAMES="$( __return_chyves_zfs_property_value          "restrict_new_property_names"          "global" )"
+		_STDOUT_LEVEL="$( __return_chyves_zfs_property_value                         "stdout_level"                         "global" )"
+		_TAP_UP_BY_DEFAULT="$( __return_chyves_zfs_property_value                    "tap_up_by_default"                    "global" )"
+		_VLAN_IFACE_BASE_NAME="$( __return_chyves_zfs_property_value                 "vlan_iface_base_name"                 "global" )"
 	fi
 
 	if [ "$_TAP_UP_BY_DEFAULT" = yes ]; then
