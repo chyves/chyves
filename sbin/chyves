@@ -40,8 +40,6 @@
 # __parse_cmd_ingress()                     # First stage to process command line parameters for chyves
 # __version()                               # Show version
 #
-## ..lib/chyves-creation                   ## Functions used to create guests in some port or another
-# __cloneguest()                            # Clone a guest
 ## ../lib/chyves-disks                     ## Functions handling disk functions
 # __add_guest_disk()                        # Add a new disk to guest
 # __delete_guest_disk()                     # Delete disk from guest
@@ -54,12 +52,17 @@
 # __get_guest_console_pid()                 # Get PID of console
 # __verify_console_not_in_use()             # Check console is in use by PID
 #
+## ../lib/chyves-guest-creation            ## Functions used to create guests in some port or another
+# __clone_guest()                           # Clone a guest
 # __create()                                # Create guest(s)
-# __get_next_console()                      # Return the next console to use
+# __generate_new_uuid_guest_use()           # Set new UUID in _UUID_GUEST_USE
+# __generate_zvol_disk_options_string()     # Creates string used to create ZFS volume for disks
+# __gvset_first_disk()                      # Return the first disk for a guest
+# __get_next_disk_number()                  # Return the next disk for a guest
+# __get_next_serial()                       # Return the next serial interface to use
 # __get_next_tap()                          # Return the next tap interface to use
 # __get_next_vnc_port()                     # Return the next vnc port to use
-# __generate_zvol_disk_options_string()     # Creates string used to create ZFS volume for disks
-# __set_new_uuid_guest_use()                # Set new UUID in _UUID_GUEST_USE
+# __verify_correct_guest_name_format()      # Verify the guest name meets the naming requirements
 #
 ## ../lib/chyves-informational             ## Functions to display information about chyves to the user
 # __list_active_taps()                      # Displays active tap via /dev
