@@ -40,8 +40,8 @@ install:
 	$(MKDIR) -p $(PREFIX)/$(RC_DIR)
 	$(MKDIR) -p $(PREFIX)/$(LIB_DIR)
 	$(INSTALL) -c -m $(BINMODE) $(.OBJDIR)/sbin/$(SCRIPT_NAME) $(PREFIX)/$(BIN_DIR)/
-	$(INSTALL) -c $(.OBJDIR)/rc.d/* $(PREFIX)/$(RC_DIR)/
-	$(INSTALL) -c $(.OBJDIR)/lib/* $(PREFIX)/$(LIB_DIR)/
+	$(INSTALL) -c -m $(BINMODE) $(.OBJDIR)/rc.d/* $(PREFIX)/$(RC_DIR)/
+	$(INSTALL) -c -m $(BINMODE) $(.OBJDIR)/lib/* $(PREFIX)/$(LIB_DIR)/
 	$(INSTALL) -c $(.OBJDIR)/man/$(MAN_FILE).gz $(PREFIX)/$(MAN_DIR)/
 
 # General use:
