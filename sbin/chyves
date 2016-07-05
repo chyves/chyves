@@ -251,22 +251,6 @@ __fault_detected_exit() {
 	exit 1
 }
 
-# Coverts a list to string that can be used for grep
-# List can be delimited by a single space for each item or a new line
-__convert_list_to_grep_string() {
-	local _string_to_convert="$1"
-	local _append_this="$2"
-
-	if [ -z "$_string_to_convert" ]; then
-		echo "$_UUID_GENERAL_USE"
-	else
-		local _var=$( echo "$_string_to_convert" | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' | sed -e 's/ /\|/g' )
-		if [ -z "$_append_this" ]; then
-			echo "$_var"
-		else
-			echo "${_var}|${_append_this}"
-		fi
-	fi
 }
 
 # Setup chyves on a dataset
