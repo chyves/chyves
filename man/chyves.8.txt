@@ -452,6 +452,8 @@ Guest Properties:
     Attaches null modem console. {n} must be a unique number and
     can not be shared between started guests. A unique number is given on
     creation.
+  template={yes|no}
+    When set to 'yes' chyves will not start the guest.
   uefi_console_output=vnc|serial
     When set to "serial", a UEFI guest will use the standard serial interface.
     Guests set to "vnc" will use a VNC connection on supported hosts. VNC output
