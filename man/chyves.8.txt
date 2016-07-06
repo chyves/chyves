@@ -433,8 +433,8 @@ Guest Properties:
     spaces.
   os={operating-system}
     Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm,
-    centos6, centos7, arch, gentoo and custom. Any other values are handled by a
-    catch-all. This value is used to determine the parameters to use for the
+    centos6, centos7, arch, gentoo, default, or custom. Any other values are
+    invalid. This value is used to determine the parameters to use for the
     grub.cfg and device.map files used by grub-bhyve to start a guest.
     Using 'custom' relies on the user to create these files in the guest
     directory.
