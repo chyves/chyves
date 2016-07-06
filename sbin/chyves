@@ -35,10 +35,23 @@
 ### Table of Contents:
 #
 ## ../lib/chyves-basics                    ## Functions that are basic to chyves functionality
+# __convert_list_to_grep_string()           # List can be delimited by a single space for each item or a new line
+# __gvset_guest_name_by_pid()               # Get guests name by supplied pid and set GV
+# __gvset_guest_pool()                      # Get pool name for guest and set GV
+# __gvset_primary_pool()                    # Get primary pool name and set GV
+# __gvset_user_input_to_bytes()             # Converts user input to bytes
 # __help()                                  # Print help page
 # __readonly_cmd()                          # Check to see if supplied command is read-only.
 # __parse_cmd_ingress()                     # First stage to process command line parameters for chyves
 # __version()                               # Show version
+#
+## ../lib/chyves-dataset                   ## Functions dealing with dataset
+# __dataset_install                         # Install chyves dataset to a pool
+# __dataset_offline                         # Offline a dataset on a pool
+# __dataset_online                          # Online a dataset on a pool
+# __dataset_promote                         # Promote a dataset on a pool
+# __dataset_uninstall                       # Deinstall chyves dataset to a pool
+# __dataset_upgrade                         # Upgrade a datasets from version to version
 #
 ## ../lib/chyves-disks                     ## Functions handling disk functions
 # __add_guest_disk()                        # Add a new disk to guest
@@ -197,10 +210,10 @@ __preflight_check() {
 	fi
 
 	# Stage 2 global variables (Dependent on functions or primary pool)
-	__get_primary_pool_name   # Sets $_PRIMARY_POOL
+	__gvset_primary_pool   # Sets $_PRIMARY_POOL
 	if [ -z "$_PRIMARY_POOL" ]; then
-		echo "Run setup to install chyves dataset on a pool."
-		[ "$1" != "setup" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
+		__log 1 "Run setup to install chyves dataset on a pool."
+		[ "$1" != "dataset" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
 	else
 		_AUTO_LOAD_KERNEL_MODS="$( __return_chyves_zfs_property_value                "auto_load_kernel_mods"                "global" )"
 		_CONSOLIDATE_BHYVE_PCI_DEVICES="$( __return_chyves_zfs_property_value        "consolidate_bhyve_pci_devices"        "global" )"

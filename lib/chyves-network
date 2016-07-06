@@ -28,7 +28,7 @@ __exit_if_tap_locked() {
 	local _tap="$1"
 	__get_pid_locking_tap $_tap
 	if [ -n "$_PID_locking_tap" ]; then
-		__get_guest_name_by_pid $_PID_locking_tap
+		__gvset_guest_name_by_pid $_PID_locking_tap
 		__fault_detected_exit "$_tap belongs to $_GUEST_name_by_pid which is still running, stop the guest before making network changes."
 	fi
 }

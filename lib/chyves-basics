@@ -42,10 +42,60 @@ __convert_list_to_grep_string() {
 	fi
 }
 
+# Get guests name by supplied pid and set GV
+__gvset_guest_name_by_pid() {
+	local _pid="$1"
+
+	for _guest in `__return_guest_list - -space`
+	do
+		local _this_guest_pid=$( __return_guest_bhyve_pid )
+		[ -z "$_this_guest_pid" ] && continue
+		if [ "$_pid" -eq "$_this_guest_pid" ]; then
+			_GUEST_name_by_pid="$_guest"
+			break
+		fi
+	done
 }
 
+# Get pool name for guest and set GV
+__gvset_guest_pool() {
+	_GUEST_pool="$( zfs list -H -d 3 -t filesystem -r -o name | grep -w "chyves/guests/$_GUEST_name" | cut -d '/' -f 1 )"
+	__verify_valid_pool "$_GUEST_pool" -c
 }
 
+# Get primary pool name and set GV
+__gvset_primary_pool() {
+	_PRIMARY_POOL="$( zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
+	if [ -n "$_PRIMARY_POOL" ]; then
+		__verify_valid_pool "$_PRIMARY_POOL" "-p"
+	fi
+}
+
+# Converts user input to bytes
+__gvset_user_input_to_bytes(){
+	local _var="$1"
+
+	[ -n "$( echo "$_var" | grep -v -E '^[0-9]{1,}[kmgtKMGT]?$' )" ] && __fault_detected_exit "Unrecognized size: '$_var', must be any integer and optionally a suffix K, M, G, or T. Megabytes are assumed if not specified."
+
+	# Change to upper case for consistency
+	local _var=$( echo "$_var" | tr '[:lower:]' '[:upper:]' )
+
+	# Break _var into two parts number and size suffix
+	local _num=$( echo "$_var" | grep -o -E "[0-9]{1,}" )
+	local _suffix=$( echo "$_var" | grep -o "[kmgtKMGT]" )
+
+	# Multiple by 1024 for each size denomination
+	while [ -n "$_suffix" ]
+	do
+		local _num=$( expr 1024 \* $_num )
+		[ "$_suffix" = "K" ] && local _suffix=""
+		[ "$_suffix" = "M" ] && local _suffix="K"
+		[ "$_suffix" = "G" ] && local _suffix="M"
+		[ "$_suffix" = "T" ] && local _suffix="G"
+	done
+
+	# Assign to Global variable
+	_USER_input_to_bytes="$_num"
 }
 
 # Print help page
@@ -288,6 +338,26 @@ __parse_cmd_console() {
 	esac
 }
 
+# Command parser for dataset
+__parse_cmd_dataset() {
+	__root_credentials_required
+	__verify_number_of_arguments "2" "$#" "2"
+
+	# Load chyves-dataset library
+	. "$_LIBRARY_PATH/chyves-dataset"
+
+	# chyves $_GUEST_name console $1
+	case "$2" in
+		install)    __verify_valid_pool "$1" -cn
+		            __dataset_install "$1"
+		            exit
+		;;
+	esac
+
+	__help
+	__fault_detected_exit "Unrecognized syntax: $@. See above for sub-commands and syntax."
+}
+
 # Command parser for disk manipulations on guests
 __parse_cmd_disk() {
 	__root_credentials_required
@@ -335,6 +405,112 @@ __parse_cmd_disk() {
 
 	__help
 	__fault_detected_exit "Unrecognized syntax: $@. See above for sub-commands and syntax."
+}
+
+# Command parser for list commands on guests
+__parse_cmd_list() {
+
+	# chyves list $2
+	case "_$1" in
+		_)            _CALLED_from_list=1
+		              __info "$_DEFAULT_LIST_FLAGS"
+		              exit
+		;;
+		_-*)          __fault_detected_exit "Only the 'chyves info' command uses flags directly, the property 'default_list_flags' can be set to change the output of 'chyves list' as it shares the same backend mechanism as 'chyves info'."
+		              exit
+		;;
+		_bridges)     __verify_number_of_arguments "1" "$#" "1"
+		              __list_bridges
+		              exit
+		;;
+		_clones)      __verify_number_of_arguments "1" "$#" "1"
+		              __list_clones
+		              exit
+		;;
+		_defaults)    __verify_number_of_arguments "1" "$#" "1"
+		              __list_defaults
+		              exit
+		;;
+		_disks)       __verify_number_of_arguments "1" "$#" "1"
+		              __info "-zdn"
+		              exit
+		;;
+		_firmware)    __verify_number_of_arguments "1" "$#" "1"
+		              __list_firmwares
+		              exit
+		;;
+		_global)      __verify_number_of_arguments "1" "$#" "2"
+		              [ -n "$2" ] && __verify_valid_pool "$2" "-c"
+		              __list_global_properties "$2"
+		              exit
+		;;
+		_iso)         __verify_number_of_arguments "1" "$#" "1"
+		              __list_iso
+		              exit
+		;;
+		_pools)       __verify_number_of_arguments "1" "$#" "1"
+		              __list_pools
+		              exit
+		;;
+		_processes)   __verify_number_of_arguments "1" "$#" "2"
+		              [ -n "$2" ] && __load_one_guest_parameters "$2"
+		              __list_processes
+		              exit
+		;;
+		_properties)  __verify_number_of_arguments "1" "$#" "1"
+		              __list_properties
+		              exit
+		;;
+		_snapshots)   __verify_number_of_arguments "1" "$#" "2"                    # Review after rewrite
+		              [ -n "$2" ] && __load_one_guest_parameters "$2"
+		              __list_snapshots
+		              exit
+		;;
+		_tap)         __verify_number_of_arguments "2" "$#" "2"
+		              [ "$2" != "active" ] && __fault_detected_exit "To see active taps run 'chyves list tap active' or run 'chyves list net_ifaces'"
+		              __list_active_taps
+		              exit
+		;;
+	esac
+
+	# Handling for 'chyves list <property>'
+	if [ -n "$( __return_property_list -a | grep "$1" )" ]; then
+		__list_single_property "$1"
+	else
+		__help
+		__fault_detected_exit "Unknown command 'chyves list $1'"
+	fi
+}
+
+# Command parser for chyves resources
+__parse_cmd_resources() {
+	local _resource_type="$1"
+	local _command="$2"
+	local _resource="$3"
+
+	# List Firmware resources
+	if [ "$_command" = "list" ] && [ "$_resource_type" = "firmware" ]; then
+		__list_firmwares
+
+	# List ISO resources
+	elif [ "$_command" = "list" ] && [ "$_resource_type" = "iso" ]; then
+		__list_iso
+	fi
+
+	case "$_command" in
+		delete)   __verify_number_of_arguments "3" "$#" "3"
+		          __resource_delete "$_resource_type" "$_resource"
+		          exit
+		;;
+		import)   __verify_number_of_arguments "3" "$#" "3"
+		          __resource_import "$_resource_type" "$_resource"
+		          exit
+		;;
+		rename)   __verify_number_of_arguments "4" "$#" "4"
+		          __resource_rename "$_resource_type" "$_resource" "$4"
+		          exit
+		;;
+	esac
 }
 
 # Command parser for snapshots

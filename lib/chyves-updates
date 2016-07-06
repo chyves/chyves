@@ -42,14 +42,14 @@ __check_for_chyves_update() {
 			if [ -z "$_grepped_version" ]; then
 				echo "Unable to obtain current available version information from $_CHECK_FOR_UPDATES_URL after $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS seconds."
 			elif [ "$_grepped_version" -gt "$_VERSION_INT" ]; then
-				__multi_chyves_zfs_property "set" "check_for_updates_last_check" "primary" ".config" "-" "$_DATE_YMD"
+				__set_chyves_zfs_property "check_for_updates_last_check" "$_DATE_YMD" "global"
 				echo "NEWER VERSION of chyves available. Check $_PROJECT_URL_GIT/tree/$_VERSION_BRANCH"
-				__multi_chyves_zfs_property "set" "check_for_updates_last_check_status" "primary" ".config" "-" "1"
+				__set_chyves_zfs_property "check_for_updates_last_check_status" "1" "global"
 			elif [ "$_grepped_version" -eq "$_VERSION_INT" ]; then
 				local _next_check_date=`date -v +${_num_of_updays}d +"%Y%m%d"`
-				__multi_chyves_zfs_property "set" "check_for_updates_last_check" "primary" ".config" "-" "$_DATE_YMD"
+				__set_chyves_zfs_property "check_for_updates_last_check" "$_DATE_YMD" "global"
 				echo "On current version, will check again on: $_next_check_date"
-				__multi_chyves_zfs_property "set" "check_for_updates_last_check_status" "primary" ".config" "-" "0"
+				__set_chyves_zfs_property "check_for_updates_last_check_status" "0" "global"
 			fi
 		fi
 	fi
