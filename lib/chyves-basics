@@ -482,6 +482,90 @@ __parse_cmd_list() {
 	fi
 }
 
+# Command parser for network tasks
+__parse_cmd_network() {
+	local _action _bridge _dev2
+	local _device="$1"
+	local _action="$2"
+	local _dev2="$3"
+	__root_credentials_required
+
+	# Verify $_device is a bridge when not using add|remove
+	if [ "$_action" = "remove" ] || [ "$_action" = "add" ]; then
+	else
+		__verify_valid_iface_format "$_device"
+		local _device_type="$_IFACE_type"
+		[ "$_device_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used, first device must be a bridge except for network add|remove actions."
+	fi
+
+	case "$_action" in
+		add)      __verify_number_of_arguments "3" "$#" "4"
+		          __verify_guests $_device
+		          [ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest is running, please shutdown before changing network configuration."
+		          [ "$_dev2" = "tap" ] && __get_next_tap && local _dev2="$_NEXT_tap" # Populate tap interface variable if the word "tap" is used.
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type" # Verify tap/vale interface
+		          [ "$_dev2_type" = "tap" ] && __verify_tap_not_in_use $_dev2 # Do not allow tap to be join if used elsewhere
+		          [ "$_dev2_type" != "vale" ] && [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network {name} add [tap{n}|vale{n}[:{p}]] [bridge{n}]'." # If $_dev2 is not a vale or tap then exit
+		          [ -n "$4" ] && __verify_valid_iface_format "$4" && [ "$_IFACE_type" != "bridge" ] && __fault_detected_exit "$4 is not a bridge, correct syntax is: 'chyves network <guest> add {tap|tap{n}} bridge{n}'."
+		          __load_one_guest_parameters "$1"
+		          __network_add "$_dev2" "$4"
+		          exit
+		;;
+		remove)   __verify_number_of_arguments "3" "$#" "4"
+		          __verify_guests $_device
+		          [ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest is running, please shutdown before changing network configuration."
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type"
+		          [ "$_dev2_type" != "vale" ] || [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network <guest> remove [tap{n}|vale{n}[:{p}]]'." # If $_dev2 is not a vale or tap exit
+		          __load_one_guest_parameters "$2"
+		          __verify_iface_on_guest "$3"
+		          __network_remove "$3"
+		          exit
+		;;
+		default)  __verify_number_of_arguments "2" "$#" "2"
+		          __set_chyves_zfs_property "bridge" "$_device" "defaults"
+		          exit
+		;;
+		private)  __verify_number_of_arguments "2" "$#" "2"
+		          __verify_valid_system_iface "$_device" -c
+		          __set_chyves_zfs_property "${_device}_phy_attach" "private" "global"
+		          exit
+		;;
+		attach)   __verify_number_of_arguments "3" "$#" "3"
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type"
+		          [ "$_dev2_type" != "vlan" ] && [ "$_dev2_type" != "physical" ] && __fault_detected_exit "Incorrect syntax used, second device must be a physical or VLAN interface. If '$3' is a VLAN interface, update the global property 'vlan_iface_base_name'"
+		          __network_attach "$1" "$3"
+		          exit
+		;;
+		join)     __verify_number_of_arguments "3" "$#" "3"
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type"
+		          [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used, second parameter must be a tap interface. 'chyves network $_device join tap{n}'." # If $_dev2 is not a vale or tap exit
+		          __network_bridge_join "$1" "$3"
+		          exit
+		;;
+		migrate)  __verify_number_of_arguments "3" "$#" "3"
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type"
+		          [ "$_dev2_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used, second device must be a bridge interface."
+		          __network_bridge_migrate "$1" "$3"
+		          exit
+		;;
+		unjoin)   __verify_number_of_arguments "3" "$#" "3"
+		          __verify_valid_iface_format "$_dev2"
+		          local _dev2_type="$_IFACE_type"
+		          [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used, second parameter must be a tap interface. 'chyves network $_device unjoin tap{n}'." # If $_dev2 is not a vale or tap exit
+		          __network_bridge_unjoin "$1" "$3"
+		          exit
+		;;
+		*)        __help
+		          __fault_detected_exit "Unrecognized network command '$_action'. See above for correct syntax."
+		;;
+	esac
+}
+
 # Command parser for chyves resources
 __parse_cmd_resources() {
 	local _resource_type="$1"

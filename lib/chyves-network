@@ -51,7 +51,8 @@ __get_bridge_phy_iface_chyves() {
 
 # Get a list of bridges on chyves
 __get_bridge_list_on_chyves() {
-	_BRIDGE_list_on_chyves=$( zfs get -H -o property all $_PRIMARY_POOL/chyves/.config | grep chyves:bridge | grep _tap_members | cut -d':' -f2 | cut -d'_' -f1 | uniq )
+	local _var1=$( zfs get -H -o property all $_PRIMARY_POOL/chyves/.config | grep -E 'chyves:bridge[0-9]{1,5}' | cut -d':' -f2 | cut -d'_' -f1 | uniq )
+	_BRIDGE_list_on_chyves="$_var1"
 }
 
 # Get a tap's bridge membership as set in .config as a chyves properties
@@ -82,7 +83,7 @@ __get_iface_list_on_system() {
 # Get a tap's guest membership
 __get_parent_guest_for_tap_chyves() {
 	local _tap="$1"
-	_PARENT_guest_for_tap_chyves="$( zfs get -H -d 3 -o name,property,value chyves:net_ifaces | grep chyves/guests/ | grep -v -E "$_OFFLINE_POOLS_GREP_STRING|$_TEMPLATE_GUESTS_GREP_STRING" | grep $_tap | cut -f1 | cut -d'/' -f4 )"
+	_PARENT_guest_for_tap_chyves="$( zfs get -H -d 3 -o name,property,value chyves:net_ifaces | grep chyves/guests/ | grep $_tap | cut -f1 | cut -d'/' -f4 )"
 
 	if [ -z "$_PARENT_guest_for_tap_chyves" ]; then
 		__fault_detected_exit "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} add $_tap'"
@@ -91,6 +92,11 @@ __get_parent_guest_for_tap_chyves() {
 
 # Get PID on tap
 __get_pid_locking_tap() {
+
+	if [ -z "$( ifconfig -l | tr ' ' '\n' | grep -w -E "^$1\$" )" ]; then
+		return
+	fi
+
 	local _tap="$1"
 	_PID_locking_tap=$( ifconfig $_tap | grep "Opened by PID" | cut -d' ' -f4 )
 }
@@ -101,266 +107,208 @@ __get_tap_list_for_bridge_on_chyves() {
 	_TAP_list_for_bridge_on_chyves=$( __return_chyves_zfs_property_value "${_bridge}_tap_members" "global" | tr ',' '\n' )
 }
 
-# Network sub-command
-__network() {
+# Used to associate a bridge with a physical or vlan interface interface
+__network_attach() {
+
+	local _exist_check=$( zfs get -H -o source chyves:"${_device}_phy_attach" $_PRIMARY_POOL/chyves/.config )
+
+	if [ "$_exist_check" != "local" ]; then
+		__verify_valid_system_iface "$_device" -c
+	fi
+
+	__set_chyves_zfs_property "${_device}_phy_attach" "$_dev2" "global"
+	__network_add_dev_to_bridge "$_device" "$_dev2"
+}
+
+# Add tap/vale interface to guest
+# Part of this function is duplicated in __clone_guest
+__network_add() {
+	local _bridge _dev2 _dev2_type _guest _guest_net_config
+	local _dev2="$1"
+	local _bridge="$2"
+	local _guest="$3"      # Optional, used for clone to set property for non-$_GUEST_name
+
+	# Re-populate network type for $_dev2
+	__verify_valid_iface_format "$_dev2"
+	local _dev2_type="$_IFACE_type"
+
+	# tap specific tasks
+	if [ "$_dev2_type" = "tap" ]; then
+
+		# If bridge parameter not supplied use value from defaults
+		[ -z "$_bridge" ] && local _bridge="$( __return_chyves_zfs_property_value "bridge" "global" )"
+
+		# Join tap to bridge
+		__network_bridge_join "$_bridge" "$_dev2"
+	fi
+
+	# Get net config for guest
+	local _guest_net_config=$( __return_chyves_zfs_property_value "net_ifaces" "guest" )
+
+	# Set variable for new net configuration
+	if [ "$_guest_net_config" = "-" ] || [ "$_guest_net_config" = "" ]; then
+		local _guest_net_config="$_dev2"
+	else
+		local _guest_net_config="$_guest_net_config,$_dev2"
+	fi
+
+	# Set net string as chyves property
+	__set_chyves_zfs_property "net_ifaces" "$_guest_net_config" "guest"
+}
+
+# Remove tap/vale interface from guest
+__network_remove() {
+	local _bridge _dev2 _dev2_type _guest_net_config
+	local _dev2="$1"
+
+	# Re-populate network type for $_dev2
+	__verify_valid_iface_format "$_dev2"
+	local _dev2_type="$_IFACE_type"
+
+	# tap specific tasks
+	if [ "$_dev2_type" = "tap" ]; then
+
+		# Verify tap is in use.
+		__verify_tap_not_in_use "$_dev2" -inverse-exit
+
+		# Set bridge to remove tap from. This GV was set by a func call in __verify_tap_not_in_use
+		local _bridge="$_PARENT_bridge_for_tap_chyves"
+
+		# Unjoin the tap from the bridge in chyves
+		__network_bridge_unjoin "$_bridge" "$_dev2"
+	fi
+
+	# Get config for guest
+	local _guest_net_config=$( __return_chyves_zfs_property_value "net_ifaces" "guest" )
+
+	# Set variable for new net configuration
+	# Expand string from comma separated, remove intended device, compress string back to comma separated, remove trailing commas.
+	local _guest_net_config=$( echo "${_guest_net_config}" | tr ',' '\n' | grep -v $_dev2 | tr '\n' ',' | sed -e 's/,$//g' )
+
+	# A dash is preferred rather than $null
+	[ -z "$_guest_net_config" ] && local _guest_net_config="-"
+
+	# Set net string as chyves property
+	__set_chyves_zfs_property "net_ifaces" "$_guest_net_config" "guest"
+}
+
+# Join a tap device to a bridge membership
+__network_bridge_join() {
+	local _device _dev2 _dev2_type _guest_net_config
 	local _device="$1"
-	local _action="$2"
-	local _dev2="$3"
-	local _bridge="$4"     # Used only for "add"
+	local _dev2="$2"
+	local _bridge_config_membership=$( __return_chyves_zfs_property_value "${_device}_tap_members" "global" )
 
-	# Verify $_device as bridge when not adding tap/vale to guest.
-	if [ "$_action" = "remove" ] || [ "$_action" = "add" ]; then
+	# Re-populate network type for $_dev2
+	__verify_valid_iface_format "$_dev2"
+	local _dev2_type="$_IFACE_type"
+
+	# Do not allow tap to be join if used elsewhere
+	[ "$_dev2_type" = "tap" ] && __verify_tap_not_in_use $_dev2
+
+	if [ "$_bridge_config_membership" = "-" ]; then
+		__set_chyves_zfs_property "${_device}_tap_members" "$_dev2" "global"
+		__verify_valid_system_iface $_dev2 -c
+		__network_add_dev_to_bridge $_device $_dev2
+	elif [ -n "$( echo "$_bridge_config_membership" | grep -w "$_dev2" )" ]; then
+		__fault_detected_exit "$_dev2 is already a memeber of $_device"
 	else
-		__verify_valid_iface_format "$_device"
-		local _device_type="$_IFACE_type"
+		local _bridge_config_membership=$( echo "${_bridge_config_membership},$_dev2" )
+		__set_chyves_zfs_property "${_device}_tap_members" "$_bridge_config_membership" "global"
+		__verify_valid_system_iface $_dev2 -c
+		__network_add_dev_to_bridge $_device $_dev2
 	fi
+}
 
-	# Check that the supplied dev2 name can be a network device
-	if [ -n "$_dev2" ] && [ "$_dev2" != "-" ]; then
-		__verify_valid_iface_format "$_dev2"
-		local _dev2_type="$_IFACE_type"
-	fi
+# Migrates chyve devices on a bridge to another bridge and sets properties as necessary
+__network_bridge_migrate() {
+	local _current_bridge _future_bridge _future_bridge_type _guest_net_config
+	local _current_bridge="$1"
+	local _future_bridge="$2"
+	local _bridge_config_membership=$( __return_chyves_zfs_property_value "${_current_bridge}_tap_members" "global" )
+	local _bridge_phy=$( __return_chyves_zfs_property_value "${_current_bridge}_phy_attach" "global" )
+	local _future_bridge_config_membership=$( __return_chyves_zfs_property_value "${_future_bridge}_tap_members" "global" )
 
-	## Begin action execution:
-	#
-	# Used to associate a bridge with a physical or vlan interface interface
-	if [ "$_action" = "attach" ]; then
-		[ "$_device_type" != "bridge" ] || [ "$_dev2_type" != "vlan" ] && [ "$_dev2_type" != "physical" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} attach {<physical-iface{n}>|<vlan-iface{n}>'."
-		local _exist_check=$( zfs get -H -o source chyves:"${_device}_phy_attach" child-middle/chyves/.config )
+	__log 1 "Migrating $_current_bridge to $_future_bridge."
 
-		if [ "$_exist_check" != "local" ]; then
-			__verify_valid_system_iface "$_device" -c
-		fi
+	[ "$_future_bridge_config_membership" != "-" ] && __log 1 "Merging $_current_bridge devices with device present on $_future_bridge ($_future_bridge_config_membership)"
 
-		__multi_chyves_zfs_property "set" "${_device}_phy_attach" "primary" ".config" "-" "$_dev2"
-		__network_add_dev_to_bridge "$_device" "$_dev2"
-	#
-	# Add tap/vale interface to guest
-	elif [ "$_action" = "add" ]; then
-
-		# Populate tap interface variable if blank or "-"
-		if [ -z "$_dev2" ] || [ "$_dev2" = "-" ]; then
-			__get_next_tap
-			local _dev2="$_NEXT_tap"
-		fi
-
-		# Verify tap/vale interface
-		__verify_valid_iface_format "$_dev2"
-		local _dev2_type="$_IFACE_type"
-
-		# Do not allow tap to be join if used elsewhere
-		[ "$_dev2_type" = "tap" ] && __verify_tap_not_in_use $_dev2
-
-		# If $_dev2 is not a vale or tap exit
-		[ "$_dev2_type" != "vale" ] && [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network {name} add [tap{n}|vale{n}[:{p}]] [bridge{n}]'."
-
-		# Swap parameters around
-		local _guest="$_device"
-
-		__get_pool_for_guest $_guest
-		__verify_valid_guest $_guest $_GUEST_pool
-
-		# If bridge parameter not supplied use value from .defaults otherwise swap direct into $_device
-		if [ -z "$_bridge" ]; then
-			__load_guest_default_parameters
-			local _device="$_GDP_bridge"
-		else
-			local _device="$_bridge"
-		fi
-
-		# Verify $_device (now a bridge)
-		__verify_valid_iface_format "$_device"
-		local _device_type="$_IFACE_type"
-
-		[ "$_device_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network {name} add [tap{n}|vale{n}[:{p}]] [bridge{n}]'."
-
-		local _guest_tap_config=$( __multi_chyves_zfs_property "get" "net_ifaces" "$_GUEST_pool" "guests" "$_guest" )
-
-		# For tap interfaces join the tap to a bridge in chyves
-		[ "$_dev2_type" = "tap" ] && __network "$_device" "join" "$_dev2"
-
-		# Set variable for new tap configuration
-		if [ "$_guest_tap_config" = "-" ] || [ "$_guest_tap_config" = "" ]; then
-			local _guest_tap_config="$_dev2"
-		else
-			local _guest_tap_config=$( echo "${_guest_tap_config},$_dev2" )
-		fi
-
-		# Set tap string as chyves property
-		__multi_chyves_zfs_property "set" "net_ifaces" "$_GUEST_pool" "guests" "$_guest" "$_guest_tap_config"
-	#
-	# Remove tap/vale interface from guest
-	elif [ "$_action" = "remove" ]; then
-
-		# Verify tap/vale interface
-		__verify_valid_iface_format "$_dev2"
-		local _dev2_type="$_IFACE_type"
-
-		# If $_dev2 is not a vale or tap exit
-		[ "$_dev2_type" != "vale" ] && [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network {name} remove [tap{n}|vale{n}[:{p}]] [bridge{n}]'."
-
-		# Swap parameters around
-		local _guest="$_device"
-
-		__get_pool_for_guest $_guest
-		__verify_valid_guest $_guest $_GUEST_pool
-
-		# Check guest is not running
-		[ -n "$( __check_bhyve_process_running $_guest )" ] && __fault_detected_exit "$_guest currently running, please stop guest before removing network interface."
-
-		if [ "$_dev2_type" = "tap" ]; then
-			# Get bridge to remove tap from
-			__get_parent_bridge_for_tap_chyves $_dev2
-			local _device="$_PARENT_bridge_for_tap_chyves"
-
-			# Verify $_device (now a bridge)
-			__verify_valid_iface_format "$_device"
-			local _device_type="$_IFACE_type"
-
-			[ "$_device_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used, incorrect bridge device used ($_device)."
-
-			# Unjoin the tap from the bridge in chyves
-			[ "$_dev2_type" = "tap" ] && __network "$_device" "unjoin" "$_dev2"
-		fi
-
-		local _guest_tap_config=$( __multi_chyves_zfs_property "get" "net_ifaces" "$_GUEST_pool" "guests" "$_guest" )
-
-		# Set variable for new tap configuration
-		if [ -z "$_guest_tap_config" ]; then
-			local _guest_tap_config="-"
-		else
-			# Expand string from comma separated, remove intended device, compress string back to comma separated.
-			local _guest_tap_config=$( echo "${_guest_tap_config}" | tr ',' '\n' | grep -v $_dev2 | tr '\n' ',' | sed -e 's/,$//g' )
-			[ -z "$_guest_tap_config" ] && local _guest_tap_config="-"
-		fi
-
-		# Set tap string as chyves property
-		__multi_chyves_zfs_property "set" "tap" "$_GUEST_pool" "guests" "$_guest" "$_guest_tap_config"
-	#
-	# Create and set a bridge in private mode (aka no physical/vlan interface)
-	elif [ "$_action" = "private" ]; then
-		[ "$_device_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} private'."
-		local _exist_check=$( zfs get -H -o source chyves:"${_device}_phy_attach" child-middle/chyves/.config )
-
-		if [ "$_exist_check" != "local" ]; then
-			__verify_valid_system_iface "$_device" -c
-		fi
-	#
-	# Set the default bridge for newly created guest's tap interface
-	elif [ "$_action" = "default" ]; then
-		[ "$_device_type" != "bridge" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} default'."
-		__multi_chyves_zfs_property "set" "bridge" "primary" "guests" ".defaults" "$_device"
-	#
-	# Join a tap device to a bridge membership
-	elif [ "$_action" = "join" ]; then
-		[ "$_device_type" != "bridge" ] || [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} add tap{n}'."
-		local _bridge_config_membership=$(  __multi_chyves_zfs_property "get" "${_device}_tap_members" "primary" ".config" )
-
-		# Do not allow tap to be join if used elsewhere
-		[ "$_dev2_type" = "tap" ] && __verify_tap_not_in_use $_dev2
-
-		if [ "$_bridge_config_membership" = "-" ]; then
-			__multi_chyves_zfs_property "set" "${_device}_tap_members" "primary" ".config" "-" "$_dev2"
-			__verify_valid_system_iface $_dev2 -c
-			__network_add_dev_to_bridge $_device $_dev2
-		elif [ -n "$( echo "$_bridge_config_membership" | grep -w "$_dev2" )" ]; then
-			__fault_detected_exit "$_dev2 is already a memeber of $_device"
-		else
-			local _bridge_config_membership=$( echo "${_bridge_config_membership},$_dev2" )
-			__multi_chyves_zfs_property "set" "${_device}_tap_members" "primary" ".config" "-" "$_bridge_config_membership"
-			__verify_valid_system_iface $_dev2 -c
-			__network_add_dev_to_bridge $_device $_dev2
-		fi
-	#
-	# Unjoin a tap device from a bridge membership
-	elif [ "$_action" = "unjoin" ]; then
-		[ "$_device_type" != "bridge" ] || [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} remove tap{n}'."
-		local _bridge_config_membership=$(  __multi_chyves_zfs_property "get" "${_device}_tap_members" "primary" ".config" )
-
-		# Do not allow tap to be moved while guest is running
-		__exit_if_tap_locked $_dev2
-
-		if [ "$_bridge_config_membership" = "-" ]; then
-			__fault_detected_exit "No members of $_device configured for chyves."
-		elif [ -z "$( echo "$_bridge_config_membership" | grep "$_dev2" )" ]; then
-			__fault_detected_exit "$_dev2 is not configure in chyves a member of $_device."
-		else
-
-			# Expand string from comma separated, remove intended device, compress string back to comma separated.
-			local _bridge_config_membership=$( echo "${_bridge_config_membership}" | tr ',' '\n' | grep -v $_dev2 | grep -v -E "^$" | tr '\n' ',' | sed -e 's/,$//g' )
-
-			# Populate an empty $_bridge_config_membership with "-" as this is the empty indicator
-			[ -z "$_bridge_config_membership" ] && local _bridge_config_membership="-"
-
-			# Set chyves property
-			__multi_chyves_zfs_property "set" "${_device}_tap_members" "primary" ".config" "-" "$_bridge_config_membership"
-
-			#
-			__network_remove_dev_to_bridge $_device $_dev2
-		fi
-	#
-	# Migrates chyve devices on a bridge to another bridge and sets properties as necessary
-	elif [ "$_action" = "migrate" ]; then
-		[ "$_device_type" != "bridge" ] || [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network bridge{n} rename bridge{n}'."
-		local _bridge_config_membership=$(  __multi_chyves_zfs_property "get" "${_device}_tap_members" "primary" ".config" )
-		local _future_bridge_config_membership=$(  __multi_chyves_zfs_property "get" "${_dev2}_tap_members" "primary" ".config" )
-		local _bridge_phy=$( __multi_chyves_zfs_property "get" "${_device}_phy_attach" "primary" ".config" )
-
-		[ "$_future_bridge_config_membership" != "-" ] && echo "Merging $_device devices with device present on $_dev2 ($_future_bridge_config_membership)"
-
-		if [ "$_bridge_config_membership" != "-" ]; then
-			echo "Removing each tap from $_device ($_bridge_config_membership)"
-			for _tap_to_remove in `echo $_bridge_config_membership | tr ',' '\n'`
-			do
-				__exit_if_tap_locked $_tap_to_remove
-				__network_remove_dev_to_bridge "$_device" $_tap_to_remove
-			done
-		fi
-
-		if [ -n "$_bridge_phy" ]; then
-			echo "Removing $_bridge_phy from $_device"
-			__network_remove_dev_to_bridge "$_device" $_bridge_phy
-		fi
-
-		echo "Setting taps from $_device to $_dev2"
-		__multi_chyves_zfs_property "set" "${_dev2}_tap_members" "primary" ".config" "-" "$_bridge_config_membership"
-		[ "$_GDP_parameters_loaded" != 1 ] && __load_guest_default_parameters
-
-		# If the bridge name is the same as the .defaults one, update it too.
-		if [ "$_GDP_bridge" = "$_device" ]; then
-			echo "Updating default bridge for newly created guests in .defaults."
-			__multi_chyves_zfs_property "set" "bridge" "primary" "guests" ".defaults" "$_dev2"
-			__load_guest_default_parameters
-		fi
-
-		for _tap_to_add in `echo "$_bridge_config_membership,$_future_bridge_config_membership" | tr ',' '\n' | grep -E [:space:]`
+	if [ "$_bridge_config_membership" != "-" ]; then
+		__log 2 "Removing each tap from $_current_bridge ($_bridge_config_membership)"
+		for _tap_to_remove in `echo $_bridge_config_membership | tr ',' '\n'`
 		do
-			__network_add_dev_to_bridge $_dev2 $_tap_to_add
+			__exit_if_tap_locked $_tap_to_remove
+			__network_remove_dev_from_bridge "$_current_bridge" $_tap_to_remove
 		done
-
-		if [ -n "$_bridge_phy" ]; then
-			echo "Adding $_bridge_phy to $_dev2"
-			__network_add_dev_to_bridge "$_dev2" $_bridge_phy
-			__multi_chyves_zfs_property "set" "${_dev2}_phy_attach" "primary" ".config" "-" "$_bridge_phy"
-		fi
-
-		echo "Deleting chyves property '${_device}_phy_attach'"
-		zfs inherit chyves:${_device}_phy_attach $_PRIMARY_POOL/chyves/.config
-
-		echo "Deleting chyves property '${_device}_tap_members'"
-		zfs inherit chyves:${_device}_tap_members $_PRIMARY_POOL/chyves/.config
-
-		__get_bridge_members_on_system $_device
-		if [ -z "$_BRIDGE_members_on_system" ]; then
-			echo "Destroying $_device as no members on device."
-			ifconfig $_device destroy
-		fi
-
-	# Unknown action verb used
-	else
-		__help
-		__fault_detected_exit "Unknown action verb used for 'chyves network', see above for correct syntax."
 	fi
+
+	if [ "$_bridge_phy" = "private" ] || [ "$_bridge_phy" = "-" ]; then
+	else
+		__log 2 "Removing $_bridge_phy from $_current_bridge"
+		__network_remove_dev_from_bridge "$_current_bridge" $_bridge_phy
+	fi
+
+	__log 2 "Setting taps from $_current_bridge to $_future_bridge"
+	__set_chyves_zfs_property "${_future_bridge}_tap_members" "$_bridge_config_membership" "global"
+	[ "$_GDP_parameters_loaded" != 1 ] && __load_guest_default_parameters
+
+	# If the bridge name is the same as the .defaults one, update it too.
+	if [ "$_GDP_bridge" = "$_current_bridge" ]; then
+		__log 2 "Updating default bridge for newly created guests in .defaults."
+		__set_chyves_zfs_property "bridge" "$_future_bridge" "defaults"
+		__load_guest_default_parameters
+	fi
+
+	for _tap_to_add in `echo "$_bridge_config_membership,$_future_bridge_config_membership" | tr ',' '\n' | grep -E [:space:]`
+	do
+		__network_add_dev_to_bridge $_future_bridge $_tap_to_add
+	done
+
+	if [ -n "$_bridge_phy" ]; then
+		__log 2 "Adding $_bridge_phy to $_future_bridge"
+		__network_add_dev_to_bridge "$_future_bridge" $_bridge_phy
+		__set_chyves_zfs_property "${_future_bridge}_phy_attach" "$_bridge_phy" "global"
+	fi
+
+	__log 2 "Deleting chyves property '${_current_bridge}_phy_attach'"
+	zfs inherit chyves:${_current_bridge}_phy_attach $_PRIMARY_POOL/chyves/.config
+
+	__log 2 "Deleting chyves property '${_current_bridge}_tap_members'"
+	zfs inherit chyves:${_current_bridge}_tap_members $_PRIMARY_POOL/chyves/.config
+
+	__get_bridge_members_on_system $_current_bridge
+	if [ -z "$_BRIDGE_members_on_system" ]; then
+		__log 2 "Destroying $_current_bridge as no members on device."
+		ifconfig $_current_bridge destroy
+	fi
+
+	__log 1 "Done migrating $_current_bridge to $_future_bridge."
+}
+
+# Unjoin a tap device from a bridge membership
+__network_bridge_unjoin() {
+	local _bridge _bridge_config_membership _tap
+	local _bridge=$1
+	local _tap="$2"
+	local _bridge_config_membership=$( __return_chyves_zfs_property_value "${_bridge}_tap_members" "global" )
+
+	# Do not allow tap to be moved while guest is running
+	__exit_if_tap_locked $_tap
+
+	# Exit if tap not configured on bridge
+	__verify_iface_on_bridge "$_bridge" "$_tap"
+
+	# Expand string from comma separated, remove intended device, compress string back to comma separated.
+	local _bridge_config_membership=$( echo "${_bridge_config_membership}" | tr ',' '\n' | grep -v $_tap | grep -v -E "^$" | tr '\n' ',' | sed -e 's/,$//g' )
+
+	# Populate an empty $_bridge_config_membership with "-" as this is the empty indicator
+	[ -z "$_bridge_config_membership" ] && local _bridge_config_membership="-"
+
+	# Set chyves property
+	__set_chyves_zfs_property "${_bridge}_tap_members" "$_bridge_config_membership" "global"
+
+	# Remove
+	__network_remove_dev_from_bridge $_bridge $_tap
 }
 
 # Adds network device to bridge
@@ -373,17 +321,17 @@ __network_add_dev_to_bridge() {
 	local _bridge_conf=$_BRIDGE_members_on_system
 
 	if [ -z "$( echo "$_bridge_conf" | grep -w "$_dev" )" ]; then
-		echo -n "Adding '$_dev' as a member of '$_bridge'..."
+		__log 1 "Adding '$_dev' as a member of '$_bridge'..." -n
 		ifconfig "$_bridge" addm "$_dev"
 		if [ "$?" != 0 ]; then
 			__fault_detected_exit "'$_dev' can not be added to '$_bridge' membership."
 		else
-			echo " done."
+			__log 1 " done."
 		fi
 		ifconfig "$_bridge" up
 		ifconfig "$_dev" up
 	elif [ -n "$( echo "$_bridge_conf" | grep -w "$_dev" )" ]; then
-		echo "'$_dev' already a member of '$_bridge'"
+		__log 1 "'$_dev' already a member of '$_bridge'"
 	fi
 }
 
@@ -407,15 +355,15 @@ __network_add_phy_to_bridge() {
 
 			# Make second attempt
 			if [ -z "$( echo "$_BRIDGE_members_on_system" | grep -w "$_outside_iface" )" ]; then
-				echo "Could not join $_outside_iface to $_bridge there is no outside network connectivity."
+				__log 1 "Could not join $_outside_iface to $_bridge there is no outside network connectivity."
 			fi
 
 		# Already member of bridge
 		else
-			echo "$_outside_iface already member of $_bridge"
+			__log 1 "$_outside_iface already member of $_bridge"
 		fi
 	else
-		echo "$_bridge is set as a private bridge. No outside interfaces connected."
+		__log 1 "$_bridge is set as a private bridge. No outside interfaces connected."
 	fi
 }
 
@@ -428,30 +376,67 @@ __network_remove_dev_from_bridge() {
 	local _bridge_conf=$( ifconfig "$_bridge" )
 
 	if [ -n "$( echo "$_BRIDGE_members_on_system" | grep -w "$_dev" )" ]; then
-		echo -n "Removing '$_dev' as a member of '$_bridge'..."
+		__log 1 "Removing '$_dev' as a member of '$_bridge'... " -n
 		ifconfig "$_bridge" deletem "$_dev"
 		if [ "$?" != 0 ]; then
-			__fault_detected_exit "Failed to remove '$_dev' from '$_bridge' membership."
+			__log 1 "Failed to remove '$_dev' from '$_bridge' membership on host."
 		fi
-		echo " done."
+		__log 1 " done."
 	else
-		echo "'$_dev' was not a member of '$_bridge'."
+		__log 1 "'$_dev' was not a member of '$_bridge'."
+	fi
+}
+
+# Verifies guest has iface configured for it.
+__verify_iface_on_bridge() {
+	local _guest_net_config _iface_in_question
+	local _bridge_in_question="$1"
+	local _iface_in_question="$2"
+	local _bridge_config_membership=$( __return_chyves_zfs_property_value "${_bridge_in_question}_tap_members" "global" )
+
+	if [ "$_bridge_config_membership" = "-" ]; then
+		__fault_detected_exit "No members of $_bridge configured for chyves."
+	elif [ -z "$( echo "$_bridge_config_membership" | grep "$_iface_in_question" )" ]; then
+		__fault_detected_exit "$_iface_in_question not configured on $_bridge_in_question."
+	fi
+}
+
+# Verifies guest has iface configured for it.
+__verify_iface_on_guest() {
+	local _guest_net_config _iface_in_question
+	local _iface_in_question="$1"
+
+	if [ -z "$_GP_net_ifaces" ]; then
+		local _guest_net_config=$( __return_chyves_zfs_property_value "net_ifaces" "guest" )
+		__log 1 "\$_GP_net_ifaces was not populated. You really should not be seeing this."
+	fi
+
+	if [ -z "$( echo "$_guest_net_config" | grep "$_iface_in_question" )"]; then
+		__fault_detected_exit "$_iface_in_question not configured on $_GUEST_name."
 	fi
 }
 
 # Verifies tap is not in use on system
 __verify_tap_not_in_use() {
+	local _tap_in_question _flag
 	local _tap_in_question="$1"
+	local _flag="$2"  # Valid flag = "-inverse-exit" effectively makes this __verify_tap_in_use
 
-	__get_pid_locking_tap
+	__get_pid_locking_tap $1
 	if [ -n "$_PID_locking_tap" ]; then
-		__get_guest_name_by_pid $_PID_locking_tap
+		__gvset_guest_name_by_pid $_PID_locking_tap
 		__fault_detected_exit "Tap already in use by $_GUEST_name_by_pid"
 	fi
 
 	__get_parent_bridge_for_tap_chyves $_tap_in_question -n
 	if [ -n "$_PARENT_bridge_for_tap_chyves" ]; then
-		__fault_detected_exit "Tap already in use by $_PARENT_bridge_for_tap_chyves"
+		if [ "$_flag" != "-inverse-exit" ]; then
+			__fault_detected_exit "'$_tap_in_question' already in use by $_PARENT_bridge_for_tap_chyves"
+		fi
+	else
+		if [ "$_flag" = "-inverse-exit" ]; then
+			__fault_detected_exit "Tap '$_tap_in_question' does not have parent device."
+		fi
 	fi
 }
 
@@ -469,6 +454,13 @@ __verify_vale_system_compat() {
 __verify_valid_iface_format() {
 	local _int="$1"
 
+	# Verify/Load console kernel module (nmdm).
+	if [ "$_AUTO_LOAD_KERNEL_MODS" = "yes" ]; then
+		__verify_kernel_module_loaded if_bridge -l      # This checks and loads the missing nmdm module.
+	else
+		__verify_kernel_module_loaded if_bridge         # This only checks but does not load nmdm module.
+	fi
+
 	# Figure out interface type and assign to a global variable: bridge|tap|<vlan-prefix>|<physical>
 	if [ -n "$( echo "$_int" | grep -E "^bridge[0-9]{1,5}$" )" ]; then
 		_IFACE_type="bridge"
@@ -476,7 +468,7 @@ __verify_valid_iface_format() {
 	elif [ -n "$( echo "$_int" | grep -E "^tap[0-9]{1,5}$" )" ]; then
 		_IFACE_type="tap"
 		_IFACE_drv="$_IFACE_type"
-	elif [ -n "$( echo "$_int" | grep -E "^${_VLAN_IFACE_BASE_NAME}{1,5}$" )" ]; then
+	elif [ -n "$( echo "$_int" | grep -E "^$_VLAN_IFACE_BASE_NAME[0-9]{1,5}$" )" ]; then
 		_IFACE_type="vlan"
 		_IFACE_drv="$_VLAN_IFACE_BASE_NAME"
 	elif [ -n "$( echo "$_int" | grep -E "^vale[0-9a-zA-Z]{1,9}(:[a-zA-Z]{1}|:[0-9]{1,4}?)?$" )" ]; then
@@ -493,7 +485,7 @@ __verify_valid_iface_format() {
 	fi
 
 	# Checks that only the prefix contains letters
-	[ "$( echo "$_int" | grep -o -E '[a-z]+' | wc -l )" -gt 1 ] && __fault_detected_exit "Invalid interface: '$_int'. Only numbers can be used after the interface type."
+	[ "$( echo "$_int" | grep -c -o -E '[a-z]+' )" -gt 1 ] && __fault_detected_exit "Invalid interface: '$_int'. Only numbers can be used after the interface type."
 
 	# Gets the interface number
 	local _int_num="$( echo "$_int" | sed s/$_IFACE_drv//g )"
@@ -524,12 +516,12 @@ __verify_valid_system_iface() {
 		if [ -z "$_flags" ]; then
 			__fault_detected_exit "Interface does not exist on system: $_int"
 		elif [ "$_flags" = "-c" ]; then
-			echo -n "$_int does not exist on system... "
-			echo -n "creating interface... "
+			__log 1 "$_int does not exist on system... " -n
+			__log 1 "creating interface... " -n
 			ifconfig "$_int" create descr "chyves-$_IFACE_type"
-			echo "done."
+			__log 1 "done."
 		elif [ "$_flags" = "-n" ]; then
-			echo "$_int does not exist on system."
+			__log 1 "$_int does not exist on system."
 		fi
 	fi
 }

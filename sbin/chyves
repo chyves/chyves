@@ -41,8 +41,14 @@
 # __gvset_primary_pool()                    # Get primary pool name and set GV
 # __gvset_user_input_to_bytes()             # Converts user input to bytes
 # __help()                                  # Print help page
-# __readonly_cmd()                          # Check to see if supplied command is read-only.
+# __parse_cmd_console()                     # Command parser for console tasks
+# __parse_cmd_dataset()                     # Command parser for dataset
+# __parse_cmd_disk()                        # Command parser for disk manipulations on guests
 # __parse_cmd_ingress()                     # First stage to process command line parameters for chyves
+# __parse_cmd_list()                        # Command parser for list commands on guests
+# __parse_cmd_network()                     # Command parser for network tasks
+# __parse_cmd_resources()                   # Command parser for chyves resources
+# __root_credentials_required()             # Checks to see if running with root credentials is required.
 # __version()                               # Show version
 #
 ## ../lib/chyves-dataset                   ## Functions dealing with dataset
