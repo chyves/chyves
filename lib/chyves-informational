@@ -268,7 +268,8 @@ does:
   -b    [basic] CPU core count, and RAM allocation.
   -p    [pool] Display the pool for the guest.
   -r    [role] Display what role the pool is set to.
-  -v    [verbose] Display OS, loader, net interfaces, and console port.
+  -v    [verbose] Display OS, loader, chyves guest version, net interfaces,
+        and console port.
   -s    [status] Display status of VMM , bhyve instance, and the rcboot value.
   -t    [template] Displays if guest is a template.
   -c    [clone] Displays clone relationship, if any.
@@ -309,7 +310,7 @@ EOT
 	[ -n "$( echo "$flags" | grep -E 'r|a' )" ] && printf "^%s" "Dataset Role"
 
 	# Print headers for -v flag
-	[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^%s^%s^%s^%s" "OS" "Loader" "net-ifaces" "Serial"
+	[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^%s^%s^%s^%s^%s" "OS" "Loader" "CGV" "net-ifaces" "Serial"
 
 	# Print headers for -s flag
 	[ -n "$( echo "$flags" | grep -E 's|a' )" ] && printf "^%s^%s^%s" "VMM" "Running" "rcboot"
@@ -363,7 +364,7 @@ EOT
 			# Get variable and print for verbose section (os, loader, tap, con)
 			if [ -n "$( echo "$flags" | grep -E 'v|a' )" ]; then
 				__get_guest_console_pid -h
-				printf "^%s^%s^%s^%s" "$_GP_os" "$_GP_loader" "$_GP_net_ifaces" "$_GP_serial_pid"
+				printf "^%s^%s^%s^%s^%s" "$_GP_os" "$_GP_loader" "$_GP_chyves_guest_version" "$_GP_net_ifaces" "$_GP_serial_pid"
 			fi
 
 			# Get information, set variables, and print for status section (VMM, Running, rcboot)
@@ -433,8 +434,8 @@ EOT
 						# Print "-" for dataset role
 						[ -n "$( echo "$flags" | grep -E 'r|a' )" ] && printf "^-"
 
-						# Print "-" for OS, Loader, net-ifaces, serial
-						[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^-^-^-^-"
+						# Print "-" for OS, Loader, CGV, net-ifaces, serial
+						[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^-^-^-^-^-"
 
 						# Print "-" for VMM, Running, rcboot
 						[ -n "$( echo "$flags" | grep -E 's|a' )" ] && printf "^-^-^-"

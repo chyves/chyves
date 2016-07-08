@@ -62,6 +62,49 @@ __guest_delete_backend() {
 	echo ""
 }
 
+# Upgrades guests to the latest 'chyves_guest_version'
+__guest_upgrade_chyves_guest_version() {
+	local _guest_list="$1"
+
+	# If keywoard "all" used, replace with all guest names in comma separated list.
+	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
+
+	# Multi-guest support.
+	# Eg.: chyves guest1,guest2,guest3 start install.iso
+	for _guest in `echo $_guest_list | tr ',' ' '`
+	do
+		[ "$_guest" = defaults ] && __fault_detected_warning_continue "Can not start defaults."
+		[ "$_guest" = global ] && __fault_detected_warning_continue "Can not start global."
+
+		_GUEST_name=$_guest
+		__load_guest_parameters "$_GUEST_name"
+		__log 1 "$_GUEST_name is on chyves_guest_version $_GP_chyves_guest_version."
+
+		# Change version number and update the global variable.
+		__chyves_guest_version_gvreload_and_set() {
+			local _version="$1"
+			__set_chyves_zfs_property "chyves_guest_version" "$_version" "guest"
+			_GP_chyves_guest_version="$( __return_chyves_zfs_property_value "chyves_guest_version" "guest" )"
+		}
+
+		# Template for first change.
+		#if [ "${_GP_chyves_guest_version}" -lt "0101" ]; then
+		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0101."
+		#	<ACTION>
+		#	__chyves_guest_version_gvreload_and_set "0101"
+		#fi
+
+		# Template
+		#if [ "${_GP_chyves_guest_version}" -lt "9900" ]; then
+		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."
+		#	 <ACTION>
+		#	__chyves_guest_version_gvreload_and_set "9900"
+		#fi
+
+		__log 1 "$_GUEST_name is on the latest chyves_guest_version ($_GP_chyves_guest_version)."
+	done
+}
+
 # Delete ISO and Firmware resources
 __resource_delete() {
 	local _resource_type="$1"    # iso|firmware

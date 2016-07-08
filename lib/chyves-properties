@@ -116,18 +116,19 @@ __load_guest_parameters() {
 
 	# GP = Guest Parameter
 	# Parameters held in ZFS user properties:
-	_GP_bargs="$( __return_chyves_zfs_property_value        "bargs"        "guest" )"
-	_GP_cpu="$( __return_chyves_zfs_property_value          "cpu"          "guest" )"
-	_GP_description="$( __return_chyves_zfs_property_value  "description"  "guest" )"
-	_GP_loader="$( __return_chyves_zfs_property_value       "loader"       "guest" )"
-	_GP_net_ifaces="$( __return_chyves_zfs_property_value   "net_ifaces"   "guest" )"
-	_GP_notes="$( __return_chyves_zfs_property_value        "notes"        "guest" )"
-	_GP_os="$( __return_chyves_zfs_property_value           "os"           "guest" )"
-	_GP_ram="$( __return_chyves_zfs_property_value          "ram"          "guest" )"
-	_GP_rcboot="$( __return_chyves_zfs_property_value       "rcboot"       "guest" )"
-	_GP_serial="$(__return_chyves_zfs_property_value        "serial"       "guest" )"
-	_GP_template="$( __return_chyves_zfs_property_value     "template"     "guest" )"
-	_GP_uuid="$( __return_chyves_zfs_property_value         "uuid"         "guest" )"
+	_GP_bargs="$( __return_chyves_zfs_property_value                 "bargs"                 "guest" )"
+	_GP_cpu="$( __return_chyves_zfs_property_value                   "cpu"                   "guest" )"
+	_GP_chyves_guest_version="$( __return_chyves_zfs_property_value  "chyves_guest_version"  "guest" )"
+	_GP_description="$( __return_chyves_zfs_property_value           "description"           "guest" )"
+	_GP_loader="$( __return_chyves_zfs_property_value                "loader"                "guest" )"
+	_GP_net_ifaces="$( __return_chyves_zfs_property_value            "net_ifaces"            "guest" )"
+	_GP_notes="$( __return_chyves_zfs_property_value                 "notes"                 "guest" )"
+	_GP_os="$( __return_chyves_zfs_property_value                    "os"                    "guest" )"
+	_GP_ram="$( __return_chyves_zfs_property_value                   "ram"                   "guest" )"
+	_GP_rcboot="$( __return_chyves_zfs_property_value                "rcboot"                "guest" )"
+	_GP_serial="$(__return_chyves_zfs_property_value                 "serial"                "guest" )"
+	_GP_template="$( __return_chyves_zfs_property_value              "template"              "guest" )"
+	_GP_uuid="$( __return_chyves_zfs_property_value                  "uuid"                  "guest" )"
 
 	# Load UEFI specific values if necessary.
 	if [ "$_GP_loader" = "uefi" ]; then
@@ -348,6 +349,10 @@ __verify_user_input_for_properties() {
 				_ADJUSTED_value="1"
 				__log 1 "bhyve must be assigned at least one core. Setting cpu=1"
 			fi
+
+		# chyves_guest_version
+		elif [ "$_property" = "chyves_guest_version" ]; then
+			__fault_detected_warning_break 1 "Not user settable."
 
 		# description and notes
 		elif [ "$_property" = "description" ] || [ "$_property" = "notes" ]; then

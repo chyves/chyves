@@ -369,6 +369,17 @@ __start() {
 			continue
 		fi
 
+		# Do not let old chyves guest MAJOR versions from starting. If latest is 0105 and guest is 0100, guest will start, if latest is 0200 do not let 0199 start.
+		if [ "$( echo "$_VERSION_CHYVES_GUEST" | grep -o -E '^[0-9]{2}' | head -n1 )" -gt "$( echo "$_GP_chyves_guest_version" | grep -o -E '^[0-9]{2}' | head -n1 )" ]; then
+			__log 1 "$_GUEST_name is on an old chyves guest version ($_GP_chyves_guest_version), not starting guest.\n"
+			continue
+		fi
+
+		# Warn if older chyves guest version than latest.
+		if [ "$_VERSION_CHYVES_GUEST" -lt "$_GP_chyves_guest_version" ]; then
+			__log 1 "$_GUEST_name is on a newer chyves guest version ($_GP_chyves_guest_version), will continue to start guest but some functionality may be missing compared to the newer version."
+		fi
+
 		__log 2 "Checking if guest is running... " -n
 		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest ($_GUEST_name) already running."
 		__log 2 "not running."

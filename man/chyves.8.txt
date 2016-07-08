@@ -27,6 +27,7 @@ chyves <guest> snapshot delete <@snapshotname>
 chyves <guest> snapshot rollback [<@snapshotname>]
 chyves <guest>|MG|all start [<iso>]
 chyves <guest>|MG|all stop [force]
+chyves <guest>|MG|all upgrade
 chyves help
 chyves info [-zbprvstcdnakl|-h]
 chyves iso list
@@ -410,6 +411,15 @@ Guest Properties:
     on global configuration "dev_mode" to "on".
   cpu={n}
     Sets number {n} of cpu cores to use, up to 16.
+  chyves_guest_version=<MMmm>
+    Managed through `chyves <guest> upgrade` command.
+    Used to ensure the guest contains latest properties when moved between hosts
+    on different versions of chyves. "MM" signifies the major version as an
+    integer and "mm" as the minor version as an integer. Changes to the major
+    version require an upgrade via 'chyves <guest> upgrade' because a guest
+    property value format has changed or a new required property was added.
+    Differences in the minor version do no require an upgrade but may not have
+    full functionality.
   description="<INSERT BRIEF DESCRIPTION>"
     Used to describe guest. Use double quotes when description contains spaces.
   loader={bhyveload|uefi|grub-bhyve}
@@ -807,6 +817,11 @@ GUEST SUB-COMMANDS
               Gets property for guests. See properties section above for more
               detail. Use 'chyves list global' or 'chyves list defaults' for
               respective property types.
+  upgrade       chyves <guest>|MG upgrade
+              Upgrades a guest to the latest chyves guest version. This add,
+              removes, and modifies guest properties to be compatible with the
+              the current version of chyves. See 'chyves_guest_version' guest
+              property for details.
 
   GUEST'S CONSOLE SUB-SUB-COMMANDS
   Manage a guest through a console using various methods described below. The
@@ -908,7 +923,8 @@ does:
   -b    [basic] CPU core count, and RAM allocation.
   -p    [pool] Display the pool for the guest.
   -r    [role] Display what role the pool is set to.
-  -v    [verbose] Display OS, loader, net interfaces, and console port.
+  -v    [verbose] Display OS, loader, chyves guest version, net interfaces,
+        and console port.
   -s    [status] Display status of VMM , bhyve instance, and the rcboot value.
   -t    [template] Displays if guest is a template.
   -c    [clone] Displays clone relationship, if any.

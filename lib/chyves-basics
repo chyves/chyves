@@ -130,6 +130,7 @@ chyves <guest> snapshot delete <@snapshotname>
 chyves <guest> snapshot rollback [<@snapshotname>]
 chyves <guest>|MG|all start [<iso>]
 chyves <guest>|MG|all stop [force]
+chyves <guest>|MG|all upgrade
 chyves help
 chyves info [-zbprvstcdnakl|-h]
 chyves iso list
@@ -275,9 +276,8 @@ __parse_cmd_ingress() {
 		          __stop_guest_gracefully "$1"
 		          exit
 		;;
-		reclaim)  __root_credentials_required                                      # Mostly verified
+		upgrade)  __root_credentials_required                                      # Mostly verified
 		          __verify_number_of_arguments "2" "$#" "2"
-		          __destroy_guest_vmm_resouces "$1"
 		          exit
 		;;
 		rename)   __root_credentials_required
@@ -288,6 +288,7 @@ __parse_cmd_ingress() {
 		          exit
 		;;
 		snapshot) __parse_cmd_snapshot "$@"
+		          __guest_upgrade_chyves_guest_version "$1"
 		          exit
 		;;
 		*)        __help
@@ -696,4 +697,5 @@ __root_credentials_required() {
 # Show version
 __version() {
 	__log 1 "chyves ${_VERSION_LONG}"
+	__log 1 "chyves guest version $_VERSION_CHYVES_GUEST"
 }
