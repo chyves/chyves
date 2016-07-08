@@ -394,7 +394,7 @@ __verify_user_input_for_properties() {
 
 		# net_ifaces
 		elif [ "$_property" = "net_ifaces" ]; then
-		__fault_detected_warning_break 1 "Not user settable."
+			__fault_detected_warning_break 1 "Not user settable."
 
 		# os
 		elif [ "$_property" = "os" ]; then
