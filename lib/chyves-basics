@@ -259,9 +259,24 @@ __parse_cmd_ingress() {
 		          __get "$1" "$3"
 		          exit
 		;;
+		reclaim)  __root_credentials_required                                      # Mostly verified
+		          __verify_number_of_arguments "2" "$#" "2"
+		          __destroy_guest_vmm_resouces "$1"
+		          exit
+		;;
+		rename)   __root_credentials_required
+		          __verify_number_of_arguments "3" "$#" "3"
+		          __verify_correct_guest_name_format "$3"
+		          __load_one_guest_parameters "$1"
+		          __guest_rename "$3"
+		          exit
+		;;
 		set)      __root_credentials_required
 		          __verify_number_of_arguments "3" "$#"
 		          __set "$@"
+		          exit
+		;;
+		snapshot) __parse_cmd_snapshot "$@"
 		          exit
 		;;
 		start)    __root_credentials_required                                      # Mostly verified
@@ -278,16 +293,6 @@ __parse_cmd_ingress() {
 		;;
 		upgrade)  __root_credentials_required                                      # Mostly verified
 		          __verify_number_of_arguments "2" "$#" "2"
-		          exit
-		;;
-		rename)   __root_credentials_required
-		          __verify_number_of_arguments "3" "$#" "3"
-		          __verify_correct_guest_name_format "$3"
-		          __load_one_guest_parameters "$1"
-		          __guest_rename "$3"
-		          exit
-		;;
-		snapshot) __parse_cmd_snapshot "$@"
 		          __guest_upgrade_chyves_guest_version "$1"
 		          exit
 		;;
