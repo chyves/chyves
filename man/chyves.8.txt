@@ -774,6 +774,29 @@ GUEST SUB-COMMANDS
               primary pool is used. A tap interface is added and associated
               with the bridge set in defaults. Support for multi-guest.
 
+  delete        chyves <guest>|MG delete
+              Permanently delete a guest from the host.
+
+  get           chyves <guest> get {<property>|all}
+              Gets property for guests. See properties section above for more
+              detail. Use 'chyves list global' or 'chyves list defaults' for
+              respective property types.
+
+  reclaim       chyves <guest>|MG reclaim
+              Reclaims a guest's VMM resources. This does not delete a guest
+              from the host, it destroys the guest's VMM resources (bhyvectl
+              vernacular).
+
+  rename        chyves <guest> rename <new-guest-name>
+              Renames the guest
+
+  set           chyves <guest>|MG|global|defaults set [<prop1>=<value>]...
+              Sets ZFS properties for guests. Using the <guest> name of
+              'defaults' sets the default values for newly created guests. Using
+              the <guest> name of 'global' sets global properties.
+
+  snapshot    See GUEST'S SNAPSHOT SUB-SUB-COMMANDS section below.
+
   start         chyves start <guest>|MG [<iso>]
               Where <iso> is optionally the name of an ISO resource. This
               command starts bhyveload, grub-bhyve, and UEFI guests. For
@@ -795,28 +818,6 @@ GUEST SUB-COMMANDS
               USE EXTREME CAUTION WITH 'force' AND ONLY AS A LAST RESORT, THIS
               CAN CAUSE A CORRUPT OS.
 
-  reclaim       chyves <guest>|MG reclaim
-              Reclaims a guest's VMM resources. This does not delete a guest
-              from the host, it destroys the guest's VMM resources (bhyvectl
-              vernacular).
-
-  rename        chyves <guest> rename <new-guest-name>
-              Renames the guest
-
-  delete        chyves <guest>|MG delete
-              Permanently delete a guest from the host.
-
-  set           chyves <guest>|MG|global|defaults set [<prop1>=<value>]...
-              Sets ZFS properties for guests. Using the <guest> name of
-              'defaults' sets the default values for newly created guests. Using
-              the <guest> name of 'global' sets global properties.
-
-  snapshot    See GUEST'S SNAPSHOT SUB-SUB-COMMANDS section below.
-
-  get           chyves <guest> get {<property>|all}
-              Gets property for guests. See properties section above for more
-              detail. Use 'chyves list global' or 'chyves list defaults' for
-              respective property types.
   upgrade       chyves <guest>|MG upgrade
               Upgrades a guest to the latest chyves guest version. This add,
               removes, and modifies guest properties to be compatible with the
