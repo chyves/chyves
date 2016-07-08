@@ -298,7 +298,7 @@ __log() {
 	local _output_level="$1"
 	local _message="$2"
 	local _echo_option="$3"
-	local _full_timestamp="$( date +%Y%m%d-%k:%M.%S )"
+	local _full_timestamp="$( date -u +%FT%T%z )"    # ISO 8601 format
 
 	# Handling for pre-chyves setup on pool
 	[ -z "$_STDOUT_LEVEL" ] && _STDOUT_LEVEL=2
@@ -307,7 +307,7 @@ __log() {
 	# Print output to screen
 	if [ "$_output_level" -le "$_STDOUT_LEVEL" ] && [ "$_STDOUT_LEVEL" -ne 0 ]; then
 
-		if [ "$_LAST_log_echo_option" = "-n" ]; then
+		if [ "$_LAST_log_echo_option" = "-n" ] || [ "$_STDOUT_LEVEL" -lt 3 ]; then
 			echo $_echo_option "$_message"
 		else
 			echo $_echo_option "[$_output_level] $_message"
