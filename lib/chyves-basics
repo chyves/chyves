@@ -701,6 +701,7 @@ __root_credentials_required() {
 
 # Show version
 __version() {
-	__log 1 "chyves ${_VERSION_LONG}"
+	__log 1 "chyves $_VERSION_LONG"
+	__log 1 "chyves dataset version $_VERSION_DATASET"
 	__log 1 "chyves guest version $_VERSION_CHYVES_GUEST"
 }
