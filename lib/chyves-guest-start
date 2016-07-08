@@ -364,6 +364,7 @@ __start() {
 		__load_guest_parameters "$_guest"
 		__log 2 "done."
 
+		# Do not let template guests from starting.
 		if [ "$_GP_template" = "yes" ]; then
 			__log 1 "$_GUEST_name is set as a template, not starting guest.\n"
 			continue
@@ -381,7 +382,7 @@ __start() {
 		fi
 
 		__log 2 "Checking if guest is running... " -n
-		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest ($_GUEST_name) already running."
+		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running.\n"
 		__log 2 "not running."
 
 		if [ "$_GP_loader" = "bhyveload" ]; then
@@ -399,12 +400,11 @@ __start() {
 		fi
 
 		__log 2 "Checking if VMM resources allocated... " -n
-		[ "$( __return_guest_vmm_allocated )" ] && __fault_detected_exit "\nVMM resources already allocated. The guest likely did not exit the bhyve process correctly when shutting down or restarting. Please reclaim the VMM resources before starting the guest with: 'chyves $_GUEST_name reclaim'"
-		# Maybe just check if grub-bhyve is running for this guest instead?
+		[ "$( __return_guest_vmm_allocated )" ] && __fault_detected_exit "\nVMM resources already allocated. Please reclaim the VMM resources before starting the guest with: 'chyves $_GUEST_name reclaim'"
 		__log 2 "not allocated."
 
 		# Exit if starting a non-FreeBSD guest on an Intel host missing the UG CPU feature
-		[ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ] && __return_cpu_section_from_dmesg && __fault_detected_exit "Missing CPU feature UG, can only start FreeBSD guests."
+		[ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ] && __return_cpu_section_from_dmesg && __fault_detected_warning_continue "Missing CPU feature UG, can only start FreeBSD guests.\n"
 
 		__log 2 "Checking which type of loader to use... " -n
 
