@@ -248,8 +248,9 @@ __parse_cmd_ingress() {
 		          exit
 		;;
 		delete)   __root_credentials_required                                      # Mostly verified
-		          __verify_number_of_arguments "2" "$#" "2"
-		          __guest_delete "$1"
+		          __verify_number_of_arguments "2" "$#" "3"
+		          [ -n "$3" ] && [ "$3" != "force" ] && __fault_detected_exit "Only 'force' is a valid third parameter for 'chyves $1 delete'."
+		          __guest_delete "$1" "$3"
 		          exit
 		;;
 		disk)     __parse_cmd_disk "$@"                                            # Mostly verified

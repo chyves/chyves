@@ -27,6 +27,7 @@
 # Delete guest
 __guest_delete() {
 	local _guest_list="$1"
+	local _force="$2"
 
 	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
 	[ "$_guest_list" = defaults ] && __fault_detected_exit "Can not delete defaults."
@@ -36,7 +37,7 @@ __guest_delete() {
 	do
 		read -p "[WARNING] Do you want to delete guest: '$_guest' [y/N]? " _delete_or_no </dev/tty
 		case "$_delete_or_no" in
-			y|Y|yes)  __guest_delete_backend $_guest
+			y|Y|yes)  __guest_delete_backend "$_guest" "$_force"
 			;;
 			*) __log 1 "Guest '$_guest' was not deleted."
 		esac
@@ -45,10 +46,29 @@ __guest_delete() {
 
 # Backend for deleting guest
 __guest_delete_backend() {
-	local _guest="$1"
-	__load_guest_parameters $_guest
+	local _single_guest="$1"
+	local _force="$2"
+	__load_guest_parameters $_single_guest
 
-	__log 2 "Removing tap interfaces from $_guest"
+	# Check if there are clones
+	if [ "$_force" = "force" ]; then
+		local _clones="$( zfs destroy -nr $_GUEST_pool/chyves/guests/$_GUEST_name 2>&1| grep -E "^$_GUEST_pool" | cut -d'/' -f4 | uniq | tr '\n' ',' )"
+
+		# Delete clones first when 'force' parameter used.
+		if [ -n "$_clones" ]; then
+			__log 1 "$_single_guest has dependent clones. Deleting $_clones first..."
+			__guest_delete "$_clones"
+
+			# Reload parameters for original guest.
+			__load_guest_parameters $_single_guest
+		fi
+	fi
+
+	# This will exit with a non-zero code when there are clones. The -n is a no-op code.
+	zfs destroy -nr $_GUEST_pool/chyves/guests/$_GUEST_name > /dev/null 2>&1
+	[ "$?" != 0 ] && __fault_detected_exit "$_GUEST_name has dependent clones, see 'chyves list clones' or use 'chyves <guest> delete force'."
+
+	__log 2 "Removing tap interfaces from $_GUEST_name"
 	if [ -n "$_GP_net_ifaces" ]; then
 		for _iface in `echo $_GP_net_ifaces | tr ',' '\n' | grep tap | tr '\n' ' '`
 		do
@@ -56,8 +76,8 @@ __guest_delete_backend() {
 		done
 	fi
 
-	__log 1 "Deleting guest: '$_guest'..." -n
-	zfs destroy -r $_GUEST_pool/chyves/guests/$_guest
+	__log 1 "Deleting guest: '$_GUEST_name'..." -n
+	zfs destroy -r $_GUEST_pool/chyves/guests/$_GUEST_name
 	__log 1 "done."
 	echo ""
 }
