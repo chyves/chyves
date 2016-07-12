@@ -340,6 +340,7 @@ __verify_correct_guest_name_format() {
 
 		# Check if guest name in use on active pool.
 		if [ -n "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_ALL_GREP_STRING" )" ]; then
+			[ "$_DEV_MODE" != "off" ] && echo "Guest names all grep string: $_GUEST_NAMES_ALL_GREP_STRING"
 			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
 	done

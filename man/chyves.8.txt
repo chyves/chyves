@@ -285,14 +285,12 @@ Global Configuration Properties:
                     bridge512_phy_attach=private
     To set this property use the follow command syntax:
       chyves network bridge{n} attach {<interface>|private}
-  bridge{n}_tap_members={t{n}[,t{n},t{n}]}
+  bridge{n}_tap_members={tap{n}[,tap{n},tap{n}]}
     Managed through `chyves network` commands.
     This property is a comma separated list of the tap members for bridge{n},
     where {n} is the interface number. Valid values for "n" are 0 to 32768.
     Guests are automatically added to this property using the bridge{n} that is
-    set in 'defaults' under the "bridge" property. Taps are stored abbreviated
-    to 't{n}' due to the character limited for ZFS properties, however the end
-    user is still required to enter the full name of 'tap{n}'.
+    set in 'defaults' under the "bridge" property.
     Examples values: bridge0_tap_members=t0
                      bridge70_tap_members=t20,t30
     A tap can be moved to another bridge by first removing the tap from the
@@ -426,15 +424,12 @@ Guest Properties:
     Tells which loader to use to boot guest. bhyveload is for FreeBSD based
     guests, uefi is used for UEFI based guests, and grub-bhyve is used for all
     other guests.
-  net_ifaces=t{n}|v{n}[:{p}]
+  net_ifaces=tap{n}|vale{n}[:{p}]
     Managed through `chyves network` commands.
-    Stores which tap and VALE interfaces assigned to a guest. Interfaces are
-    stored abbreviated due to the character limited for ZFS properties, however
-    the end user is still required to enter the full name of 'tap{n}' or
-    vale{n}[:{p}. Where {n} is a unique interface number. Taps are process
-    locked and can not be shared simultaneously by multiple guests. Multiple
-    devices are stored using a comma as a delimiter.
-    VALE interface names must be vale{n}[:{p}] where {n} can be
+    Stores which tap and VALE interfaces are assigned to a guest. Where {n} is a
+    unique interface number. Taps are process locked and can not be shared
+    simultaneously by multiple guests. Multiple devices are stored using commas
+    as delimiters. VALE interface names must be vale{n}[:{p}] where {n} can be
     alpha-numeric up to 9 characters long. Optionally a port can be specified
     where :{p} starts with a separating colon and either a single alphabetical
     character or a number 0-9999.
