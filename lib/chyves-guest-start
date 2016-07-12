@@ -249,7 +249,7 @@ __generate_bhyve_vnc_string() {
 	local _string="${_string},w=${_vnc_w_res},h=${_vnc_h_res}"
 
 	# VNC Pause boot until connect
-	[ "$_GP_uefi_pause_until_vnc_client_connect" = "yes" ] && local _string="${_string},wait"
+	[ "$_GP_uefi_vnc_pause_until_client_connect" = "yes" ] && local _string="${_string},wait"
 
 	# Assign to global variable
 	_BHYVE_vnc_string="$_string"
@@ -475,7 +475,7 @@ __start() {
 
 				# Attach USB 3.0 Mouse? - Only useful for VNC.
 				__log 2 "Generating bhyve PCI string for mouse... " -n
-				if [ "$_GP_uefi_mouse_type" = "usb3" ]; then
+				if [ "$_GP_uefi_vnc_mouse_type" = "usb3" ]; then
 					__log 2 "xHCI mouse... " -n
 					local _uefi_usb3_mouse_string="xhci,tablet"
 					__generate_bhyve_slot_string "$_uefi_usb3_mouse_string"

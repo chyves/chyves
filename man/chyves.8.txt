@@ -458,8 +458,9 @@ Guest Properties:
     can not be shared between started guests. A unique number is given on
     creation.
   template={yes|no}
-    When set to 'yes' chyves will not start the guest.
-  uefi_console_output=vnc|serial
+    When set to 'yes' chyves will not start the guest. The guest's datasets are
+    set to readonly so no changes can be made until set back to 'no'.
+  uefi_console_output={vnc|serial}
     When set to "serial", a UEFI guest will use the standard serial interface.
     Guests set to "vnc" will use a VNC connection on supported hosts. VNC output
     is experimental and introduced to bhyve in May 2016. VNC support requires
@@ -467,16 +468,7 @@ Guest Properties:
     support, and the UEFI firmware "BHYVE_UEFI_20160526.fd".
   uefi_firmware=<firmware-resource-name>
     UEFI firmware resource used to boot UEFI guests. These are available in
-    Peter Grehan's public FreeBSD file directory.
-  uefi_mouse_type=ps2|usb3
-    This property is only used when the property "uefi_console_output" is set
-    to "vnc". When set to "ps2" a PS/2 mouse is connected to the guest. When
-    set "usb3" a USB 3.0 tablet is emulated which provides much better mouse
-    performance but is only supported on newer guest OSes.
-  uefi_pause_until_vnc_client_connect={on|off}
-    When set to "on" the guest will wait to boot until a VNC client connects.
-    This is helpful for installations requiring a key press within a short
-    timing window.
+    Peter Grehan's public FreeBSD file directory or sysutils/uefi-edk2-bhyve.
   uefi_vnc_client={print|freerdp|custom}
     This stores the preferred VNC client used to start a session with the guest
     parameters pre-populated.
@@ -486,6 +478,15 @@ Guest Properties:
   uefi_vnc_ip=x.x.x.x
     Specifies the IP for the host to bind-to for VNC connections for the
     guest. The default is "0.0.0.0" which binds to all IPs on the host.
+  uefi_vnc_mouse_type=ps2|usb3
+    This property is only used when the property "uefi_console_output" is set
+    to "vnc". When set to "ps2" a PS/2 mouse is connected to the guest. When
+    set "usb3" a USB 3.0 tablet is emulated which provides much better mouse
+    performance but is only supported on newer guest OSes.
+  uefi_vnc_pause_until_client_connect={on|off}
+    When set to "on" the guest will wait to boot until a VNC client connects.
+    This is helpful for installations requiring a key press within a short
+    timing window.
   uefi_vnc_port={n}
     Valid values are from 1 to 65536.
     Specifies the port for the host to listen on for VNC connections for the
@@ -530,9 +531,9 @@ Default Guest Properties:
     longer a guest property. The ZFS property "usedbychildren" is used to show
     the size in 'chyves info'.
   uefi_console_output=serial
-  uefi_mouse_type=ps2
-  uefi_pause_until_vnc_client_connect=no
   uefi_vnc_ip=0.0.0.0
+  uefi_vnc_mouse_type=ps2
+  uefi_vnc_pause_until_client_connect=no
   uefi_vnc_res=800x600
 
   These default disk properties are direct ZFS values used to create disks for

@@ -70,11 +70,11 @@ __dataset_install() {
 
 		__write_property_value_to_config_file "defaults" "uefi_console_output"                  "serial"
 		__write_property_value_to_config_file "defaults" "uefi_firmware"                        "-"
-		__write_property_value_to_config_file "defaults" "uefi_mouse_type"                      "ps2"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_client"                      "print"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_ip"                          "0.0.0.0"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_mouse_type"                  "ps2"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_pause_until_client_connect"  "no"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_res"                         "800x600"
-		__write_property_value_to_config_file "defaults" "uefi_pause_until_vnc_client_connect"  "no"
 
 		__write_property_value_to_config_file "defaults" "disk_volmode"         "dev"
 		__write_property_value_to_config_file "defaults" "disk_volblocksize"    "512"

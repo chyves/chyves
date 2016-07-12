@@ -374,16 +374,22 @@ __verify_user_input_for_properties() {
 			__verify_valid_dataset "Firmware/$_value"
 			__log 2 "done"
 
-# uefi_mouse_type
-		elif [ "$_property" = "uefi_mouse_type" ]; then
+# uefi_vnc_mouse_type
+		elif [ "$_property" = "uefi_vnc_mouse_type" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^ps2$|^usb3$' )" ]; then
-				__fault_detected_warning_break 1 "Correct values for 'uefi_mouse_type' is 'ps2' or 'usb3'."
+				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_mouse_type' is 'ps2' or 'usb3'."
 			fi
 
-# uefi_pause_until_vnc_client_connect
-		elif [ "$_property" = "uefi_pause_until_vnc_client_connect" ]; then
+# uefi_vnc_pause_until_client_connect
+		elif [ "$_property" = "uefi_vnc_pause_until_client_connect" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
-				__fault_detected_warning_break 1 "Correct values for 'uefi_pause_until_vnc_client_connect' is 'yes' or 'no'."
+				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_pause_until_client_connect' is 'yes' or 'no'."
+			fi
+
+# uefi_vnc_client
+		elif [ "$_property" = "uefi_vnc_client" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^custom$|^freerdp$|^off$|^print$' )" ]; then
+				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_client' is 'custom', 'freerdp', 'off', or 'print'."
 			fi
 
 # uefi_vnc_ip

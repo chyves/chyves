@@ -337,8 +337,8 @@ __parse_cmd_console() {
 		_vnc)     __verify_number_of_arguments "3" "$#" "3"
 		          [ "$_GP_loader" = "uefi" ] && __fault_detected_exit "Guest 'loader' must be set to 'uefi'."
 		          [ "$_GP_uefi_console_output" = "vnc" ] && __fault_detected_exit "Guest 'uefi_console_output' must be set to 'vnc'."
-		          [ "$_GP_uefi_pause_until_vnc_client_connect" = "on" ] && __log 1 "Guest will wait to start until VNC connection is started." && sleep 3
-		          [ "$_GP_uefi_mouse_type" = "ps2" ] && __log 1 "Guest will likely be jumpy, scientific term. If OS is newer, try setting 'uefi_mouse_type' to 'usb3'."
+		          [ "$_GP_uefi_vnc_pause_until_client_connect" = "on" ] && __log 1 "Guest will wait to start until VNC connection is started." && sleep 3
+		          [ "$_GP_uefi_vnc_mouse_type" = "ps2" ] && __log 1 "Guest will likely be jumpy, scientific term. If OS is newer, try setting 'uefi_vnc_mouse_type' to 'usb3'."
 		          __log 1 "Starting VNC client: $_GP_uefi_vnc_client"
 		          __console_vnc_$_GP_uefi_vnc_client
 		          exit
