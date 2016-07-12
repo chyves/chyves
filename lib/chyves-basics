@@ -282,7 +282,7 @@ __parse_cmd_ingress() {
 		;;
 		start)    __root_credentials_required                                      # Mostly verified
 		          __verify_number_of_arguments "2" "$#" "3"
-		          [ -n "$3" ] && __verify_resource "ISO/$3"
+		          [ -n "$3" ] && __verify_valid_dataset "ISO/$3"
 		          __start "$1" "$3"
 		          exit
 		;;
