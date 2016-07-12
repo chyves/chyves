@@ -221,7 +221,7 @@ __preflight_check() {
 	_GLOBAL_CONFIG_FILE="/chyves/$_PRIMARY_POOL/.config/global.cfg"
 	if [ -z "$_PRIMARY_POOL" ]; then
 		__log 1 "Run setup to install chyves dataset on a pool."
-		[ "$1" != "dataset" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
+		[ "$1" != "dataset" ] && __fault_detected_exit "No seriously, run 'chyves dataset <ZFS-pool-name> install'"
 	else
 
 		# Load all global parameters in global config file to global varibles in the _UPPER_UPPER_UPPER format.
