@@ -137,6 +137,32 @@ __console_tmux() {
 	tmux attach-session -t chyves
 }
 
+# Run custom VNC client command
+__console_vnc_custom() {
+	__verify_binary_available "$( basename "$( echo "$_GP_uefi_vnc_client_custom" | awk 'print $1' )" )"
+
+	[ "$_GP_uefi_vnc_ip" = "0.0.0.0" ] && _GP_uefi_vnc_ip="localhost"
+
+	$_GP_uefi_vnc_client_custom &
+}
+
+# Print VNC client setttings
+__console_vnc_print() {
+
+	__log 1 "Connect to IP: $_GP_uefi_vnc_ip"
+	__log 1 "      on port: $_GP_uefi_vnc_port"
+	__log 1 " @ resolution: $_GP_uefi_vnc_res"
+}
+
+# Run VNC client with FreeRDP
+__console_vnc_freerdp() {
+	__verify_binary_available xfreerdp
+
+	[ "$_GP_uefi_vnc_ip" = "0.0.0.0" ] && _GP_uefi_vnc_ip="localhost"
+
+	xfreerdp /v:$_GP_uefi_vnc_ip /port:$_GP_uefi_vnc_port /size:$_GP_uefi_vnc_res &
+}
+
 # Get PID of console
 __get_guest_console_pid() {
 	local _flag _pid

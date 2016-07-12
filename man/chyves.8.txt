@@ -482,6 +482,12 @@ Guest Properties:
     When set to "on" the guest will wait to boot until a VNC client connects.
     This is helpful for installations requiring a key press within a short
     timing window.
+  uefi_vnc_client={print|freerdp|custom}
+    This stores the preferred VNC client used to start a session with the guest
+    parameters pre-populated.
+  uefi_vnc_client_custom_cmd
+    This contains the command to start the VNC client when 'uefi_vnc_client' is
+    set to 'custom'.
   uefi_vnc_ip=x.x.x.x
     Specifies the IP for the host to bind-to for VNC connections for the
     guest. The default is "0.0.0.0" which binds to all IPs on the host.
