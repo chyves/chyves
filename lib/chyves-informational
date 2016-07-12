@@ -174,9 +174,9 @@ __list_global_properties() {
 # List ISO firmware resources.
 __list_iso() {
 	(
-	echo -e "ISO\tSize"
-	zfs list -H -r -o name,used $_PRIMARY_POOL/chyves/ISO | cut -d '/' -f 4- | sort -k1
-	) | column -t
+	echo -e "ISO^Size"
+	zfs list -H -r -o name,used $_PRIMARY_POOL/chyves/ISO | cut -d '/' -f 4- | grep -v -E '^$' | awk '{ print $1"^"$2 }' | sort -k1
+	) | column -ts^
 }
 
 # List pools and roles
