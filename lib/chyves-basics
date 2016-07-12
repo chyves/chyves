@@ -401,6 +401,7 @@ __parse_cmd_disk() {
 		              __verify_valid_dataset "guests/$_GUEST_name/$3"
 		              __verify_user_input_for_properties "description" "$5" "guests"
 		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
+		              _RESTRICT_NEW_PROPERTY_NAMES="master-override"
 		              __write_property_value_to_config_file "guest" "$3_description" "$_value"
 		              exit
 		;;
@@ -409,6 +410,7 @@ __parse_cmd_disk() {
 		              __verify_valid_dataset "guests/$_GUEST_name/$3"
 		              __verify_user_input_for_properties "notes" "$5" "guests"
 		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
+		              _RESTRICT_NEW_PROPERTY_NAMES="master-override"
 		              __write_property_value_to_config_file "guest" "$3_notes" "$_value"
 		              exit
 		;;
