@@ -411,6 +411,9 @@ __start() {
 		if [ "$_GP_loader" = "bhyveload" ]; then
 			__log 2 "bhyveload."
 
+			# If CPU feature "UG" is missing limit to one CPU
+			[ "${_CPU_MISSING_UG}" ] && _GP_cpu="1"
+
 			__log 2 "Generating command string for bhyveload... " -n
 			if [ -n "$_media" ]; then
 				__log 2 "using $_media as boot device... " -n
