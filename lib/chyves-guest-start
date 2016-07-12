@@ -490,7 +490,7 @@ __start() {
 		__log 2 "   ...done."
 
 		__log 2 "Generating bhyve string for custom PCI devices (if any)... " -n
-		__generate_bhyve_custom_pci_string "$_GUEST_pool/chyves/guests/$_GUEST_name"
+		__generate_bhyve_custom_pci_string
 		__log 2 "done."
 
 		# Print the command to start the UEFI guest when $_DEV_MODE is not "off".
