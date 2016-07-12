@@ -69,7 +69,7 @@ __delete_guest_disk() {
 	read -p "Do you want to delete $_disk on $_GUEST_name? This is NOT reversible, nor will snapshots will NOT be able to undo this action. Are you sure? [Y/N]? " an </dev/tty
 	case "$an" in
 		y|Y)  __log 1 "Deleting $_disk from $_GUEST_name... " -n
-		      zfs destroy $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk
+		      zfs destroy -r $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk
 
 	        # Handling for exit code
 	        if [ "$?" -eq "0" ]; then
