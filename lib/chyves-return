@@ -130,7 +130,7 @@ __return_guest_list() {
 __return_guest_rcboot_priority() {
 	local _flags _rcboot_property
 	local _flags=$1
-	local _rcboot_property="$( __return_chyves_zfs_property_value "rcboot" "guest" )"
+	local _rcboot_property="$( __return_property_value_from_config_file "guest" "rcboot" )"
 
 	if [ "$_flags" = "-human-readable" ]; then
 		if [ "$_rcboot_property" = "-" ] || [ "$_rcboot_property" -eq '0' ]; then

@@ -111,7 +111,7 @@ __clone_guest() {
 
 			echo "Setting creation stamp on $_cname..."
 			local _creation_stamp="Cloned from $_GUEST_name on $( date ) by chyves $_VERSION_LONG using __clone_guest()"
-			__set_chyves_zfs_property "creation" "$_creation_stamp" "manual" "$_dst_pool/chyves/guests/$_cname"
+			__write_property_value_to_config_file "manual" "creation" "$_creation_stamp" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 		fi
 
 		# Create unique guest properties when -*u is used
@@ -119,7 +119,7 @@ __clone_guest() {
 			echo "Setting new properties as part of replication..."
 
 			# Erase network configuration as we will be copying the parent's configuration
-			__set_chyves_zfs_property "net_ifaces" "-" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+			__write_property_value_to_config_file "manual" "net_ifaces" "-" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 
 			# Recreate network design from parent
 			__log 2 "Configuring $_cname network to mimic the design of $_GUEST_name..."
@@ -128,7 +128,7 @@ __clone_guest() {
 				__verify_valid_iface_format "$_interface"
 
 				# Get net config for guest
-				local _guest_net_config="$( __return_chyves_zfs_property_value "net_ifaces" "manual" "$_dst_pool/chyves/guests/$_cname/.config" )"
+				local _guest_net_config="$( __return_property_value_from_config_file "manual" "net_ifaces" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg" )"
 
 				__log 2 "Mimicking $_interface interface for $_cname."
 				if [ "$_IFACE_type" = "vale" ]; then
@@ -156,18 +156,18 @@ __clone_guest() {
 					local _guest_net_config="$_guest_net_config,$_new_interface"
 				fi
 
-				__set_chyves_zfs_property "net_ifaces" "$_guest_net_config" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+				__write_property_value_to_config_file "manual" "net_ifaces" "$_guest_net_config" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 			done
 			__log 2 "Done recreating nework design for $_cname from $_GUEST_name's design."
 
 			__log 2 "Assigning next available unused console interface... $_NEXT_serial"
 			__get_next_serial
-			__set_chyves_zfs_property "serial" "$_NEXT_serial" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+			__write_property_value_to_config_file "manual" "serial" "$_NEXT_serial" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 
 			__log 2 "Generating new UUID... " -n
 			__generate_new_uuid_guest_use
 			__log 2 "$_UUID_GUEST_USE"
-			__set_chyves_zfs_property "uuid" "$_UUID_GUEST_USE" "manual" "$_dst_pool/chyves/guests/$_cname/.config"
+			__write_property_value_to_config_file "manual" "uuid" "$_UUID_GUEST_USE" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 		fi
 		__log 1 "Completed clone of $_cname from $_GUEST_name."
 		echo "" # Create visual space for next multi-guest.
@@ -214,31 +214,34 @@ __create() {
 		__get_next_serial
 		__generate_new_uuid_guest_use
 		_GUEST_name="$_guest"
-		local _creation_stamp="Created on $( date ) by chyves $_VERSION_LONG using __create()"
 
 		__log 1 "Creating $_GUEST_name..."
 		__log 2 "Creating dataset on $_GUEST_pool"
 		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name
-		zfs create -o mountpoint=none $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+		_GUEST_mountpoint="$( __return_guest_dataset_mountpoint )"
+		_GUEST_config_file="$_GUEST_mountpoint/.config/.cfg"
+		touch $_GUEST_config_file
+
 		__log 2 "Creating log dataset with compression turned on."
 		zfs create -o compression=on $_GUEST_pool/chyves/guests/$_GUEST_name/logs
 		__log 2 "Creating $_disk_size disk0 with options: $_ZVOL_disk_options_string"
 		zfs create -V $_disk_size $_ZVOL_disk_options_string $_GUEST_pool/chyves/guests/$_GUEST_name/disk0
 		__log 2 "Setting guest properties:"
-		__set_chyves_zfs_property "bargs"                 "$_GDP_bargs" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "cpu"                   "$_GDP_cpu" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "chyves_guest_version"  "$_VERSION_CHYVES_GUEST" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "template"              "$_GDP_template" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "loader"                "$_GDP_loader" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "os"                    "$_GDP_os" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "ram"                   "$_GDP_ram" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "rcboot"                "$_GDP_rcboot" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "serial"                "$_NEXT_serial" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "creation"              "$_creation_stamp" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "description"           "-" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "net_ifaces"            "$_NEXT_tap" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "notes"                 "-" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		__set_chyves_zfs_property "uuid"                  "$_UUID_GUEST_USE" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+		__write_property_value_to_config_file "guest" "bargs"                 "$_GDP_bargs"
+		__write_property_value_to_config_file "guest" "cpu"                   "$_GDP_cpu"
+		__write_property_value_to_config_file "guest" "chyves_guest_version"  "$_VERSION_CHYVES_GUEST"
+		__write_property_value_to_config_file "guest" "template"              "$_GDP_template"
+		__write_property_value_to_config_file "guest" "loader"                "$_GDP_loader"
+		__write_property_value_to_config_file "guest" "os"                    "$_GDP_os"
+		__write_property_value_to_config_file "guest" "ram"                   "$_GDP_ram"
+		__write_property_value_to_config_file "guest" "rcboot"                "$_GDP_rcboot"
+		__write_property_value_to_config_file "guest" "serial"                "$_NEXT_serial"
+		__write_property_value_to_config_file "guest" "creation"              "Created on $( date ) by chyves $_VERSION_LONG using __create()"
+		__write_property_value_to_config_file "guest" "description"           "-"
+		__write_property_value_to_config_file "guest" "net_ifaces"            "$_NEXT_tap"
+		__write_property_value_to_config_file "guest" "notes"                 "-"
+		__write_property_value_to_config_file "guest" "uuid"                  "$_UUID_GUEST_USE"
 
 		__log 2 "Adding $_NEXT_tap to $_GDP_bridge"
 		__network_bridge_join "$_GDP_bridge" "$_NEXT_tap"
@@ -286,10 +289,11 @@ __get_next_disk_number() {
 
 # Return the next serial interface to use
 __get_next_serial() {
-	local _conlast="$( zfs get -H -o value chyves:serial | grep -v - | sort -V | tail -n1 | cut -c 5- )"
-	if [ -z $_conlast ]; then
-		local _conlast="$( __return_chyves_zfs_property_value "console_start_offset" "global" )"
+
+	if [ "$_NUMBER_OF_ALL_GUESTS" = 0 ]; then
+		local _conlast="$_CONSOLE_START_OFFSET"
 	else
+		local _conlast="$( grep -hE "^serial=" /chyves/*/guests/*/.config/.cfg | cut -d'=' -f2 | sort -V | tail -n1 | cut -c 5- )"
 		local _conlast="$( expr $_conlast + 1 )"
 	fi
 	_NEXT_serial="nmdm$_conlast"
@@ -297,10 +301,11 @@ __get_next_serial() {
 
 # Return the next tap interface to use
 __get_next_tap() {
-	local _taplast="$( zfs get -H -o value chyves:net_ifaces | grep -v - | tr ',' '\n' | grep tap | sort -V | tail -n1 | cut -c 4- )"
-	if [ -z $_taplast ]; then
-		local _tap_num="$( __return_chyves_zfs_property_value "tap_start_offset" "global" )"
+
+	if [ "$_NUMBER_OF_ALL_GUESTS" = 0 ]; then
+		local _tap_num="$_TAP_START_OFFSET"
 	else
+		local _taplast="$( grep -hE "^net_ifaces=" /chyves/*/guests/*/.config/.cfg | cut -d'=' -f2- | tr ',' '\n' | grep tap | sort -V | tail -n1 | cut -c 4- )"
 		local _tap_num="$( expr $_taplast + 1 )"
 	fi
 	_NEXT_tap="tap$_tap_num"
@@ -308,10 +313,12 @@ __get_next_tap() {
 
 # Return the next vnc port to use
 __get_next_vnc_port() {
-	local _vnc_port_last="$( zfs get -H -o value chyves:uefi_vnc_port | grep -v - | sort -V | tail -n1 )"
-	if [ -z $_vnc_port_last ]; then
-		local _vnc_port_last="$( __return_chyves_zfs_property_value "uefi_vnc_port_start_offset" "global" )"
+
+	if [ "$_NUMBER_OF_ALL_GUESTS" = 0 ]; then
+		local _vnc_port_last="$_UEFI_VNC_PORT_START_OFFSET"
 	else
+		local _vnc_port_last="$( grep -hE "^uefi_vnc_port=" /chyves/*/guests/*/.config/.cfg | cut -d'=' -f2 | sort -V | tail -n1 )"
+		[ -z "$_vnc_port_last" ] && local _vnc_port_last="$( expr $_UEFI_VNC_PORT_START_OFFSET - 1 )"
 		local _vnc_port_last="$( expr $_vnc_port_last + 1 )"
 	fi
 	_NEXT_vnc_port="$_vnc_port_last"
@@ -333,7 +340,6 @@ __verify_correct_guest_name_format() {
 
 		# Check if guest name in use on active pool.
 		if [ -n "$( echo "$_guest_to_check" | grep -E "$_GUEST_NAMES_ALL_GREP_STRING" )" ]; then
-			[ "$_DEVELOPER_MODE" != "off" ] && echo "Guest names all grep string: $_GUEST_NAMES_ALL_GREP_STRING"
 			__fault_detected_exit "\"$_guest_to_check\" name already in use on system within active pools and guests."
 		fi
 	done

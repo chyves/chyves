@@ -65,7 +65,7 @@ __gvset_guest_pool() {
 
 # Get primary pool name and set GV
 __gvset_primary_pool() {
-	_PRIMARY_POOL="$( zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep "primary" | cut -d'/' -f1 )"
+	_PRIMARY_POOL="$( echo "$_GLOBAL_CONFIG_FILE" | cut -d'/' -f3 )"
 	if [ -n "$_PRIMARY_POOL" ]; then
 		__verify_valid_pool "$_PRIMARY_POOL" "-p"
 	fi
@@ -188,10 +188,10 @@ __parse_cmd_ingress() {
 		              __parse_cmd_dataset $@
 		              exit
 		;;
-		_dev)         [ "$_DEVELOPER_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves .config set dev_mode=on'"
-		              [ "$_DEVELOPER_MODE" != "on" ] && set "$_DEVELOPER_MODE"
+		_dev)         [ "$_DEV_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves global set dev_mode=on'"
+		              [ "$_DEV_MODE" != "on" ] && set "$_DEV_MODE"
 		               $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
-		              [ "$_DEVELOPER_MODE" != "on" ] && set "$( echo $_DEVELOPER_MODE | sed 's/-/+/g' )"
+		              [ "$_DEV_MODE" != "on" ] && set "$( echo $_DEV_MODE | sed 's/-/+/g' )"
 		              exit
 		;;
 		_firmware)    __parse_cmd_resources $@
@@ -397,7 +397,7 @@ __parse_cmd_disk() {
 		              __verify_valid_dataset "guests/$_GUEST_name/$3"
 		              __verify_user_input_for_properties "description" "$5" "guests"
 		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
-		              __set_chyves_zfs_property "description" "$_value" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$3"
+		              __write_property_value_to_config_file "guest" "$3_description" "$_value"
 		              exit
 		;;
 		notes)        __verify_number_of_arguments "5" "$#" "5"
@@ -405,7 +405,7 @@ __parse_cmd_disk() {
 		              __verify_valid_dataset "guests/$_GUEST_name/$3"
 		              __verify_user_input_for_properties "notes" "$5" "guests"
 		              [ -n "$_ADJUSTED_value" ] && local _value="$_ADJUSTED_value"
-		              __set_chyves_zfs_property "notes" "$_value" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$3"
+		              __write_property_value_to_config_file "guest" "$3_notes" "$_value"
 		              exit
 		;;
 	esac
@@ -531,12 +531,12 @@ __parse_cmd_network() {
 		          exit
 		;;
 		default)  __verify_number_of_arguments "2" "$#" "2"
-		          __set_chyves_zfs_property "bridge" "$_device" "defaults"
+		          __write_property_value_to_config_file "global" "bridge" "$_device"
 		          exit
 		;;
 		private)  __verify_number_of_arguments "2" "$#" "2"
 		          __verify_valid_system_iface "$_device" -c
-		          __set_chyves_zfs_property "${_device}_phy_attach" "private" "global"
+		          __write_property_value_to_config_file "global" "${_device}_phy_attach" "private"
 		          exit
 		;;
 		attach)   __verify_number_of_arguments "3" "$#" "3"

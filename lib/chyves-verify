@@ -170,22 +170,22 @@ __verify_valid_pool() {
 		if [ -n "$(echo $_flags | grep -E "c|p" )" ]; then
 			zfs list -H ${_pool_to_check}/chyves > /dev/null 2>&1
 			if [ "$?" = 0 ]; then
-				if [ -n "$(echo $_flags | grep 'n')" ] && [ -n "$(echo $_flags | grep "c" )" ]; then  # If -n flag is used, exit.
+				if [ -n "$(echo $_flags | grep "c" )" ] && [ -n "$(echo $_flags | grep 'n')" ]; then  # If -n flag is used, exit.
 					__fault_detected_exit "${_pool_to_check} has been setup with chyves."
 				fi
 			else
-				if [ -z "$(echo $_flags | grep 'n')" ] && [ -n "$(echo $_flags | grep "c" )" ]; then  # If -n flag is not used, exit.
+				if [ -n "$(echo $_flags | grep "c" )" ] && [ -z "$(echo $_flags | grep 'n')" ]; then  # If -n flag is not used, exit.
 					__fault_detected_exit "${_pool_to_check} has not been setup with chyves."
 				fi
 			fi
 		fi
 
 		# Check to see if the pool is in the primary dataset_role
-		if [ -n "$( echo $_flags | grep 'p' )" ] && [ "$( zfs get -H -o value chyves:dataset_role $_pool_to_check/chyves/.config )" != "primary" ]; then
+		if [ -n "$( echo $_flags | grep 'p' )" ] && [ "$( __return_property_value_from_config_file "manual" "dataset_role" "/chyves/$_pool_to_check/.config/pool.cfg" )" != "primary" ]; then
 			if [ -z "$( echo $_flags | grep 'n' )" ]; then  # If -n flag is not used, exit.
 				__fault_detected_exit "${_pool_to_check} is not a primary pool."
 			fi
-		elif [ -n "$( echo $_flags | grep 'n' )" ]; then # If -n flag is used and the pool is primary then exit.
+		elif [ -n "$( echo $_flags | grep 'p' )" ] && [ -n "$( echo $_flags | grep 'n' )" ]; then # If -n flag is used and the pool is primary then exit.
 			__fault_detected_exit "${_pool_to_check} is the primary pool, this "
 		fi
 

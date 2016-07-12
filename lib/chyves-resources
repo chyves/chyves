@@ -103,8 +103,8 @@ __guest_upgrade_chyves_guest_version() {
 		# Change version number and update the global variable.
 		__chyves_guest_version_gvreload_and_set() {
 			local _version="$1"
-			__set_chyves_zfs_property "chyves_guest_version" "$_version" "guest"
-			_GP_chyves_guest_version="$( __return_chyves_zfs_property_value "chyves_guest_version" "guest" )"
+			__write_property_value_to_config_file "guest" "chyves_guest_version" "$_version"
+			__load_guest_parameter_single "chyves_guest_version"
 		}
 
 		# Template for first change.
@@ -194,21 +194,21 @@ __resource_import() {
 			__log 2 "Please enter a supported hash checksum for '$_file_name':"
 			read -p "Supported cryptographic hash function are (md5|sha1|sha256|sha512|null): " _user_supplied_hash </dev/tty
 
-			__log 2 "Downloading $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/..."
-			fetch $_URL -o /chyves/$_resource_name/$_folder_name
+			__log 2 "Downloading $_file_name from $_URL to /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name/..."
+			fetch $_URL -o /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name
 
 			local _hash_length=$( echo $_user_supplied_hash | wc | awk '{ print $3 }' )
 			case "$_hash_length" in
-				33)     local _calcd_chksum=$( md5 -q /chyves/ISO/$_folder_name/$_file_name )
+				33)     local _calcd_chksum=$( md5 -q /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name )
 				        local _hash_type=MD5
 				;;
-				41)     local _calcd_chksum=$( sha1 -q /chyves/ISO/$_folder_name/$_file_name )
+				41)     local _calcd_chksum=$( sha1 -q /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name )
 				        local _hash_type=SHA1
 				;;
-				65)     local _calcd_chksum=$( sha256 -q /chyves/ISO/$_folder_name/$_file_name )
+				65)     local _calcd_chksum=$( sha256 -q /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name )
 				        local _hash_type=SHA256
 				;;
-				129)    local _calcd_chksum=$( sha512 -q /chyves/ISO/$_folder_name/$_file_name )
+				129)    local _calcd_chksum=$( sha512 -q /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name )
 				        local _hash_type=SHA512
 				;;
 				*)      local _calcd_chksum=""
@@ -234,8 +234,8 @@ __resource_import() {
 		else
 			__log 2 "Downloading : $_file_name"
 			__log 2 "        from: $_URL"
-			__log 2 "          to: /chyves/$_resource_name/$_folder_name/..."
-			fetch $_URL -o /chyves/$_resource_name/$_file_name
+			__log 2 "          to: /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name/..."
+			fetch $_URL -o /chyves/$_PRIMARY_POOL/$_resource_name/$_file_name
 		fi
 
 	# Local file copies only.
@@ -243,24 +243,24 @@ __resource_import() {
 		__verify_valid_dataset "$_resource_name/$_folder_name" -check_not_in_use
 		__log 2 "Creating ZFS dataset: $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name"
 		zfs create $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name
-		__log 2 "Copying $_file_name from $_URL to /chyves/$_resource_name/$_folder_name/"
-		cp $_URL /chyves/$_resource_name/$_folder_name
+		__log 2 "Copying $_file_name from $_URL to /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name/"
+		cp $_URL /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name
 	fi
 
 	# Decompress resource if ending in .gz|.xz
 	# These programs delete the original files after decompression
 	if [ -n "$( echo "$_file_name" | grep -E "\.gz$" )" ]; then
 		__log 2 "Decompressing .gz file."
-		gunzip -d /chyves/ISO/$_folder_name/$_file_name
+		gunzip -d /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name
 		local _file_name="$_folder_name"
 	elif [ -n "$( echo "$_file_name" | grep -E "\.xz$" )" ]; then
 		__log 2 "Decompressing .xz file."
-		xz -d /chyves/ISO/$_folder_name/$_file_name
+		xz -d /chyves/$_PRIMARY_POOL/ISO/$_folder_name/$_file_name
 		local _file_name="$_folder_name"
 	fi
 
 	# Checks to see if resource exists now.
-	if [ -e /chyves/$_resource_name/$_folder_name/$_file_name ]; then
+	if [ -e /chyves/$_PRIMARY_POOL/$_resource_name/$_folder_name/$_file_name ]; then
 		__log 1 "$_file_name successfully imported as a chyves $_resource_name resource."
 	else
 		__log 1 "Operation unsuccessful: delete the dataset and try again."

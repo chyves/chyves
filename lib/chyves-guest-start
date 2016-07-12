@@ -26,9 +26,7 @@
 
 # Generates a bhyve slot string for custom PCI devices
 __generate_bhyve_custom_pci_string() {
-	local _dataset="$1"
-	local _custom_pci_devs=$( zfs get -H -o property,value all $_dataset | grep chyves:pcidev: | sort | cut -f2 )
-
+	local _custom_pci_devs="$( grep -E "^pcidev_" $_GUEST_config_file | cut -d'=' -f2- | sort -V )"
 
 	# Special handling for PCI passthrough devices
 	if [ -n "$( echo "$_custom_pci_devs" | grep 'passthru,' )" ]; then
@@ -70,11 +68,15 @@ __generate_bhyve_disk_string() {
 	# Create device list for bhyve
 	for _disk_dataset in `echo $_disks_dataset_list | tr '\n' ' '`
 	do
-		# See man page Manually Setting Properties section for more info.
-		local _virtio_block_options=$( zfs get -H -o value chyves:virtio_block_options "$_disk_dataset" )
+
+		# Parse disk name for pulling property
+		local _disk_name="$( echo "$_disk_dataset" | cut -d'/' -f5 )"
+
+		# See man page Advanced Properties section for more info.
+		local _virtio_block_options=$( __return_property_value_from_config_file "guest" "virtio_block_options_$_disk_name" )
 
 		# Typical handling
-		if [ -z "$_virtio_block_options" ] || [ "$_virtio_block_options" = "-" ]; then
+		if [ -z "$_virtio_block_options" ]; then
 
 			# Pull the blocksize on the ZFS volume to optimize performance.
 			#local _disk_blocksize="$( zfs get -H -p -o value volblocksize "$_disk_dataset" )"
@@ -108,8 +110,7 @@ __generate_bhyve_net_string() {
 	__gvset_guest_pool "$name"
 
 	# Setup interfaces if any are configured.
-	local _net_ifaces="$( __return_chyves_zfs_property_value "net_ifaces" "guest" )"
-	for _iface in `echo $_net_ifaces | tr ',' '\n'`
+	for _iface in `echo "$_GP_net_ifaces" | tr ',' '\n'`
 	do
 		[ "$_iface" = "-" ] && continue
 
@@ -126,8 +127,8 @@ __generate_bhyve_net_string() {
 		fi
 
 		# Add a virtio-net pci device for the tap
-		local _mac="$( __return_chyves_zfs_property_value "${_iface}_mac" "guest" )"
-		if [ $_mac = "-" ] || [ -z "$_mac" ]; then
+		local _mac="$( __return_property_value_from_config_file "guest" "${_iface}_mac" )"
+		if [ -z "$_mac" ]; then
 			local _string="$_string virtio-net,$_iface"
 		else
 			_string="$_string virtio-net,${_iface},mac=${_mac}"
@@ -245,7 +246,7 @@ __generate_bhyve_vnc_string() {
 	local _string="${_string},w=${_vnc_w_res},h=${_vnc_h_res}"
 
 	# VNC Pause boot until connect
-	[ "$_GP_uefi_vnc_pause" = "yes" ] && local _string="${_string},wait"
+	[ "$_GP_uefi_pause_until_vnc_client_connect" = "yes" ] && local _string="${_string},wait"
 
 	# Assign to global variable
 	_BHYVE_vnc_string="$_string"
@@ -264,7 +265,7 @@ __generate_generic_device_map() {
 __generate_grub_bhyve_command() {
 	local _guest="$1"
 	local _iso="$2"
-	[ -n "$_iso" ] && local _media="/chyves/ISO/$_iso/$_iso"
+	[ -n "$_iso" ] && local _media="/chyves/$_PRIMARY_POOL/ISO/$_iso/$_iso"
 	__gvset_guest_pool "$_guest"
 	__gvset_first_disk
 	__verify_binary_available "grub-bhyve"
@@ -415,7 +416,7 @@ __start() {
 			__log 2 "Generating command string for bhyveload... " -n
 			if [ -n "$_media" ]; then
 				__log 2 "using $_media as boot device... " -n
-				local _media_string_bhyveload="/chyves/ISO/$_media/$_media"
+				local _media_string_bhyveload="/chyves/$_PRIMARY_POOL/ISO/$_media/$_media"
 			else
 				__gvset_first_disk
 				__log 2 "using $_FIRST_disk as boot device... " -n
@@ -484,7 +485,7 @@ __start() {
 		[ -z "$_BHYVE_console_string" ] && _BHYVE_console_string="-l com1,/dev/${_GP_serial}A"
 
 		# Attach media if present. Always use 3 due to UEFI requiring ahci devices on PCI slots 3-6 && simplicity.
-		[ -n "$_media" ] && _BHYVE_optical_media_string="-s 3,ahci-cd,/chyves/ISO/$_media/$_media"
+		[ -n "$_media" ] && _BHYVE_optical_media_string="-s 3,ahci-cd,/chyves/$_PRIMARY_POOL/ISO/$_media/$_media"
 
 		__log 2 "Generating bhyve string for network devices... "
 		__generate_bhyve_net_string $_GUEST_name
@@ -494,8 +495,8 @@ __start() {
 		__generate_bhyve_custom_pci_string "$_GUEST_pool/chyves/guests/$_GUEST_name"
 		__log 2 "done."
 
-		# Print the command to start the UEFI guest when $_DEVELOPER_MODE is not "off".
-		if [ "$_DEVELOPER_MODE" != "off" ]; then
+		# Print the command to start the UEFI guest when $_DEV_MODE is not "off".
+		if [ "$_DEV_MODE" != "off" ]; then
 			__log 3 "loader command ($_GP_loader):"
 			__log 3 "$_LOADER_cmd"
 			__log 3 "bhyve command:"

@@ -39,8 +39,8 @@ __list_bridges() {
 		echo "Bridge: $b"
 
 		# Get outside interface for this bridge
-		local _phy=$( __return_chyves_zfs_property_value "${b}_phy_attach" "global" )
-		[ "$_phy" = "-" ] && __fault_detected_exit "Bridge not associated with physical or vlan interface, or set to \"private\". \nPlease run: chyves network $b attach {iface} \n        Or: chyves network $b private"
+		local _phy=$( __return_property_value_from_config_file "global" "${b}_phy_attach" )
+		[ "$_phy" = "" ] && __fault_detected_exit "Bridge not associated with physical or vlan interface, or set to \"private\". \nPlease run: chyves network $b attach {iface} \n        Or: chyves network $b private"
 		__verify_valid_iface_format $_phy
 		if [ "$_IFACE_type" = "private" ]; then
 			echo "       Private network, no outside connectivity."
@@ -129,8 +129,10 @@ __list_clones_sub() {
 
 # List properties set in .defaults
 __list_defaults() {
-		echo -e "Properties:\t     defaults:"
-		zfs get -r -t filesystem -o property,value all $_PRIMARY_POOL/chyves/guests/.defaults | grep chyves: | sed -e 's/chyves://g' | sort -k1
+	(
+	echo "Guest Default:^Value:"
+	awk 'BEGIN { FS = "=" } ; { print $1"^"$2 }' $_DEFAULT_CONFIG_FILE | sort -k1
+	) | column -ts^
 }
 
 # List Firmware resources. Using "firmware" lists the property firmware rather than the resource
@@ -142,21 +144,29 @@ __list_firmwares() {
 # List properties set in .config
 __list_global_properties() {
 	local _pool=$1
+	local _pool_list="$( __return_pools_all | tr '\n' ' ' )"
 
-	echo "Listing properties set in .config"
 	[ "$_pool" = "primary" ] && _pool=$_PRIMARY_POOL
 
-	if [ -n "${_pool}" ]; then
-		(
-		echo -e "Property:\t Value:"
-		( zfs get -r -t filesystem -o property,value all $_pool/chyves/.config | grep chyves: | sed -e 's/chyves://g' | sort -k1 )
-		) | column -t
-	else
-		(
-		echo -e "Dataset:\t Property:\t Value:"
-		( zfs get -r -t filesystem -o name,property,value all | grep chyves/.config | grep chyves: | sed -e 's/chyves://g' | sed -e 's/\/chyves\/\.config//g' ) | sort -k2
-		) | column -t
-	fi
+	# If pool is specified, only display that one.
+	[ -n "$_pool" ] && local _pool_list="$_pool"
+
+	(
+	echo "Pool:^Type:^Property:^Value:"
+	for _loop in $_pool_list
+	do
+		echo $_loop
+		if [ -e "/chyves/$_loop/.config/global.cfg" ]; then
+			echo " ^Global"
+			awk 'BEGIN { FS = "=" } ; { print " ^ ^"$1"^"$2 }' /chyves/$_loop/.config/global.cfg | sort -k1
+		fi
+
+		if [ -e "/chyves/$_loop/.config/pool.cfg" ]; then
+			echo " ^Pool"
+			awk 'BEGIN { FS = "=" } ; { print " ^ ^"$1"^"$2 }' /chyves/$_loop/.config/pool.cfg | sort -k1
+		fi
+	done
+	) | column -ts^
 }
 
 # List ISO firmware resources.
@@ -169,12 +179,14 @@ __list_iso() {
 
 # List pools and roles
 __list_pools() {
-	local _pools=$( __return_pools_all )
+	local _pool_list="$( __return_pools_all )"
 	(
-		printf "%s^%s\n" "Pool:" "Role:"
-		for _pool in $_pools; do
-			local _dataset_role=$( zfs get -H -o value chyves:dataset_role $_pool/chyves/.config )
-			printf "%s^%s\n" "$_pool" "$_dataset_role"
+		echo "Pool:^Role:^Version:"
+		for _pool in $_pool_list
+		do
+			local _dataset_role=$( __return_property_value_from_config_file "manual" "dataset_role" "/chyves/$_pool/.config/pool.cfg" )
+			local _dataset_version=$( __return_property_value_from_config_file "manual" "dataset_version" "/chyves/$_pool/.config/pool.cfg" )
+			echo "$_pool^$_dataset_role^$_dataset_version"
 		done
 	) | sort -k1 | column -ts^
 }
@@ -191,10 +203,10 @@ __list_processes() {
 
 # Dynamically lists the guest chyves properties
 __list_properties() {
-	echo "Use the following syntax to display of list of the guests on the system and a property."
+	echo "Use the following syntax to display the specified property and a list values for each guest."
 	echo "These are the available properties: "
 	__return_property_list
-	echo "Run 'chyves list <property>' to see what that property is for each guest."
+	echo "Run 'chyves list <property>' where <property> is an above value."
 }
 
 # Lists a property for all active guests. See "chyves list properties" for options
@@ -203,18 +215,19 @@ __list_single_property() {
 
 	# Displays singular property
 	(
-	printf 'Guest\t'$_property'\n'
+	echo "Guest:^$_property:"
 	for _pool in `__return_new_line_delimit_as_space_string $( __return_pools_all )`
 	do
 		for _guest in `__return_new_line_delimit_as_space_string $( __return_guest_list $_pool )`
 		do
 			_GUEST_name="$_guest"
 			_GUEST_pool=$_pool
-			local _value="$( __return_chyves_zfs_property_value "${_property}" "guest" )"
-			printf $_GUEST_name'\t'$_value'\n'
+			_GUEST_config_file="/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg"
+			local _value="$( __return_property_value_from_config_file "guest" "$_property" )"
+			echo "$_GUEST_name ^$_value"
 		done
 	done
-	) | column -t
+	) | column -ts^
 }
 
 # List snapshots
@@ -222,7 +235,7 @@ __list_snapshots() {
 
 	if [ -z "$_GUEST_name" ]; then
 		echo "Listing top level snapshots..."
-		zfs list -H -d 4 -t snapshot -o name | grep chyves/guests | grep -v -E ".defaults|.config" | cut -d '/' -f4- | sed '/^$/d'
+		zfs list -H -d 4 -t snapshot -o name | grep chyves/guests | grep -v ".config" | cut -d '/' -f4- | sed '/^$/d'
 	else
 		echo "Listing all $_GUEST_name snapshots..."
 		__return_guest_snapshot_list_level2
@@ -332,7 +345,7 @@ EOT
 
 	# Spider through pools
 	for pool in $_pools; do
-		local _dataset_role=$( __return_chyves_zfs_property_value "dataset_role" "manual" "$pool/chyves/.config" )
+		local _dataset_role=$( __return_property_value_from_config_file "manual" "dataset_role" "/chyves/$pool/.config/pool.cfg" )
 
 		if [ -z "$_gst" ]; then
 			local _guest_list="$( __return_new_line_delimit_as_space_string $( __return_guest_list $pool ) )"
@@ -455,13 +468,13 @@ EOT
 
 						# Print Description (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'd|a' )" ]; then
-							local _disk_desc="$( __return_chyves_zfs_property_value "description" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$_disk" )"
+							local _disk_desc="$( __return_property_value_from_config_file "guest" "${_disk}_description" )"
 							printf "^%s" "$_disk_desc"
 						fi
 
 						# Print Notes (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'n|a' )" ]; then
-							local _disk_notes="$( __return_chyves_zfs_property_value "notes" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/$_disk" )"
+							local _disk_notes="$( __return_property_value_from_config_file "guest" "${_disk}_notes" )"
 							printf "^%s" "$_disk_notes"
 						fi
 					fi

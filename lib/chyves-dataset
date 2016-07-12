@@ -29,23 +29,27 @@ __dataset_install() {
 	local _pool="$1"
 	local _creation_stamp="Dataset originally created on $( date ) by chyves $_VERSION_LONG using dataset version $_VERSION_DATASET"
 	echo "Setting up chyves on $_pool..."
-	zfs create $_pool/chyves
-	zfs create -o mountpoint=none $_pool/chyves/.config
-	zfs set chyves:creation="$_creation_stamp" $_pool/chyves/.config
-	zfs set chyves:dataset_version="$_VERSION_DATASET" $_pool/chyves/.config
+	zfs create -o mountpoint=/chyves/$_pool $_pool/chyves
+	zfs create $_pool/chyves/.config
+	touch /chyves/$_pool/.config/pool.cfg
+	__write_property_value_to_config_file "manual" "creation"        "$_creation_stamp" "/chyves/$_pool/.config/pool.cfg"
+	__write_property_value_to_config_file "manual" "dataset_version" "$_VERSION_DATASET" "/chyves/$_pool/.config/pool.cfg"
 	zfs create $_pool/chyves/guests
 
 	# A chyves pool is already setup, so setup as secondary pool.
 	if [ -n "$_PRIMARY_POOL" ]; then
 		echo "Setting pool up in secondary dataset role..."
-		zfs set mountpoint="/chyves/$_pool" $_pool/chyves
-		zfs set chyves:dataset_role=secondary $_pool/chyves/.config
+		__write_property_value_to_config_file "manual" "dataset_role" "secondary" "/chyves/$_pool/.config/pool.cfg"
 
 	# chyves is not set up yet, setup primary pool.
 	else
 		_PRIMARY_POOL=$_pool
 		_RESTRICT_NEW_PROPERTY_NAMES="master-override"
-		zfs set mountpoint="/chyves" $_PRIMARY_POOL/chyves
+		_GLOBAL_CONFIG_FILE="/chyves/$_PRIMARY_POOL/.config/global.cfg"
+		_DEFAULT_CONFIG_FILE="/chyves/$_PRIMARY_POOL/guests/.defaults"
+		__write_property_value_to_config_file "manual" "dataset_role" "primary" "/chyves/$_PRIMARY_POOL/.config/pool.cfg"
+		touch "$_GLOBAL_CONFIG_FILE"
+		touch "$_DEFAULT_CONFIG_FILE"
 		echo "Creating compressed log dataset"
 		zfs create -o compression=on $_PRIMARY_POOL/chyves/logs
 		_LOG_TO_FILE="YES"
@@ -54,57 +58,56 @@ __dataset_install() {
 		zfs create $_PRIMARY_POOL/chyves/ISO
 
 		__log 2 "Creating guest defaults dataset and properties..."
-		zfs create -o mountpoint=none $_PRIMARY_POOL/chyves/guests/.defaults
-		__set_chyves_zfs_property "bargs"         "-A -H -P" "defaults"
-		__set_chyves_zfs_property "bridge"        "bridge0" "defaults"
-		__set_chyves_zfs_property "cpu"           "1" "defaults"
-		__set_chyves_zfs_property "loader"        "bhyveload" "defaults"
-		__set_chyves_zfs_property "os"            "default" "defaults"
-		__set_chyves_zfs_property "ram"           "256M" "defaults"
-		__set_chyves_zfs_property "rcboot"        "0" "defaults"
-		__set_chyves_zfs_property "size"          "8G" "defaults"
-		__set_chyves_zfs_property "template"      "no" "defaults"
+		__write_property_value_to_config_file "defaults" "bargs"     "-A -H -P"
+		__write_property_value_to_config_file "defaults" "bridge"    "bridge0"
+		__write_property_value_to_config_file "defaults" "cpu"       "1"
+		__write_property_value_to_config_file "defaults" "loader"    "bhyveload"
+		__write_property_value_to_config_file "defaults" "os"        "default"
+		__write_property_value_to_config_file "defaults" "ram"       "256M"
+		__write_property_value_to_config_file "defaults" "rcboot"    "0"
+		__write_property_value_to_config_file "defaults" "size"      "8G"
+		__write_property_value_to_config_file "defaults" "template"  "no"
 
-		__set_chyves_zfs_property "uefi_console_output"                  "serial" "defaults"
-		__set_chyves_zfs_property "uefi_firmware"                        "-" "defaults"
-		__set_chyves_zfs_property "uefi_mouse_type"                      "ps2" "defaults"
-		__set_chyves_zfs_property "uefi_vnc_ip"                          "0.0.0.0" "defaults"
-		__set_chyves_zfs_property "uefi_vnc_res"                         "800x600" "defaults"
-		__set_chyves_zfs_property "uefi_pause_until_vnc_client_connect"  "no" "defaults"
+		__write_property_value_to_config_file "defaults" "uefi_console_output"                  "serial"
+		__write_property_value_to_config_file "defaults" "uefi_firmware"                        "-"
+		__write_property_value_to_config_file "defaults" "uefi_mouse_type"                      "ps2"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_client"                      "print"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_ip"                          "0.0.0.0"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_res"                         "800x600"
+		__write_property_value_to_config_file "defaults" "uefi_pause_until_vnc_client_connect"  "no"
 
-		__set_chyves_zfs_property "disk_volmode"         "dev" "defaults"
-		__set_chyves_zfs_property "disk_volblocksize"    "512" "defaults"
-		__set_chyves_zfs_property "disk_dedup"           "inherit" "defaults"
-		__set_chyves_zfs_property "disk_compression"     "inherit" "defaults"
-		__set_chyves_zfs_property "disk_primarycache"    "inherit" "defaults"
-		__set_chyves_zfs_property "disk_secondarycache"  "inherit" "defaults"
-
-		__log 2 "Saving defaults settings as a snapshot"
-		zfs snapshot $_PRIMARY_POOL/chyves/guests/.defaults@${_DATE_YMD}-chyves-install-inital-settings-version-${_VERSION}
+		__write_property_value_to_config_file "defaults" "disk_volmode"         "dev"
+		__write_property_value_to_config_file "defaults" "disk_volblocksize"    "512"
+		__write_property_value_to_config_file "defaults" "disk_dedup"           "inherit"
+		__write_property_value_to_config_file "defaults" "disk_compression"     "inherit"
+		__write_property_value_to_config_file "defaults" "disk_primarycache"    "inherit"
+		__write_property_value_to_config_file "defaults" "disk_secondarycache"  "inherit"
 
 		__log 2 "Setting up global properties on primary pool..."
-		__set_chyves_zfs_property "auto_load_kernel_mods"                "yes" "global"
-		__set_chyves_zfs_property "console_start_offset"                 "50" "global"
-		__set_chyves_zfs_property "consolidate_bhyve_pci_devices"        "no" "global"
-		__set_chyves_zfs_property "dataset_role"                         "primary" "global"
-		__set_chyves_zfs_property "default_clone_flag"                   "-iu" "global"
-		__set_chyves_zfs_property "default_info_flags"                   "-h" "global"
-		__set_chyves_zfs_property "default_list_flags"                   "-skdp" "global"
-		__set_chyves_zfs_property "dev_mode"                             "off" "global"
-		__set_chyves_zfs_property "network_design_mode"                  "auto" "global"
-		__set_chyves_zfs_property "log_mode"                             "dual" "global"
-		__set_chyves_zfs_property "log_to_file"                          "yes" "global"
-		__set_chyves_zfs_property "restrict_new_property_names"          "on" "global"
-		__set_chyves_zfs_property "stdout_level"                         "2" "global"
-		__set_chyves_zfs_property "tap_start_offset"                     "50" "global"
-		__set_chyves_zfs_property "tap_up_by_default"                    "yes" "global"
-		__set_chyves_zfs_property "vlan_iface_base_name"                 "vlan" "global"
-		__set_chyves_zfs_property "uefi_vnc_port_start_offset"           "5900" "global"
-		__set_chyves_zfs_property "check_for_updates"                    "weekly" "global"
-		__set_chyves_zfs_property "check_for_updates_timeout_seconds"    "2" "global"
-		__set_chyves_zfs_property "check_for_updates_last_check"         "$_DATE_YMD" "global"
-		__set_chyves_zfs_property "check_for_updates_last_check_status"  "0" "global"
-		__set_chyves_zfs_property "check_for_updates_unique_id"          "$_UUID_GENERAL_USE" "global"
+		__write_property_value_to_config_file "global" "auto_load_kernel_mods"                "yes"
+		__write_property_value_to_config_file "global" "check_for_updates"                    "weekly"
+		__write_property_value_to_config_file "global" "check_for_updates_timeout_seconds"    "2"
+		__write_property_value_to_config_file "global" "check_for_updates_last_check"         "$_DATE_YMD"
+		__write_property_value_to_config_file "global" "check_for_updates_last_check_status"  "0"
+		__write_property_value_to_config_file "global" "check_for_updates_unique_id"          "$_UUID_GENERAL_USE"
+		__write_property_value_to_config_file "global" "console_start_offset"                 "50"
+		__write_property_value_to_config_file "global" "consolidate_bhyve_pci_devices"        "no"
+		__write_property_value_to_config_file "global" "default_clone_flag"                   "-iu"
+		__write_property_value_to_config_file "global" "default_info_flags"                   "-h"
+		__write_property_value_to_config_file "global" "default_list_flags"                   "-skdp"
+		__write_property_value_to_config_file "global" "dev_mode"                             "off"
+		__write_property_value_to_config_file "global" "network_design_mode"                  "auto"
+		__write_property_value_to_config_file "global" "log_mode"                             "dual"
+		__write_property_value_to_config_file "global" "log_to_file"                          "yes"
+		__write_property_value_to_config_file "global" "restrict_new_property_names"          "on"
+		__write_property_value_to_config_file "global" "stdout_level"                         "2"
+		__write_property_value_to_config_file "global" "tap_start_offset"                     "50"
+		__write_property_value_to_config_file "global" "tap_up_by_default"                    "yes"
+		__write_property_value_to_config_file "global" "vlan_iface_base_name"                 "vlan"
+		__write_property_value_to_config_file "global" "uefi_vnc_port_start_offset"           "5900"
+
+		__log 2 "Saving global settings as a snapshot"
+		zfs snapshot $_PRIMARY_POOL/chyves/.config@${_DATE_YMD}-chyves-install-inital-settings-version-${_VERSION}
 
 		__log 2 "Creating null.iso for UEFI use..."
 		touch /tmp/null.iso

@@ -170,10 +170,10 @@ _DATE_YMD=$( date +"%Y%m%d" )
 _DATE_YM=$( date +"%Y%m" )
 _UUID_GENERAL_USE="$(/bin/uuidgen)"
 _UUID_GUEST_USE="$(/bin/uuidgen)"
-_OLD_VERSION_DATASETS="$( zfs get -H -o name,value -t filesystem -r chyves:dataset_version | grep chyves/.config | grep -v "${_VERSION_DATASET}" )"
+_OLD_VERSION_DATASETS="$( grep -hE "^dataset_version=.*" /chyves/*/.config/pool.cfg | grep -v "dataset_version=$_VERSION_DATASET" )"
 _FREEBSD_NET_DRIVERS_GREP_STRING='^bxe[0-9]?[0-9]?$|^de[0-9]?[0-9]?$|^em[0-9]?[0-9]?$|^igb[0-9]?[0-9]?$|^ix[0-9]?[0-9]?$|^ixv[0-9]?[0-9]?$|^ixl[0-9]?[0-9]?$|^ixlv[0-9]?[0-9]?$|^le[0-9]?[0-9]?$|^ti[0-9]?[0-9]?$|^txp[0-9]?[0-9]?$|^vx[0-9]?[0-9]?$|^miibus[0-9]?[0-9]?$|^ae[0-9]?[0-9]?$|^age[0-9]?[0-9]?$|^alc[0-9]?[0-9]?$|^ale[0-9]?[0-9]?$|^bce[0-9]?[0-9]?$|^bfe[0-9]?[0-9]?$|^bge[0-9]?[0-9]?$|^cas[0-9]?[0-9]?$|^dc[0-9]?[0-9]?$|^et[0-9]?[0-9]?$|^fxp[0-9]?[0-9]?$|^gem[0-9]?[0-9]?$|^hme[0-9]?[0-9]?$|^jme[0-9]?[0-9]?$|^lge[0-9]?[0-9]?$|^msk[0-9]?[0-9]?$|^nfe[0-9]?[0-9]?$|^nge[0-9]?[0-9]?$|^nve[0-9]?[0-9]?$|^pcn[0-9]?[0-9]?$|^re[0-9]?[0-9]?$|^rl[0-9]?[0-9]?$|^sf[0-9]?[0-9]?$|^sge[0-9]?[0-9]?$|^sis[0-9]?[0-9]?$|^sk[0-9]?[0-9]?$|^ste[0-9]?[0-9]?$|^stge[0-9]?[0-9]?$|^tl[0-9]?[0-9]?$|^tx[0-9]?[0-9]?$|^vge[0-9]?[0-9]?$|^vr[0-9]?[0-9]?$|^wb[0-9]?[0-9]?$|^xl[0-9]?[0-9]?$|^cs[0-9]?[0-9]?$|^ed[0-9]?[0-9]?$|^ex[0-9]?[0-9]?$|^ep[0-9]?[0-9]?$|^fe[0-9]?[0-9]?$|^sn[0-9]?[0-9]?$|^xe[0-9]?[0-9]?$|^an[0-9]?[0-9]?$|^ath[0-9]?[0-9]?$|^ath_pci[0-9]?[0-9]?$|^ath_hal[0-9]?[0-9]?$|^bwi[0-9]?[0-9]?$|^bwn[0-9]?[0-9]?$|^ipw[0-9]?[0-9]?$|^iwi[0-9]?[0-9]?$|^iwn[0-9]?[0-9]?$|^malo[0-9]?[0-9]?$|^mwl[0-9]?[0-9]?$|^ral[0-9]?[0-9]?$|^wi[0-9]?[0-9]?$|^wpi[0-9]?[0-9]?$'
 _KERNEL_MODULES="$( printf "%s\n%s\n%s\n%s\n%s" "vmm" "nmdm" "if_tap" "bridgestp" "if_bridge" )"
-_NUMBER_OF_ALL_GUESTS="$( zfs list -d 3 -r -o name | grep chyves/guests/ | grep -c -v .defaults )"
+_NUMBER_OF_ALL_GUESTS="$( zfs list -d 3 -t filesystem -r -o name | grep -c /chyves/guests/ )"
 _GUEST_NAMES_FORBIDDEN_GREP_STRING="^.config$|^.defaults$|^all$|^clone$|^console$|^create$|^dataset$|^defaults$|^delete$|^destroy$|^disk$|^firmware$|^get$|^global$|^guests$|^info$|^iso$|^list$|^network$|^primary$|^reclaim$|^rename$|^reorder$|^reset$|^set$|^snapshot$|^start$|^stop$|^stop$"
 _PCI_SLOT_START=4
 _OFFLIMIT_PCI_SLOT_NUMS_GREP_STRING='^0$|^3$|^31$'
@@ -190,7 +190,7 @@ __preflight_check() {
 	__load_library_files
 
 	# Check to see if more than one pool has the primary role set.
-	if [ "$( zfs get -H -o name,value -t filesystem -r chyves:dataset_role | grep "chyves/.config" | grep -c "primary" )" -gt 1 ]; then
+	if [ "$( echo "$_GLOBAL_CONFIG_FILE" | grep -c "" )" -gt 1 ]; then
 		__fault_detected_exit "More than one primary pool set, fix it!"
 	fi
 
@@ -218,31 +218,22 @@ __preflight_check() {
 
 	# Stage 2 global variables (Dependent on functions or primary pool)
 	__gvset_primary_pool   # Sets $_PRIMARY_POOL
+	_GLOBAL_CONFIG_FILE="/chyves/$_PRIMARY_POOL/.config/global.cfg"
 	if [ -z "$_PRIMARY_POOL" ]; then
 		__log 1 "Run setup to install chyves dataset on a pool."
 		[ "$1" != "dataset" ] && __fault_detected_exit "No seriously, run \"chyves setup <ZFS-pool-name>\""
 	else
-		_AUTO_LOAD_KERNEL_MODS="$( __return_chyves_zfs_property_value                "auto_load_kernel_mods"                "global" )"
-		_CONSOLIDATE_BHYVE_PCI_DEVICES="$( __return_chyves_zfs_property_value        "consolidate_bhyve_pci_devices"        "global" )"
-		_CHECK_FOR_UPDATES="$( __return_chyves_zfs_property_value                    "check_for_updates"                    "global" )"
-		_CHECK_FOR_UPDATES_TIMEOUT_SECONDS="$( __return_chyves_zfs_property_value    "check_for_updates_timeout_seconds"    "global" )"
-		_CHECK_FOR_UPDATES_LAST_CHECK="$( __return_chyves_zfs_property_value         "check_for_updates_last_check"         "global" )"
-		_CHECK_FOR_UPDATES_LAST_CHECK_STATUS="$( __return_chyves_zfs_property_value  "check_for_updates_last_check_status"  "global" )"
-		_CHECK_FOR_UPDATES_UNIQUE_ID="$( __return_chyves_zfs_property_value          "check_for_updates_unique_id"          "global" )"
-		_CHECK_FOR_UPDATES_URL="$_PROJECT_URL_GIT/raw/${_VERSION_BRANCH}/lib/chy-version"
-		_DEFAULT_CLONE_FLAG="$( __return_chyves_zfs_property_value                   "default_clone_flag"                   "global" )"
-		_DEFAULT_INFO_FLAGS="$( __return_chyves_zfs_property_value                   "default_info_flags"                   "global" )"
-		_DEFAULT_LIST_FLAGS="$( __return_chyves_zfs_property_value                   "default_list_flags"                   "global" )"
-		_DEVELOPER_MODE="$( __return_chyves_zfs_property_value                       "dev_mode"                             "global" )"
+
+		# Load all global parameters in global config file to global varibles in the _UPPER_UPPER_UPPER format.
+		for _var in `cat $_GLOBAL_CONFIG_FILE | cut -d'=' -f1`
+		do
+			__load_global_parameter_single "$_var"
+		done
+
+		_DEFAULT_CONFIG_FILE="/chyves/$_PRIMARY_POOL/guests/.defaults"
+		_CHECK_FOR_UPDATES_URL="$_PROJECT_URL_GIT/raw/${_VERSION_BRANCH}/sbin/chyves"
 		_GUEST_NAMES_ACTIVE="$( __return_new_line_delimit_as_comma_string $( __return_guest_list ) )"
 		_GUEST_NAMES_ALL_GREP_STRING="$( __return_new_line_delimit_as_grep_string $( __return_guest_list ) )"
-		_LOG_MODE="$( __return_chyves_zfs_property_value                             "log_mode"                             "global" )"
-		_LOG_TO_FILE="$( __return_chyves_zfs_property_value                          "log_to_file"                          "global" )"
-		_NETWORK_DESIGN_MODE="$( __return_chyves_zfs_property_value                  "network_design_mode"                  "global" )"
-		_RESTRICT_NEW_PROPERTY_NAMES="$( __return_chyves_zfs_property_value          "restrict_new_property_names"          "global" )"
-		_STDOUT_LEVEL="$( __return_chyves_zfs_property_value                         "stdout_level"                         "global" )"
-		_TAP_UP_BY_DEFAULT="$( __return_chyves_zfs_property_value                    "tap_up_by_default"                    "global" )"
-		_VLAN_IFACE_BASE_NAME="$( __return_chyves_zfs_property_value                 "vlan_iface_base_name"                 "global" )"
 	fi
 
 	if [ "$_TAP_UP_BY_DEFAULT" = yes ]; then
@@ -324,7 +315,7 @@ __log() {
 		# If _GUEST_name is set, then set the variable to record to the guest path.
 		if [ -n "$_GUEST_name" ]; then
 			if [ "$_LOG_MODE" = "guest" ] || [ "$_LOG_MODE" = "dual" ]; then
-				if [ -e "$_GUEST_mountpoint" ]; then
+				if [ -e "$_GUEST_mountpoint/logs" ]; then
 					local _guest_log_path="$_GUEST_mountpoint/logs/$_DATE_YM.log"
 				fi
 			fi
@@ -332,8 +323,8 @@ __log() {
 
 		# If host or dual mode is set, then set varible to record
 		if [ "$_LOG_MODE" = "host" ] || [ "$_LOG_MODE" = "dual" ]; then
-			if [ -e "/chyves" ] ; then
-				local _host_log_path="/chyves/logs/$_DATE_YM.log"
+			if [ -e "/chyves/$_PRIMARY_POOL/logs" ] ; then
+				local _host_log_path="/chyves/$_PRIMARY_POOL/logs/$_DATE_YM.log"
 			fi
 		fi
 

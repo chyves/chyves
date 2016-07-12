@@ -30,18 +30,19 @@ __get() {
 	local prop="$2"
 
 	# Multi-guest support.
-	# Eg.: chyves get cpu guest1,guest2,guest3
+	# Eg.: chyves guest1,guest2,guest3 get cpu
 	for name in `echo "$guests" | tr ',' ' '`
 	do
 		_GUEST_name="$name"
 		__gvset_guest_pool
+		_GUEST_config_file="/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg"
 
 		if [ "$prop" = "all" ]; then
-			echo "Getting all $name's chyves properties..."
-			zfs get -o property,value all $_GUEST_pool/chyves/guests/$_GUEST_name/.config | grep chyves: | sort | sed -e 's/chyves://g'
+			echo "Getting all $name's properties..."
+			awk 'BEGIN { FS = "=" } ; { print $1"^"$2 }' $_GUEST_config_file | sort -k1 | column -ts^
 		else
-			echo -n "Getting $name's property '$prop'="
-			__return_chyves_zfs_property_value "$prop" "guest"
+			__log 1 "$name's $prop=" -n
+			__return_property_value_from_config_file "guest" "$prop"
 		fi
 	done
 }
@@ -76,74 +77,55 @@ __get_corrected_byte_nomenclature() {
 	_CORRECTED_byte_nomenclature="$_num$_suffix"
 }
 
+# Load single guest parameter from config file to $_GP_($_var)
+__load_global_parameter_single() {
+	local _var="$1"
+	local _value="$( cat $_GLOBAL_CONFIG_FILE | grep -m 1 -E "^$_var=" | cut -d'=' -f2- )"
+	local _var="$( echo $_var | tr '[:lower:]' '[:upper:]' )"
+	_var2="_$_var"
+	export $_var2="$_value"
+}
+
+# Load single guest parameter from config file to $_GP_($_var)
+__load_guest_default_parameter_single() {
+	local _var="$1"
+	local _value="$( cat $_DEFAULT_CONFIG_FILE | grep -m 1 -E "^$_var=" | cut -d'=' -f2- )"
+	_var2="_GDP_$_var"
+	export $_var2="$_value"
+}
+
 # Loads .defaults parameters to global variables
 __load_guest_default_parameters() {
 	_GDP_parameters_loaded=1
 
-	# GDP = Guest Default Parameter
-	# Parameters held in ZFS user properties:
-	_GDP_bargs="$( __return_chyves_zfs_property_value       "bargs"       "defaults" )"
-	_GDP_bridge="$( __return_chyves_zfs_property_value      "bridge"      "defaults" )"
-	_GDP_cpu="$( __return_chyves_zfs_property_value         "cpu"         "defaults" )"
-	_GDP_loader="$( __return_chyves_zfs_property_value      "loader"      "defaults" )"
-	_GDP_os="$( __return_chyves_zfs_property_value          "os"          "defaults" )"
-	_GDP_ram="$( __return_chyves_zfs_property_value         "ram"         "defaults" )"
-	_GDP_rcboot="$( __return_chyves_zfs_property_value      "rcboot"      "defaults" )"
-	_GDP_size="$( __return_chyves_zfs_property_value        "size"        "defaults" )"
-	_GDP_template="$( __return_chyves_zfs_property_value    "template"    "defaults" )"
+	# Load all guest parameters in guest config file.
+	for _var in `cat $_DEFAULT_CONFIG_FILE | cut -d'=' -f1`
+	do
+		__load_guest_default_parameter_single "$_var"
+	done
+}
 
-	# UEFI
-	_GDP_uefi_console_output="$( __return_chyves_zfs_property_value  "uefi_console_output"                  "defaults" )"
-	_GDP_uefi_firmware="$( __return_chyves_zfs_property_value        "uefi_firmware"                        "defaults" )"
-	_GDP_uefi_mouse_type="$( __return_chyves_zfs_property_value      "uefi_mouse_type"                      "defaults" )"
-	_GDP_uefi_vnc_ip="$( __return_chyves_zfs_property_value          "uefi_vnc_ip"                          "defaults" )"
-	_GDP_uefi_vnc_res="$( __return_chyves_zfs_property_value         "uefi_vnc_res"                         "defaults" )"
-	_GDP_uefi_vnc_pause="$( __return_chyves_zfs_property_value       "uefi_pause_until_vnc_client_connect"  "defaults" )"
-
-	# Get _disk specific properties
-	_GDP_disk_volmode="$( __return_chyves_zfs_property_value         "disk_volmode"         "defaults" )"
-	_GDP_disk_volblocksize="$( __return_chyves_zfs_property_value    "disk_volblocksize"    "defaults" )"
-	_GDP_disk_dedup="$( __return_chyves_zfs_property_value           "disk_dedup"           "defaults" )"
-	_GDP_disk_compression="$( __return_chyves_zfs_property_value     "disk_compression"     "defaults" )"
-	_GDP_disk_primarycache="$( __return_chyves_zfs_property_value    "disk_primarycache"    "defaults" )"
-	_GDP_disk_secondarycache="$( __return_chyves_zfs_property_value  "disk_secondarycache"  "defaults" )"
+# Load single guest parameter from config file to $_GP_($_var)
+__load_guest_parameter_single() {
+	local _var="$1"
+	local _value="$( cat $_GUEST_config_file | grep -m 1 -E "^$_var=" | cut -d'=' -f2- )"
+	_var2="_GP_$_var"
+	export $_var2="$_value"
 }
 
 # Load guest parameters to global variables
 __load_guest_parameters() {
 	_GUEST_name="$1"
 	__gvset_guest_pool  # Sets $_GUEST_pool
-
-	# GP = Guest Parameter
-	# Parameters held in ZFS user properties:
-	_GP_bargs="$( __return_chyves_zfs_property_value                 "bargs"                 "guest" )"
-	_GP_cpu="$( __return_chyves_zfs_property_value                   "cpu"                   "guest" )"
-	_GP_chyves_guest_version="$( __return_chyves_zfs_property_value  "chyves_guest_version"  "guest" )"
-	_GP_description="$( __return_chyves_zfs_property_value           "description"           "guest" )"
-	_GP_loader="$( __return_chyves_zfs_property_value                "loader"                "guest" )"
-	_GP_net_ifaces="$( __return_chyves_zfs_property_value            "net_ifaces"            "guest" )"
-	_GP_notes="$( __return_chyves_zfs_property_value                 "notes"                 "guest" )"
-	_GP_os="$( __return_chyves_zfs_property_value                    "os"                    "guest" )"
-	_GP_ram="$( __return_chyves_zfs_property_value                   "ram"                   "guest" )"
-	_GP_rcboot="$( __return_chyves_zfs_property_value                "rcboot"                "guest" )"
-	_GP_serial="$(__return_chyves_zfs_property_value                 "serial"                "guest" )"
-	_GP_template="$( __return_chyves_zfs_property_value              "template"              "guest" )"
-	_GP_uuid="$( __return_chyves_zfs_property_value                  "uuid"                  "guest" )"
-
-	# Load UEFI specific values if necessary.
-	if [ "$_GP_loader" = "uefi" ]; then
-		# UEFI GOP Support
-		_GP_uefi_console_output="$( __return_chyves_zfs_property_value  "uefi_console_output"                  "guest" )"
-		_GP_uefi_firmware="$( __return_chyves_zfs_property_value        "uefi_firmware"                        "guest" )"
-		_GP_uefi_mouse_type="$( __return_chyves_zfs_property_value      "uefi_mouse_type"                      "guest" )"
-		_GP_uefi_vnc_ip="$( __return_chyves_zfs_property_value          "uefi_vnc_ip"                          "guest" )"
-		_GP_uefi_vnc_port="$( __return_chyves_zfs_property_value        "uefi_vnc_port"                        "guest" )"
-		_GP_uefi_vnc_res="$( __return_chyves_zfs_property_value         "uefi_vnc_res"                         "guest" )"
-		_GP_uefi_vnc_pause="$( __return_chyves_zfs_property_value       "uefi_pause_until_vnc_client_connect"  "guest" )"
-	fi
-
-	# Other parameters
 	_GUEST_mountpoint="$( __return_guest_dataset_mountpoint )"
+	_GUEST_config_file="$_GUEST_mountpoint/.config/.cfg"
+
+	# Load all guest parameters in guest config file.
+	for _var in `cat $_GUEST_config_file | cut -d'=' -f1`
+	do
+		__load_guest_parameter_single "$_var"
+	done
+
 	_GUEST_wire_memory="$( [ -n "$( echo "$_GP_bargs" | grep '\-S' )" ] && echo "-S" )"
 }
 
@@ -152,32 +134,6 @@ __load_one_guest_parameters() {
 	__verify_one_guest_supplied "$1"
 	_GUEST_name="$1"
 	__load_guest_parameters $_GUEST_name
-}
-
-# Backend interface to get chyves properties with ZFS
-__return_chyves_zfs_property_value() {
-	local _manual_resource _property _resource _zfs_dataset
-	local _property="$1"          # <property name>
-	local _resource="$2"          # global|guest|defaults|manual
-	local _manual_resource="$3"   #
-
-	#
-	if [ "$_resource" = "global" ]; then
-		local _zfs_dataset="$_PRIMARY_POOL/chyves/.config"
-	elif [ "$_resource" = "defaults" ]; then
-		local _zfs_dataset="$_PRIMARY_POOL/chyves/guests/.defaults"
-	elif [ "$_resource" = "guest" ]; then
-		local _zfs_dataset="$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-	elif [ "$_resource" = "manual" ]; then
-		local _zfs_dataset="$_manual_resource"
-	fi
-
-	# If CPU feature "UG" is missing limit to one CPU
-	if [ "$_property" = "cpu" ] && [ "${_CPU_MISSING_UG}" ]; then
-		echo "1"
-	else
-		zfs get -H -o value chyves:$_property $_zfs_dataset
-	fi
 }
 
 # Get all chyves properties that are set on the system
@@ -189,18 +145,52 @@ __return_property_list() {
 	# -d      [defaults] Get a list of .defaults only properties
 	# -c      [config] Get a list of .config only properties
 
+	# Properties for a particular guest
 	if [ -n "${_guest}" ]; then
 		__gvset_guest_pool
-		zfs get -r -H -t filesystem -o name,property all | grep -w  "$_GUEST_pool/chyves/guests/$_guest" | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+		cat "$_GUEST_config_file" | cut -d'=' -f1 | sort | uniq
+
+	# All properties
 	elif [ "${_flags}" = "-a" ]; then
-		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+		cat /chyves/*/guests/*/.config/.cfg /chyves/*/guests/.defaults /chyves/*/.config/*.cfg | cut -d'=' -f1 | sort | uniq
+
+	# Properties for defaults only
 	elif [ "${_flags}" = "-d" ]; then
-		zfs get -r -H -t filesystem -o name,property all $_PRIMARY_POOL/chyves/guests/.defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+		cat $_DEFAULT_CONFIG_FILE | cut -d'=' -f1 | sort | uniq
+
+	# Global and pool properties only
 	elif [ "${_flags}" = "-c" ]; then
-		zfs get -r -H -t filesystem -o name,property all $_PRIMARY_POOL/chyves/.config | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+		cat /chyves/*/.config/*.cfg | cut -d'=' -f1 | sort | uniq
+
+	# All guests properties
 	else
-		zfs get -r -H -t filesystem -o name,property all | grep /guests/ | grep -v .defaults | grep chyves: | cut -f2 | sort | sed -e 's/chyves://g' | uniq
+		cat /chyves/*/guests/*/.config/.cfg | cut -d'=' -f1 | sort | uniq
 	fi
+}
+
+# Returns property value from config file.
+__return_property_value_from_config_file() {
+	local _config_file _guest_message _manual_declare _type _value _var
+	local _type="$1"     # global|guest|defaults|manual
+	local _var="$2"
+	local _manual_declare="$3"
+
+	# Set the config file location.
+	if [ "$_type" = "global" ]; then
+		local _config_file="$_GLOBAL_CONFIG_FILE"
+	elif [ "$_type" = "defaults" ]; then
+		local _config_file="$_DEFAULT_CONFIG_FILE"
+	elif [ "$_type" = "guest" ]; then
+		local _config_file="$_GUEST_config_file"
+		local _guest_message="for guest $_GUEST_name"
+	elif [ "$_type" = "manual" ]; then
+		local _config_file="$_manual_declare"
+	fi
+
+	[ ! -e "$_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
+
+	# Print the value
+	echo "$( grep -m 1 -E "^$_var=" $_config_file | cut -d'=' -f2- )"
 }
 
 # Frontend interface to set chyves properties
@@ -237,6 +227,7 @@ __set() {
 				else
 					__log 2 "Switching to setting properties for guest: $_GUEST_name"
 					__gvset_guest_pool "$_GUEST_name"
+					_GUEST_config_file="/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg"
 					local _type="guest"
 				fi
 			fi
@@ -255,11 +246,11 @@ __set() {
 
 			# Use function to set ZFS property
 			if [ "$_guest" = "global" ]; then
-				__set_chyves_zfs_property "$_prop" "$_val" "global"
+				__write_property_value_to_config_file "global" "$_prop" "$_val"
 			elif [ "$_guest" = "defaults" ]; then
-				__set_chyves_zfs_property "$_prop" "$_val" "defaults"
+				__write_property_value_to_config_file "defaults" "$_prop" "$_val"
 			else
-				__set_chyves_zfs_property "$_prop" "$_val" "guest"
+				__write_property_value_to_config_file "guest" "$_prop" "$_val"
 			fi
 
 			# Used to save some cycles
@@ -269,68 +260,13 @@ __set() {
 	done
 }
 
-# Backend interface to set chyves properties with ZFS
-__set_chyves_zfs_property() {
-	local _property="$1"          # <property name>
-	local _value="$2"             # <property value>
-	local _resource="$3"          # global|guest|defaults|manual
-	local _manual_resource="$4"   #
-	local _guest_message=
-
-	#
-	if [ "$_resource" = "global" ]; then
-		local _zfs_dataset="$_PRIMARY_POOL/chyves/.config"
-	elif [ "$_resource" = "defaults" ]; then
-		local _zfs_dataset="$_PRIMARY_POOL/chyves/guests/.defaults"
-	elif [ "$_resource" = "guest" ]; then
-		local _zfs_dataset="$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-		local _guest_message="for guest $_GUEST_name"
-	elif [ "$_resource" = "manual" ]; then
-		local _zfs_dataset="$_manual_resource"
-	fi
-
-	# Set the value for the property.
-	__log 2 "Setting $_resource property '${_property}' to value: '${_value}' $_guest_message"
-	zfs set chyves:${_property}="${_value}" $_zfs_dataset
-}
-
 # Middleware for setting properties, verifies user input for properties.
 __verify_user_input_for_properties() {
 	local _property _resource _value
 	local _property="$1"
 	local _value="$2"
 	local _resource="$3"
-	_ADJUSTED_value=""        # Needs to be reset due to being reused.
-
-	# Do not ever allow for setting new defaults properties, to prevent confusion (except for setup)
-	if [ "$_resource" = "defaults" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
-		local _valid_properties=$( __return_property_list -d )
-		local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
-		if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-			__fault_detected_exit "$_property is not a defined defaults property. \nCreating new properties for defaults is not possible."
-		fi
-
-	# Do not ever allow for setting new .config properties except bridge{n}_phy_attach and bridge{n}_tap_members, this is to prevent confusion.
-	# $2 in __convert_list_to_grep_string under _string_to_grep is what is needed to allow setting bridge{n}_phy_attach and bridge{n}_tap_members as needed.
-	# Use "set" directly is not recommended as it is not fully restrictive and will allow invalid bridge numbers be used which will later fail.
-	elif [ "$_resource" = "global" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
-		local _valid_properties="$( __return_property_list -c )"
-		local _string_to_grep="$( __convert_list_to_grep_string "$_valid_properties" "bridge([0-9]{1,5})_phy_attach|bridge([0-9]{1,5})_tap_members" )"
-		if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-			__fault_detected_exit "$_property is not a defined global property. \nCreating new properties for global is not possible."
-		fi
-
-	# Property control for guests.
-	elif [ "$_NUMBER_OF_ALL_GUESTS" -gt 0 ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
-		# If new property restrition is on, see if a new property name is being supplied.
-		if [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "$_NUMBER_OF_ALL_GUESTS" -gt "0" ]; then
-			local _valid_properties=$( __return_property_list -a )
-			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" "^template$" )
-			if [ -z "$( echo "$_property" | grep -w -E "$_string_to_grep" )" ]; then
-				__fault_detected_exit "$_property is not a defined guest property and creation of new property creation is set to off, see 'restrict_new_property_names'."
-			fi
-		fi
-	fi
+	_ADJUSTED_value=""        # Needs to be reset due to being reused and global.
 
 	#
 	if [ "$_resource" = "" ]; then
@@ -370,22 +306,17 @@ __verify_user_input_for_properties() {
 
 			# Special handling for UEFI guests
 			if [ "$_value" = "uefi" ]; then
-				local _uefi_firmware_source="$( zfs get -H -o source chyves:uefi_firmware $_GUEST_pool/chyves/guests/$_GUEST_name/.config )"
+				local _uefi_parameters="$( grep -c -E "^uefi_.*" /chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg )"
 
 				# Check to see if uefi property has been previously set.
-				if [ "$_uefi_firmware_source" != "local" ]; then
-					__log 2 "\nTurning on other UEFI properties, using defaults to set values." -e
+				if [ "$_uefi_parameters" = "0" ]; then
+					__log 2 "\nTurning on UEFI properties, using defaults to set values." -e
 					__load_guest_default_parameters
 					__get_next_vnc_port
 					local _previous_restrict_state="$_RESTRICT_NEW_PROPERTY_NAMES"
 					_RESTRICT_NEW_PROPERTY_NAMES="master-override"                 # If this is the first guest with UEFI the following properties would fail to be set without this.
-					__set_chyves_zfs_property "uefi_console_output"                  "$_GDP_uefi_console_output" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_firmware"                        "$_GDP_uefi_firmware" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_mouse_type"                      "$_GDP_uefi_mouse_type" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_vnc_port"                        "$_NEXT_vnc_port" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_vnc_ip"                          "$_GDP_uefi_vnc_ip" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_vnc_res"                         "$_GDP_uefi_vnc_res" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
-					__set_chyves_zfs_property "uefi_pause_until_vnc_client_connect"  "$_GDP_uefi_vnc_pause" "manual" "$_GUEST_pool/chyves/guests/$_GUEST_name/.config"
+					__write_property_value_to_config_file "guest" "uefi_console_output"                  "$_GDP_uefi_console_output"
+					__write_property_value_to_config_file "guest" "uefi_firmware"                        "$_GDP_uefi_firmware"
 					_RESTRICT_NEW_PROPERTY_NAMES="$_previous_restrict_state"       # Turn back to previous state.
 				else
 					__log 2 "Existing UEFI configuration on guest."
@@ -693,12 +624,69 @@ __verify_user_input_for_properties() {
 			fi
 		fi
 	fi
+}
 
-	# Check to not exceed ZFS 1024 character limit, this does not apply to desc or notes as those are truncated. For other properties it might be detrimental to do so, such as the net properties.
-	local _length="$( echo "$_value" | wc -m )"
-	if [ "$_length" -gt "1024" ]; then
-		__fault_detected_warning_break 1 "Value is longer than 1024 character. ZFS's limit is 1024, aborting rather than causing futher issues."
+# Writes config to file.
+__write_property_value_to_config_file() {
+	local _config_file _guest_message _manual_declare _type _value _var
+	local _type="$1"     # global|guest|defaults|manual
+	local _var="$2"
+	local _value="$3"
+	local _manual_declare="$4"
+
+	# Set the config file location.
+	if [ "$_type" = "global" ]; then
+		local _config_file="$_GLOBAL_CONFIG_FILE"
+	elif [ "$_type" = "defaults" ]; then
+		local _config_file="$_DEFAULT_CONFIG_FILE"
+	elif [ "$_type" = "guest" ]; then
+		local _config_file="$_GUEST_config_file"
+		local _guest_message="for guest $_GUEST_name"
+	elif [ "$_type" = "manual" ]; then
+		local _config_file="$_manual_declare"
 	fi
 
-	# echo "Valid user input... "
+	[ ! -e "$_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
+
+	# Remove old value if set but exit if property does not exist and $_RESTRICT_NEW_PROPERTY_NAMES is set to 'on'.
+	if [ -n "$( grep -E "^$_var=.*" $_config_file )" ]; then
+		echo "$( grep -v -E "^$_var=" $_config_file )" > $_config_file
+	else
+
+		# Do not ever allow for setting new defaults properties, to prevent confusion (except for setup)
+		if [ "$_type" = "defaults" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
+			local _valid_properties=$( __return_property_list -d )
+			local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" )
+			if [ -z "$( echo "$_var" | grep -w -E "$_string_to_grep" )" ]; then
+				__fault_detected_exit "$_var is not a defined defaults property. \nCreating new properties for defaults is not possible."
+			fi
+
+		# Do not ever allow for setting new .config properties except bridge{n}_phy_attach and bridge{n}_tap_members, this is to prevent confusion.
+		# $2 in __convert_list_to_grep_string under _string_to_grep is what is needed to allow setting bridge{n}_phy_attach and bridge{n}_tap_members as needed.
+		# Use "set" directly is not recommended as it is not fully restrictive and will allow invalid bridge numbers be used which will later fail.
+		elif [ "$_type" = "global" ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
+			local _valid_properties="$( __return_property_list -c )"
+			local _string_to_grep="$( __convert_list_to_grep_string "$_valid_properties" "^bridge([0-9]{1,5})_phy_attach$|^bridge([0-9]{1,5})_tap_members$" )"
+			if [ -z "$( echo "$_var" | grep -w -E "$_string_to_grep" )" ]; then
+				__fault_detected_exit "$_var is not a defined global property. \nCreating new properties for global is not possible."
+			fi
+
+		# Property control for guests.
+		elif [ "$_NUMBER_OF_ALL_GUESTS" -gt 0 ] && [ "$_RESTRICT_NEW_PROPERTY_NAMES" != "master-override" ]; then
+			# If new property restrition is on, see if a new property name is being supplied.
+			if [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "$_NUMBER_OF_ALL_GUESTS" -gt "0" ]; then
+				local _valid_properties=$( __return_property_list -a )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" "^pcidev_[0-9]{1,3}$|^tap[0-9]{1,5}_mac$|^template$|^virtio_block_options_disk[0-9]{1,5}$" )
+				if [ -z "$( echo "$_var" | grep -w -E "$_string_to_grep" )" ]; then
+					__fault_detected_exit "$_var is not a defined guest property and creation of new property creation is set to off, see 'restrict_new_property_names'."
+				fi
+			fi
+		fi
+	fi
+
+	# Set the value for the property.
+	__log 2 "Setting $_type property '$_var' to value: '$_value' $_guest_message"
+
+	# Append value to config file
+	echo "$_var=$_value" >> $_config_file
 }
