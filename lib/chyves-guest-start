@@ -56,11 +56,9 @@ __generate_bhyve_custom_pci_string() {
 
 # Generates a bhyve slot string for disks
 __generate_bhyve_disk_string() {
-	local _guest="$1"
-	__gvset_guest_pool "$_guest"
 
 	# Find number of disk for guest
-	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_guest | sort -k1V )"
+	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | sort -k1V )"
 	local _num_of_disks="$( echo $_disks_dataset_list | grep -c "" )"
 
 	[ "$_num_of_disks" = 0 ] && echo "Guest has no disks." && return 0
@@ -426,7 +424,7 @@ __start() {
 			__log 2 "done."
 
 			__log 2 "Generating bhyve PCI string for disks... " -n
-			__generate_bhyve_disk_string $_GUEST_name
+			__generate_bhyve_disk_string
 			__log 2 "done."
 
 		# grub-bhyve
@@ -438,7 +436,7 @@ __start() {
 			__log 2 "done."
 
 			__log 2 "Generating bhyve PCI string for disks... " -n
-			__generate_bhyve_disk_string $_GUEST_name
+			__generate_bhyve_disk_string
 			__log 2 "done."
 
 		# uefi
@@ -456,7 +454,7 @@ __start() {
 			[ -z "$_media" ] && local _media="null.iso"
 
 			__log 2 "Generating bhyve PCI string for disks... " -n
-			__generate_bhyve_disk_string $_GUEST_name
+			__generate_bhyve_disk_string
 			__log 2 "done."
 
 			# Special handling for VNC console
