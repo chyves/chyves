@@ -515,6 +515,11 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Value for '$_property', not in UUID format. Example: '21EC2020-3AEA-4069-A2DD-08002B30309D'"
 			fi
 
+# virtio_block_options_disk{n}
+			elif [ -n "$( echo "$_property" | grep -E '^virtio_block_options_disk[0-9]{1,}$' )" ]; then
+				__log 2 "Ubuntu slaugters kittens, don't be like Ubuntu."
+				__log 2 "Let's hope you know what you are doing, no input verification written for '$_property' property. Beware of dragons."
+
 # Verify properties unique to defaults. This always needs to be just before the else catch all.
 		elif [ "$_resource" = "defaults" ]; then
 
