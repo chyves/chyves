@@ -35,17 +35,17 @@ __generate_bhyve_custom_pci_string() {
 		__verify_iommu_capable
 
 		# Get unique physical devices on host that share the same PCI slot number
-		for _single_pci_phy in `echo $_custom_pci_devs | grep 'passthru,' | cut -d',' -f2 | cut -d'/' -f1 | uniq | tr '\n' ' '`
+		for _single_pci_phy in `echo "$_custom_pci_devs" | grep -o -E 'passthru,[0-9]{1,3}\/[0-9]{1,3}\/[0-9]{1,3}' | cut -d',' -f2 | cut -d'/' -f1 | uniq | tr '\n' ' '`
 		do
 			# Generate complete bhyve string under one PCI slot per physical device on host.
-			local _devs_for_phy="$( echo $_custom_pci_devs | sort -k1 | grep "passthru,$_single_pci_phy/" | tr '\n' ' ' )"
+			local _devs_for_phy="$( echo "$_custom_pci_devs" | sort -k1 | grep -o -E "passthru,$_single_pci_phy\/[0-9]{1,3}\/[0-9]{1,3}"  | tr '\n' ' ' )"
 			__generate_bhyve_slot_string "$_devs_for_phy" 1 yes
 			local _processed_string="$_processed_string $_BHYVE_slot_string"
 		done
 	fi
 
 	# Handling for other custom PCI devices
-	for _pci in `echo $_custom_pci_devs | grep -v 'passthru,' | tr '\n' ' '`
+	for _pci in `echo "$_custom_pci_devs" | grep -v 'passthru,' | tr '\n' ' '`
 	do
 		__generate_bhyve_slot_string "$_pci" "" no
 		local _processed_string="$_processed_string $_BHYVE_slot_string"
