@@ -136,9 +136,11 @@ __list_defaults() {
 }
 
 # List Firmware resources. Using "firmware" lists the property firmware rather than the resource
-__list_firmwares() {
-		echo "Listing Firmware..."
-		zfs list -H -t filesystem -r -o name $pool/chyves/Firmware | cut -d '/' -f 4 | sed 1d
+__list_firmware() {
+	(
+	echo -e "UEFI Firmware^Size"
+	zfs list -H -t filesystem -r -o name,used $_PRIMARY_POOL/chyves/Firmware | sed 1d | cut -d '/' -f 4- | awk '{ print $1"^"$2 }' | sort -k1
+	) | column -ts^
 }
 
 # List properties set in .config
