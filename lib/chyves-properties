@@ -368,6 +368,57 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for '$_property' property is 'yes' or 'no'."
 			fi
 
+			[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_break 1 "Can not set running guest as template while running."
+
+			# Further action to take to (un)set dataset as read only. First start by unmounting the dataset.
+			__log 2 "Unmounting guest dataset... " -n
+			zfs umount -f $_GUEST_pool/chyves/guests/$_GUEST_name
+			[ "$?" != 0 ] && __fault_detected_warning_break 1 "Can not unmount guest dataset. Please try setting 'template' to '$_value' again."
+			__log 2 "done."
+
+			# If 'yes' turn on readonly, if 'no' turn off.
+			if [ "$_value" = "yes" ]; then
+				__log 1 "Setting guest datasets to be read-only."
+				zfs set readonly=on $_GUEST_pool/chyves/guests/$_GUEST_name
+				if [ "$?" != 0 ]; then
+					# Abort
+					zfs get -r readonly $_GUEST_pool/chyves/guests/$_GUEST_name
+					zfs mount $_GUEST_pool/chyves/guests/$_GUEST_name
+					__fault_detected_warning_break 1 "Can not set guest dataset to read only. Please try setting 'template' to 'yes' again. Manual intervention may be required."
+				else
+					# Unset readonly, set template to yes, and then reset readonly. Wanted to see if it was possible before making it impossible to write the value to 'yes'.
+					zfs set readonly=off $_GUEST_pool/chyves/guests/$_GUEST_name
+					zfs mount $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+					__write_property_value_to_config_file "guest" "template" "yes"
+					zfs umount -f $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+					zfs set readonly=on $_GUEST_pool/chyves/guests/$_GUEST_name
+					__log 2 "Successfully changed guest's datasets to readonly. Any and all future changes to this guest will fail until 'template' is set back to 'no'."
+				fi
+			elif [ "$_value" = "no" ]; then
+				__log 1 "Setting guest datasets to be writable."
+				zfs set readonly=off $_GUEST_pool/chyves/guests/$_GUEST_name
+				if [ "$?" != 0 ]; then
+					# Abort
+					zfs get -r readonly $_GUEST_pool/chyves/guests/$_GUEST_name
+					zfs mount $_GUEST_pool/chyves/guests/$_GUEST_name
+					__fault_detected_warning_break 1 "Can not set guest dataset to writeable. Please try setting 'template' to 'no' again. Manual intervention may be required."
+				else
+					__log 2 "Successfully changed guest's datasets to writeable."
+				fi
+			fi
+
+			# Remount dataset.
+			__log 2 "Mounting guest datasets... "
+			for _dataset in `zfs list -H -r -o name -t filesystem $_GUEST_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
+			do
+				zfs mount $_dataset
+				if [ "$?" = 0 ]; then
+					__log 2 "                           $_dataset."
+				else
+					__log 2 "Failed to mount datasets: $_dataset"
+				fi
+			done
+
 # uefi_console_output
 		elif [ "$_property" = "uefi_console_output" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^serial$|^vnc$' )" ]; then
