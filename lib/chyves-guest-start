@@ -114,8 +114,13 @@ __generate_bhyve_net_string() {
 
 		__verify_valid_system_iface $_iface -c
 
+		# Action for VALE interfaces
 		if [ "$_IFACE_type" = "vale" ]; then
+
+			# Verify one time only if system is compatiable with VALE.
 			[ -z "$_VALE_system_compat" ] && __verify_vale_system_compat
+
+		# Action for tap interfaces
 		elif [ "$_IFACE_type" = "tap" ]; then
 			__get_parent_bridge_for_tap_chyves $_iface
 			__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
@@ -162,7 +167,7 @@ __generate_bhyve_slot_string() {
 
 		# Tell user that chyves can not exceed bhyve's eight PCI functions per PCI slot limit.
 		if [ "$_per_slot" -gt 7 ] || [ "$_use_pci_funcions" = "yes" ]; then
-			echo "More devices than available PCI Slots and PCI functions can provide, some devices will not be attached."
+			__log 1 "More devices than available PCI Slots and PCI functions can provide, some devices will not be attached."
 			local _per_slot=7
 		fi
 
@@ -181,7 +186,7 @@ __generate_bhyve_slot_string() {
 
 		# Exit if above bhyve's maximum number of PCI slots but return the value of what is available. 31 is always used by the lpc
 		if [ "$_PCI_slot" -gt 30 ]; then
-			echo "Can not attach any additional PCI devices to guest per bhyve, attaching what can be attached."
+			__log 1 "Can not attach any additional PCI devices to guest per bhyve, attaching what can be attached."
 			_BHYVE_slot_string="$_out_string"
 			return 0
 		fi
@@ -209,7 +214,7 @@ __generate_bhyve_slot_string() {
 			if [ "$_max_slot_count" -gt "$_max_slot" ]; then
 
 				# Do not display the warning message for PCI Custom devices or when propery $_CONSOLIDATE_BHYVE_PCI_DEVICES is set to "yes".
-				[ "$_use_pci_funcions" != "yes" ] && echo "Can not attach any additional PCI devices to guest per chyves, attaching what can be attached."
+				[ "$_use_pci_funcions" != "yes" ] && __log 1 "Can not attach any additional PCI devices to guest per chyves, attaching what can be attached."
 
 				# Return to the function that called this one after setting $_BHYVE_slot_string to what has been done.
 				_BHYVE_slot_string="$_out_string"
@@ -353,7 +358,7 @@ __start() {
 
 	# Multi-guest support.
 	# Eg.: chyves guest1,guest2,guest3 start install.iso
-	for _guest in `echo $_guest_list | tr ',' ' '`
+	for _guest in `echo "$_guest_list" | tr ',' ' '`
 	do
 		[ "$_guest" = defaults ] && __fault_detected_warning_continue "Can not start defaults."
 		[ "$_guest" = global ] && __fault_detected_warning_continue "Can not start global."
