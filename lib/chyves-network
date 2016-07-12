@@ -223,7 +223,7 @@ __network_bridge_join() {
 		__verify_valid_system_iface $_dev2 -c
 		__network_add_dev_to_bridge $_device $_dev2
 	elif [ -n "$( echo "$_bridge_config_membership" | grep -w "$_dev2" )" ]; then
-		__fault_detected_exit "$_dev2 is already a memeber of $_device"
+		__fault_detected_exit "$_dev2 is already a member of $_device"
 	else
 		local _bridge_config_membership=$( echo "${_bridge_config_membership},$_dev2" )
 		__write_property_value_to_config_file "global" "${_device}_tap_members" "$_bridge_config_membership"
