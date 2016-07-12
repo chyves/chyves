@@ -71,12 +71,12 @@ __get_parent_bridge_for_tap_chyves() {
 # Get a list of interfaces on system
 __get_iface_list_on_system() {
 	local _type="$1"    # vlan|bridge|tap|<kernel-drv>|$null
-	local _omit='lo'    # | separated list
+	local _omit='^lo$'  # | separated list
 
 	if [ -z "$_type" ]; then
-		_IFACE_list_on_system=$( ifconfig -l | tr ' ' '\n' | grep -E -v "$_omit" )
+		_IFACE_list_on_system=$( ifconfig -l | tr ' ' '\n' | grep -v -E "$_omit" )
 	else
-		_IFACE_list_on_system=$( ifconfig -l | tr ' ' '\n' | grep -E -v "$_omit" | grep "$_type" )
+		_IFACE_list_on_system=$( ifconfig -l | tr ' ' '\n' | grep -v -E "$_omit" | grep "$_type" )
 	fi
 }
 
