@@ -65,7 +65,7 @@ __list_clones() {
 	_CLONE_tiers=0
 
 	# Find all ZFS datasets with clones associated with them
-	local _clone_parents="$( zfs get -H -r -o name,value origin | awk '$2 != "-" {print $2}' | cut -d'/' -f4 | uniq | tr '\n' ' ' )"
+	local _clone_parents="$( zfs get -H -r -o name,value origin | awk '$2 != "-" {print $2}' | cut -d'/' -f4 | sort | uniq | tr '\n' ' ' )"
 
 	[ "$_clone_parents" = " " ] && echo "No clones on host" && exit
 
@@ -78,7 +78,7 @@ __list_clones() {
 
 		for _parent in `echo $_clone_parents`
 		do
-			for _child in `zfs get -H -t volume -r -o name,value origin | awk -v pattern="/chyves/guests/$_parent" '$2 ~ pattern {print $1}' | cut -d'/' -f4 | uniq | tr '\n' ' '`
+			for _child in `zfs get -H -t volume -r -o name,value origin | awk -v pattern="/chyves/guests/$_parent/" '$2 ~ pattern {print $1}' | cut -d'/' -f4 | sort | uniq | tr '\n' ' '`
 			do
 
 				# Remove guests that are children
@@ -103,7 +103,7 @@ __list_clones_sub() {
 	local incoming_tier=$_CLONE_tiers
 	_CLONE_tiers="$( expr 1 + $_CLONE_tiers )"
 
-	local _children="$( zfs get -H -t volume -r -o name,value origin | awk -v pattern="/chyves/guests/$_this_parent" '$2 ~ pattern {print $1}' | cut -d'/' -f4 | uniq | tr '\n' ' ' )"
+	local _children="$( zfs get -H -t volume -r -o name,value origin | awk -v pattern="/chyves/guests/$_this_parent/" '$2 ~ pattern {print $1}' | cut -d'/' -f4 | uniq | tr '\n' ' ' )"
 
 	# Create indentions based on current tier
 	while [ "$i" -lt "$_CLONE_tiers" ]
