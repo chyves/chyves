@@ -158,6 +158,7 @@ _VERSION_INT="00000000"               # Example: 01106025 XXXYYZZZ
 _VERSION_DATASET="0001"
 _VERSION_CHYVES_GUEST="0100"
 _VERSION_BRANCH=master
+_GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"
 _OS=$( sysctl -n kern.ostype )
 _OS_VERSION_DATE=$( sysctl -n kern.osreldate )
 _OS_VERSION_FREENAS=$( [ -e "/etc/version" ] && cat /etc/version )
