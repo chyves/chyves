@@ -356,6 +356,12 @@ __verify_user_input_for_properties() {
 			fi
 			echo "It is not recommmended to set this property manually."
 
+# tap{n}_mac
+		elif [ -n "$( echo "$_property" | grep -E '^tap[0-9]{1,5}_mac$' )" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}$' )" ]; then
+				__fault_detected_warning_break 1 "Correct value for '$_property' is a MAC address in ethers(5) format. Example: 58:9C:FC:00:00:00 or 58:9c:fc:00:00:00"
+			fi
+
 # template
 		elif [ "$_property" = "template" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
