@@ -236,7 +236,7 @@ __preflight_check() {
 		_GUEST_NAMES_ALL_GREP_STRING="$( __return_new_line_delimit_as_grep_string $( __return_guest_list ) )"
 	fi
 
-	if [ "$_TAP_UP_BY_DEFAULT" = yes ]; then
+	if [ "$_TAP_UP_BY_DEFAULT" = "yes" ]; then
 		__verify_kernel_module_loaded if_tap -l
 		sysctl net.link.tap.up_on_open=1 > /dev/null 2>&1
 	fi
