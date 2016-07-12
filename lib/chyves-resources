@@ -186,6 +186,12 @@ __resource_import() {
 	# Check to see if file is on a remote source
 	if [ -n "$(echo "$_URL" | grep -E '^http|^ftp')" ]; then
 		__verify_valid_dataset "$_resource_name/$_folder_name" -check_not_in_use
+
+		# Ensure the file extension is something this can manage to download. Some URLs have crazy authentication or CDN hoops
+		if [ -z "$( echo "$_URL" | grep -E '\.iso$|\.fd$|\.iso\.xz$|\.iso\.gz$' )" ]; then
+			__fault_detected_exit "Unrecognized file extension. Please manually download the file and import it as a: .iso .fd iso.xz or iso.gz file."
+		fi
+
 		__log 2 "Creating ZFS dataset: $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name"
 		zfs create $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name
 
