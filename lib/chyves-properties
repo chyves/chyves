@@ -425,6 +425,30 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for 'uefi_console_output property is 'serial' or 'vnc'."
 			fi
 
+			# Special handling for UEFI guests
+			if [ "$_value" = "vnc" ]; then
+				local _uefi_vnc_parameters="$( grep -c -E "^uefi_vnc_.*" /chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg )"
+
+				# Check to see if uefi property has been previously set.
+				if [ "$_uefi_vnc_parameters" = "0" ]; then
+					__log 2 "\nTurning on UEFI VNC properties, using defaults to set values." -e
+					__load_guest_default_parameters
+					__get_next_vnc_port
+					local _previous_restrict_state="$_RESTRICT_NEW_PROPERTY_NAMES"
+					_RESTRICT_NEW_PROPERTY_NAMES="master-override"                 # If this is the first guest with UEFI VNC settings the following properties would fail to be set without this.
+					__write_property_value_to_config_file "guest" "uefi_vnc_client"                      "$_GDP_uefi_vnc_client"
+					__write_property_value_to_config_file "guest" "uefi_vnc_client_custom_cmd"           ""
+					__write_property_value_to_config_file "guest" "uefi_vnc_pause_until_client_connect"  "$_GDP_uefi_vnc_pause_until_client_connect"
+					__write_property_value_to_config_file "guest" "uefi_vnc_port"                        "$_NEXT_vnc_port"
+					__write_property_value_to_config_file "guest" "uefi_vnc_mouse_type"                  "$_GDP_uefi_vnc_mouse_type"
+					__write_property_value_to_config_file "guest" "uefi_vnc_ip"                          "$_GDP_uefi_vnc_ip"
+					__write_property_value_to_config_file "guest" "uefi_vnc_res"                         "$_GDP_uefi_vnc_res"
+					_RESTRICT_NEW_PROPERTY_NAMES="$_previous_restrict_state"       # Turn back to previous state.
+				else
+					__log 2 "Existing UEFI VNC configuration on guest."
+				fi
+			fi
+
 # uefi_firmware
 		elif [ "$_property" = "uefi_firmware" ]; then
 			__log 2 "Verifying firmware resource dataset... " -n
