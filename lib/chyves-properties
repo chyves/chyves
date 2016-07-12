@@ -290,14 +290,6 @@ __verify_user_input_for_properties() {
 		elif [ "$_property" = "chyves_guest_version" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
 
-		# description and notes
-		elif [ "$_property" = "description" ] || [ "$_property" = "notes" ]; then
-			local _length="$( echo "$_value" | wc -m )"
-			if [ "$_length" -gt "1024" ]; then
-				_ADJUSTED_value="$( echo "$_value" | colrm 1025 )"
-				__log 1 "ZFS has a 1024 character limit, truncating to the first 1024 characters."
-			fi
-
 # loader
 		elif [ "$_property" = "loader" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^uefi$|^bhyveload$|^grub-bhyve$' )" ]; then
