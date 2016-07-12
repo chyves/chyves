@@ -121,14 +121,11 @@ __get_tap_list_for_bridge_on_chyves() {
 
 # Used to associate a bridge with a physical or vlan interface interface
 __network_attach() {
+	local _device="$1"
+	local _dev2="$2"
 
-	local _exist_check=$( zfs get -H -o source chyves:"${_device}_phy_attach" $_PRIMARY_POOL/chyves/.config )
-
-	if [ "$_exist_check" != "local" ]; then
-		__verify_valid_system_iface "$_device" -c
-	fi
-
-	__set_chyves_zfs_property "${_device}_phy_attach" "$_dev2" "global"
+	__verify_valid_system_iface "$_device" -c
+	__write_property_value_to_config_file "global" "${_device}_phy_attach" "$_dev2"
 	__network_add_dev_to_bridge "$_device" "$_dev2"
 }
 
