@@ -275,7 +275,7 @@ __verify_user_input_for_properties() {
 	# Guest and Defaults share many common properties. Last elif handles properties unique to defaults.
 	elif [ "$_resource" = "guest" ] || [ "$_resource" = "defaults" ]; then
 
-		# cpu
+# cpu
 		if [ "$_property" = "cpu" ]; then
 			if [ "$_value" -gt "16" ]; then
 				_ADJUSTED_value="16"
@@ -286,7 +286,7 @@ __verify_user_input_for_properties() {
 				__log 1 "bhyve must be assigned at least one core. Setting cpu=1"
 			fi
 
-		# chyves_guest_version
+# chyves_guest_version
 		elif [ "$_property" = "chyves_guest_version" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
 
@@ -298,7 +298,7 @@ __verify_user_input_for_properties() {
 				__log 1 "ZFS has a 1024 character limit, truncating to the first 1024 characters."
 			fi
 
-		# loader
+# loader
 		elif [ "$_property" = "loader" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^uefi$|^bhyveload$|^grub-bhyve$' )" ]; then
 				__fault_detected_warning_break 1 "Unrecognized loader type. Recognized values are bhyveload, grub-bhyve, uefi"
@@ -323,22 +323,22 @@ __verify_user_input_for_properties() {
 				fi
 			fi
 
-		# net_ifaces
+# net_ifaces
 		elif [ "$_property" = "net_ifaces" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
 
-		# os
+# os
 		elif [ "$_property" = "os" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^openbsd59$|^openbsd58$|^openbsd57$|^netbsd$|^debian$|^d8lvm$|^centos6$|^centos7$|^arch$|^gentoo$|^custom$|^default$' )" ]; then
 				__log 1 "Unrecognized os type. Valid values are required for grub-bhyve guests to boot properly. See man page for valid values."
 			fi
 
-		# ram
+# ram
 		elif [ "$_property" = "ram" ]; then
 			__get_corrected_byte_nomenclature "$_value"
 			_ADJUSTED_value="$_CORRECTED_byte_nomenclature"
 
-		# rcboot
+# rcboot
 		elif [ "$_property" = "rcboot" ]; then
 			if [ -n "$( echo "$_value" | tr '[:lower:]' '[:upper:]' | grep -E '^NO$|^N$' )" ]; then
 				__log 2 "Correct syntax is to use '0' rather than '$value'."
@@ -347,44 +347,44 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for 'rcboot' property is any positive integer or zero."
 			fi
 
-		# serial
+# serial
 		elif [ "$_property" = "serial" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^nmdm[0-9]{1,}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'serial' property is 'nmdm' followed by any unique positive integer."
 			fi
 			echo "It is not recommmended to set this property manually."
 
-		# template
+# template
 		elif [ "$_property" = "template" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for '$_property' property is 'yes' or 'no'."
 			fi
 
-		# uefi_console_output
+# uefi_console_output
 		elif [ "$_property" = "uefi_console_output" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^serial$|^vnc$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'uefi_console_output property is 'serial' or 'vnc'."
 			fi
 
-		# uefi_firmware
+# uefi_firmware
 		elif [ "$_property" = "uefi_firmware" ]; then
 			__log 2 "Verifying firmware resource dataset... " -n
 			__verify_valid_dataset "Firmware/$_value"
 			__log 2 "done"
 
-		# uefi_mouse_type
+# uefi_mouse_type
 		elif [ "$_property" = "uefi_mouse_type" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^ps2$|^usb3$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'uefi_mouse_type' is 'ps2' or 'usb3'."
 			fi
 
-		# uefi_pause_until_vnc_client_connect
+# uefi_pause_until_vnc_client_connect
 		elif [ "$_property" = "uefi_pause_until_vnc_client_connect" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'uefi_pause_until_vnc_client_connect' is 'yes' or 'no'."
 			fi
 
-		# uefi_vnc_ip
+# uefi_vnc_ip
 		elif [ "$_property" = "uefi_vnc_ip" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct value for '$_property' is an IPv4 address. Example: 192.168.100.2"
@@ -405,7 +405,7 @@ __verify_user_input_for_properties() {
 				__log 1 "IPv4 address ($_value), not found on system. Connection to VNC will fail."
 			fi
 
-		# uefi_vnc_port
+# uefi_vnc_port
 		elif [ "$_property" = "uefi_vnc_port" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,5}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for '$_property' property is a positive integer 0 through 65535."
@@ -414,41 +414,41 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for '$_property' property is a positive integer within 0 through 65535 range."
 			fi
 
-		# uefi_vnc_res
+# uefi_vnc_res
 		elif [ "$_property" = "uefi_vnc_res" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^1920x1200$|^1920x1080$|^1600x1200$|^1600x900$|^1280x1024$|^1280x720$|^1024x768$|^800x600$|^640x480$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_res' are in the man page."
 			fi
 
-		# uuid
+# uuid
 		elif [ "$_property" = "uuid" ]; then
 			if [ -z "$( echo "$_value" | grep -E '$_UUID_CHECK_GREP_STRING' )" ]; then
 				__fault_detected_warning_break 1 "Value for '$_property', not in UUID format. Example: '21EC2020-3AEA-4069-A2DD-08002B30309D'"
 			fi
 
-		# Verify properties unique to defaults. This always needs to be just before the else catch all.
+# Verify properties unique to defaults. This always needs to be just before the else catch all.
 		elif [ "$_resource" = "defaults" ]; then
 
-			# bridge
+# bridge
 			if [ "$_property" = "bridge" ]; then
 				__verify_valid_iface_format $_value
 				if [ "$_IFACE_type" != "bridge" ]; then
 					__fault_detected_warning_break 1 "Valid value for 'bridge' must be a bridge name."
 				fi
 
-			# disk_compression
+# disk_compression
 			elif [ "$_property" = "disk_compression" ]; then
 				if [ -z "$( echo "$_value" | grep -E '^on$|^off$|^lzjb$|^gzip$|^gzip-[1-9]{1}$|^zle$|^lz4$|^inherit$' )" ]; then
 					__fault_detected_warning_break 1 "Invalid value for '$_property', think of the kittens."
 				fi
 
-			# disk_primarycache & disk_secondarycache
+# disk_primarycache & disk_secondarycache
 			elif [ "$_property" = "disk_primarycache" ] || [ "$_property" = "disk_secondarycache" ]; then
 				if [ -z "$( echo "$_value" | grep -E '^all$|^none$|^metadata$|^inherit$' )" ]; then
 					__fault_detected_warning_break 1 "Invalid value for '$_property', think of the kittens."
 				fi
 
-			# disk_volblocksize
+# disk_volblocksize
 			elif [ "$_property" = "disk_volblocksize" ]; then
 				__gvset_user_input_to_bytes "$_value"
 				_ADJUSTED_value="$_USER_input_to_bytes"
@@ -456,7 +456,7 @@ __verify_user_input_for_properties() {
 					__fault_detected_warning_break 1 "Invalid value for '$_property', think of the kittens."
 				fi
 
-			# disk_volmode
+# disk_volmode
 			elif [ "$_property" = "disk_volmode" ]; then
 				if [ -z "$( echo "$_value" | grep -E '^geom$|^dev$|^inherit$' )" ]; then
 					__fault_detected_warning_break 1 "Invalid value for '$_property', think of the kittens."
@@ -465,137 +465,137 @@ __verify_user_input_for_properties() {
 					__log 1 "[WARNING] While setting the value for 'disk_volmode' to 'geom' will work, the host OS can interfere and possibly corrupt the guest disk."
 				fi
 
-			# size
+# size
 			elif [ "$_property" = "size" ]; then
 				__get_corrected_byte_nomenclature "$_value"
 				_ADJUSTED_value="$_CORRECTED_byte_nomenclature"
 			fi
 
-		# Catch all for guests.
+# Catch all for guests.
 		else
 			__log 1 "No input verification for guest '$_property' property written. Beware of dragons."
 		fi
 
-	# Verify global properties
+# Verify global properties
 	elif [ "$_resource" = "global" ]; then
 
-		# auto_load_kernel_mods
+# auto_load_kernel_mods
 		if [ "$_property" = "auto_load_kernel_mods" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^no$|^yes$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'yes' or 'no'"
 			fi
 
-		# bridge{n}_tap_members
+# bridge{n}_tap_members
 		elif [ -n "$( echo "$_property" | grep -E '^bridge[0-9]{1,5}_tap_members$' )" ]; then
 			__fault_detected_warning_break 1 "Use 'chyves network' to indirectly manage property: '$_property'."
 
-		# check_for_updates
+# check_for_updates
 		elif [ "$_property" = "check_for_updates" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^daily$|^weekly$|^monthly$|^always$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are: daily, weekl, monthly, and always."
 			fi
 
-		# check_for_updates_last_check
+# check_for_updates_last_check
 		elif [ "$_property" = "check_for_updates_last_check" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^20[0-9]{2}[01]{1}[0-9]{1}[0-3]{1}[0-9]{1}$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', must be in YYYYMMDD."
 			fi
 
-		# check_for_updates_last_check_status
+# check_for_updates_last_check_status
 		elif [ "$_property" = "check_for_updates_last_check_status" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^0$|^1$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are '0' or '1'."
 			fi
 
-		# check_for_updates_timeout_seconds
+# check_for_updates_timeout_seconds
 		elif [ "$_property" = "check_for_updates_timeout_seconds" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,}$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property'."
 			fi
 
-		# check_for_updates_unique_id
+# check_for_updates_unique_id
 		elif [ "$_property" = "check_for_updates_unique_id" ]; then
 			if [ -z "$( echo "$_value" | grep -E '$_UUID_CHECK_GREP_STRING' )" ]; then
 				__fault_detected_warning_break 1 "Value for '$_property', not in UUID format. Example: '21EC2020-3AEA-4069-A2DD-08002B30309D'"
 			fi
 
-		# chyves_version
+# chyves_version
 		elif [ "$_property" = "chyves_version" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
 
-		# chyves_version_int
+# chyves_version_int
 		elif [ "$_property" = "chyves_version_int" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
 
-		# console_start_offset
+# console_start_offset
 		elif [ "$_property" = "console_start_offset" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,}$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property'."
 			fi
 
-		# consolidate_bhyve_pci_devices
+# consolidate_bhyve_pci_devices
 		elif [ "$_property" = "consolidate_bhyve_pci_devices" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'yes' or 'no'."
 			fi
 
-		# dataset_role
+# dataset_role
 		elif [ "$_property" = "dataset_role" ]; then
 			__fault_detected_warning_break 1 "Not user settable, use 'chyves dataset' to manage."
 
-		# dataset_version
+# dataset_version
 		elif [ "$_property" = "dataset_version" ]; then
 			__fault_detected_warning_break 1 "Not user settable, use 'chyves dataset' to manage."
 
-		# default_info_flags
+# default_info_flags
 		elif [ "$_property" = "default_info_flags" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', see 'chyves info -h' for valid values."
 			fi
 
-		# default_list_flags
+# default_list_flags
 		elif [ "$_property" = "default_list_flags" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', this function share the same backend as 'chyves info' see man page for valid values."
 			fi
 
-		# dev_mode
+# dev_mode
 		elif [ "$_property" = "dev_mode" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^on$|^off$|^-[xvn]{1}$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property'."
 			fi
 
-		# log_mode
+# log_mode
 		elif [ "$_property" = "log_mode" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^host$|^guest$|^dual$|^off$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'host', 'guest', or 'dual'."
 			fi
 
-		# log_to_file
+# log_to_file
 		elif [ "$_property" = "log_to_file" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^on$|^off$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'on' or 'off'."
 			fi
 
-		# network_design_mode
+# network_design_mode
 		elif [ "$_property" = "network_design_mode" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^auto$|^system$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'auto' or 'system'."
 			fi
 
-		# restrict_new_property_names
+# restrict_new_property_names
 		elif [ "$_property" = "restrict_new_property_names" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^on$|^off$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'on' and 'off'."
 			fi
 
-		# stdout_level
+# stdout_level
 		elif [ "$_property" = "stdout_level" ]; then
 			if [ -z "$( echo "$_value" | grep -E '[0-4]{1}' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are '0', '1', '2', '3', or '4'. See man page for meaning."
 			fi
 
-		# tap_start_offset
+# tap_start_offset
 		elif [ "$_property" = "tap_start_offset" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,5}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for '$_property' is a positive integer 0 through 32768."
@@ -603,13 +603,13 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for '$_property' is a positive integer 0 through 32768."
 			fi
 
-		# tap_up_by_default
+# tap_up_by_default
 		elif [ "$_property" = "tap_up_by_default" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^yes$|^no$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are 'yes' or 'no'. "
 			fi
 
-		# uefi_vnc_port_start_offset
+# uefi_vnc_port_start_offset
 		elif [ "$_property" = "uefi_vnc_port_start_offset" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,5}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for '$_property' is a positive integer 0 through 65535."
@@ -617,7 +617,7 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for '$_property' is a positive integer 0 through 65535."
 			fi
 
-		# vlan_iface_base_name
+# vlan_iface_base_name
 		elif [ "$_property" = "vlan_iface_base_name" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^[a-z]{1,}$' )" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are any alphabetic words."
