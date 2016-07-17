@@ -292,7 +292,7 @@ __resource_rename() {
 
 	read -p "Do you want to rename $_resource_type_name from '$_resource' to '$_new_name' [y/N]? " _rename_or_no </dev/tty
 	case "$_rename_or_no" in
-		y|Y|yes)   mv -f /chyves/$_resource_type_name/$_resource/$_resource /chyves/$_resource_type_name/$_resource/$_new_name
+		y|Y|yes)   mv -f /chyves/$_PRIMARY_POOL/$_resource_type_name/$_resource/$_resource /chyves/$_PRIMARY_POOL/$_resource_type_name/$_resource/$_new_name
 		           zfs rename $_PRIMARY_POOL/chyves/$_resource_type_name/$_resource $_PRIMARY_POOL/chyves/$_resource_type_name/$_new_name
 		;;
 		*)         __log 1 "$_resource_type_name: '$_resource' not renamed."
