@@ -817,7 +817,7 @@ GUEST SUB-COMMANDS
 
   snapshot    See GUEST'S SNAPSHOT SUB-SUB-COMMANDS section below.
 
-  start         chyves start <guest>|MG [<iso>]
+  start         chyves <guest>|MG start [<iso>]
               Where <iso> is optionally the name of an ISO resource. This
               command starts bhyveload, grub-bhyve, and UEFI guests. For
               grub-bhyve guests if a ISO is supplied, it is assumed to be the
