@@ -36,9 +36,6 @@ __clone_guest() {
 	local _unique_properties_msg="Clones will have unique properties, see man page for details."
 	__load_guest_default_parameters
 
-	#
-	#[ "$_GP_clone" = "child" ] && __fault_detected_exit "Can not clone child clone."
-
 	# Use global clone method if null
 	[ -z "$_flag" ] && local _flag=$_DEFAULT_CLONE_FLAG
 
@@ -70,7 +67,7 @@ __clone_guest() {
 
 	# Clones must always be on the same pool.
 	if [ "$_flag" = "-ce" ] || [ "$_flag" = "-cu" ]; then
-		[ "$_dst_pool" != "$_src_pool" ] && __log 1 "Clones are dependent on their parents and must be on the same pool."
+		[ "$_dst_pool" != "$_src_pool" ] && __log 1 "Clones are dependent on their parents and must be on the same pool, this is due to how ZFS clone work."
 		local _dst_pool=$_src_pool
 
 	# See if destination pool is declared.
