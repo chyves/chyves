@@ -788,7 +788,10 @@ GUEST SUB-COMMANDS
                       for each interface of the parent under the same bridge,
                       VALE interfaces are copied over and ports removed, a new
                       unique port is used for uefi_vnc_port, and a new UUID
-                      is generated.
+                      is generated. If the guest's parameter 'template' is set
+                      to 'yes', then the parameter is temporarily set to 'no' to
+                      create unique properties, then after cloning the guests
+                      and clones have their parameter 'template' set to 'yes'.
 
               If the cloning method flag is omitted, the default is used as
               defined in global property 'default_clone_flag', this is initially

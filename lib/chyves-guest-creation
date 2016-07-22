@@ -59,6 +59,15 @@ __clone_guest() {
 		__fault_detected_exit "Invalid flag used '$_flag'. See 'man chyves' for correct flags and details."
 	fi
 
+	# Handling if guest is a template but unique properties are desired.
+	if [ "$_flag" = "-cu" ] || [ "$_flag" = "-iu" ]; then
+		if [ "$_GP_template" = "yes" ]; then
+			__log 1 "$_GUEST_name is set as a template and unique properties are desired. Temporarily setting template mode to 'no' but will return to 'yes' after cloning has finished."
+			local _guest_was_a_template=1
+			__set $_GUEST_name set template=no
+		fi
+	fi
+
 	# Clones must always be on the same pool.
 	if [ "$_flag" = "-ce" ] || [ "$_flag" = "-cu" ]; then
 		[ "$_dst_pool" != "$_src_pool" ] && __log 1 "Clones are dependent on their parents and must be on the same pool."
@@ -197,7 +206,19 @@ __clone_guest() {
 			fi
 		fi
 	fi
-	__log 1 "Successfully cloned $_GUEST_name to $_clone_list."
+
+	# Needs to be set for final message, and templates will change the value of $_GUEST_name.
+	local _original_guest="$_GUEST_name"
+
+	# Final handling if guest was a templat to set back as a template.
+	if [ "$_flag" = "-cu" ] || [ "$_flag" = "-iu" ]; then
+		if [ "$_guest_was_a_template" ]; then
+		__log 1 "$_GUEST_name was originally a template, setting '${_GUEST_name},$_clone_list' back as a template. Run 'chyves $_clone_list set template=no' to turn off template on the clones."
+		__set "${_GUEST_name},$_clone_list" set template=yes
+		fi
+	fi
+
+	__log 1 "Successfully cloned $_original_guest to $_clone_list."
 }
 
 # Create guest(s)
