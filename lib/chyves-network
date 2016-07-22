@@ -478,7 +478,7 @@ __verify_vale_system_compat() {
 __verify_valid_iface_format() {
 	local _int="$1"
 
-	# Verify/Load console kernel module (nmdm).
+	# Verify/Load console kernel module (if_bridge).
 	if [ "$_AUTO_LOAD_KERNEL_MODS" = "yes" ]; then
 		__verify_kernel_module_loaded if_bridge -l      # This checks and loads the missing nmdm module.
 	else
