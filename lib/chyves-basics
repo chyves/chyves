@@ -363,6 +363,10 @@ __parse_cmd_dataset() {
 		            __dataset_install "$1"
 		            exit
 		;;
+		upgrade)    __verify_valid_pool "$1" -c
+		            __dataset_upgrade "$1"
+		            exit
+		;;
 	esac
 
 	__help

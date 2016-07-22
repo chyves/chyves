@@ -728,6 +728,14 @@ DATASET SUB-COMMANDS
               Creates ZFS datasets and parameters on pool. This is the first
               step to getting chyves running.
 
+  upgrade       chyves dataset <pool> upgrade
+              Upgrades dataset version from an old version to the newest version
+              incrementally. This is done by adding, removing, and updating
+              parameters which are required by the latest version of chyves. It
+              is recommended to upgrade the primary pool first in case their are
+              new defaults, otherwise the 'chyves <guest> upgrade' will need to
+              be manually ran against the guests on secondary pools.
+
 FIRMWARE SUB-COMMANDS
 These sub-commands manage UEFI firmware resources.
 

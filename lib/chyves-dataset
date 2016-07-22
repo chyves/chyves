@@ -147,3 +147,40 @@ __dataset_install() {
 	fi
 }
 
+# Incrementally upgrade a datasets from version to version
+__dataset_upgrade() {
+	local _pool="$1"
+
+	__dataset_upgrade_lset_version() {
+		_DATASET_pool_version_int="$( __return_property_value_from_config_file "manual" "dataset_version" "/chyves/$_pool/.config/pool.cfg" )"
+	}
+
+	# Seed value
+	__dataset_upgrade_lset_version
+
+	# Prepare to add new paramaters
+	_RESTRICT_NEW_PROPERTY_NAMES=master-override
+
+	# Added defaults bhyve_net_type
+	if [ "$_DATASET_pool_version_int" = "0001" ]; then
+		__log 1 "Upgrading dataset to version 0002"
+		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "bhyve_net_type" "virtio-net"
+		__load_guest_default_parameters
+		__write_property_value_to_config_file "manual" "dataset_version" "0002" "/chyves/$_pool/.config/pool.cfg"
+		__dataset_upgrade_lset_version
+	fi
+
+	# Template for second change.
+	#if [ "$_DATASET_pool_version_int" = "0002" ]; then
+	#	__log 1 "Upgrading dataset to version 0003"
+	#	<ACTION>
+	#	__write_property_value_to_config_file "manual" "dataset_version" "0003" "/chyves/$_pool/.config/pool.cfg"
+	#	__dataset_upgrade_lset_version
+	#fi
+
+	# Upgrade guests on pool to latest chyves guest version if the primary pool is on the latest version.
+	_PRIMARY_pool_version_int="$( __return_property_value_from_config_file "manual" "dataset_version" "/chyves/$_PRIMARY_POOL/.config/pool.cfg" )"
+	if [ "$_PRIMARY_pool_version_int" = "$_VERSION_DATASET" ]; then
+		__guest_upgrade_chyves_guest_version "$( __return_new_line_delimit_as_comma_string $( __return_guest_list $_pool ) )"
+	fi
+}
