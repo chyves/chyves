@@ -137,16 +137,25 @@ __clone_guest() {
 					local _new_interface="$( echo $_interface | cut -d':' -f1 )"
 
 				elif [ "$_IFACE_type" = "tap" ]; then
-					__log 2 "Getting bridge that $_interface belongs to..." -n
-					__get_parent_bridge_for_tap_chyves $_interface
-					__log 2 "$_PARENT_bridge_for_tap_chyves."
-					__log 2 "Getting next tap interface..." -n
-					__get_next_tap
-					__log 2 "$_NEXT_tap."
-					local _new_interface="$_NEXT_tap"
-					__log 2 "Joining $_new_interface to $_PARENT_bridge_for_tap_chyves... " -n
-					__network_bridge_join "$_PARENT_bridge_for_tap_chyves" "$_new_interface"
-					__log 2 "done."
+
+					# NETWORK_DESIGN_MODE handling
+					if [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
+						__log 2 "Getting bridge that $_interface belongs to..." -n
+						__get_parent_bridge_for_tap_chyves $_interface
+						__log 2 "$_PARENT_bridge_for_tap_chyves."
+						__log 2 "Getting next tap interface..." -n
+						__get_next_tap
+						__log 2 "$_NEXT_tap."
+						local _new_interface="$_NEXT_tap"
+						__log 2 "Joining $_new_interface to $_PARENT_bridge_for_tap_chyves... " -n
+						__network_bridge_join "$_PARENT_bridge_for_tap_chyves" "$_new_interface"
+						__log 2 "done."
+					elif [ "$_NETWORK_DESIGN_MODE" = "system" ]; then
+						__log 2 "Getting next tap interface..." -n
+						__get_next_tap
+						__log 2 "$_NEXT_tap."
+						local _new_interface="$_NEXT_tap"
+					fi
 				fi
 
 				# Set variable for new net configuration
@@ -244,8 +253,12 @@ __create() {
 		__write_property_value_to_config_file "guest" "notes"                 "-"
 		__write_property_value_to_config_file "guest" "uuid"                  "$_UUID_GUEST_USE"
 
-		__log 2 "Adding $_NEXT_tap to $_GDP_bridge"
-		__network_bridge_join "$_GDP_bridge" "$_NEXT_tap"
+		# NETWORK_DESIGN_MODE handling
+		if [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
+			__log 2 "Adding $_NEXT_tap to $_GDP_bridge"
+			__network_bridge_join "$_GDP_bridge" "$_NEXT_tap"
+		fi
+
 		__log 1 "$_GUEST_name created."
 		echo ""  # Create visual space for next multi-guest.
 	done

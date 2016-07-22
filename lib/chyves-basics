@@ -503,6 +503,8 @@ __parse_cmd_network() {
 	local _dev2="$3"
 	__root_credentials_required
 
+	[ "$_NETWORK_DESIGN_MODE" = "system" ] && __fault_detected_exit "The 'chyves network' commands are for use when 'network_design_mode' is set to 'auto', currently it is set to 'system'. All network configuration must be manually managed in the system. Turning the mode to 'auto' does not just \"fix\" things. Each tap interface will need to be associated with a bridge."
+
 	# Verify $_device is a bridge when not using add|remove
 	if [ "$_action" = "remove" ] || [ "$_action" = "add" ]; then
 	else

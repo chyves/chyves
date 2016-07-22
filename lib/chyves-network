@@ -184,7 +184,7 @@ __network_remove() {
 		local _bridge="$_PARENT_bridge_for_tap_chyves"
 
 		# Unjoin the tap from the bridge in chyves
-		__network_bridge_unjoin "$_bridge" "$_dev2"
+		[ "$_NETWORK_DESIGN_MODE" = "auto" ] && __network_bridge_unjoin "$_bridge" "$_dev2"
 	fi
 
 	# Get config for guest
@@ -517,6 +517,9 @@ __verify_valid_system_iface() {
 
 	# Do not try to verify "private" or vale interfaces as valid.
 	[ "$_int" = "private" ] || [ "$_IFACE_type" = "vale" ] && return
+
+	# The end user configured their network devices
+	[ "$_NETWORK_DESIGN_MODE" = "system" ] && return
 
 	ifconfig "$_int" > /dev/null 2>&1
 

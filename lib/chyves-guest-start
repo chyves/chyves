@@ -125,9 +125,16 @@ __generate_bhyve_net_string() {
 		elif [ "$_IFACE_type" = "tap" ]; then
 			# Get mac address for tap
 			local _mac="$( __return_property_value_from_config_file "guest" "${_iface}_mac" )"
-			__get_parent_bridge_for_tap_chyves $_iface
-			__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
-			__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+
+			# _NETWORK_DESIGN_MODE handling
+			if [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
+				__get_parent_bridge_for_tap_chyves $_iface
+				__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
+				__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+			elif [ "$_NETWORK_DESIGN_MODE" = "system" ]; then
+				[ ! -e "/dev/$_iface" ] && __log 1 "Network design mode set to 'system' however tap interface not detected on system." && break 2
+			fi
+
 			# Handling for Intel e1000 emulation
 			if [ "$_GP_bhyve_net_type" = "e1000" ] && [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
 				__log 2 "Attaching $_iface interface via Intel e1000 emulation."
