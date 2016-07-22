@@ -21,7 +21,7 @@ chyves <guest> disk list
 chyves <guest> get {<property>|all}
 chyves <guest>|MG|all reclaim
 chyves <guest> rename <new-guest-name>
-chyves <guest>|MG|global|defaults set [<prop1>=<value>]...
+chyves <guest>|MG|global|defaults|all set [<prop1>=<value>]...
 chyves <guest> snapshot [<@snapshotname>]
 chyves <guest> snapshot delete <@snapshotname>
 chyves <guest> snapshot rollback [<@snapshotname>]

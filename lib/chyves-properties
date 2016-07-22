@@ -198,12 +198,19 @@ __set() {
 	local _guests_list _lastguest _prop _val
 	local _guests_list="$1"          # This is script indexed.
 
+	# If keywoard "all" used, replace with all guest names in comma separated list.
+	[ "$_guests_list" = all ] && local _guests_list="$_GUEST_NAMES_ACTIVE"
+
 	shift 2   # Keep from setting "set" or guest name as a property.
 	for arg in "$@"; do
 
 		# Guest name detector
 		if [ -z "$( echo "$arg" | grep '=' )" ]; then
 			local _guests_list="$arg"
+
+			# If keywoard "all" used, replace with all guest names in comma separated list.
+			[ "$_guests_list" = all ] && local _guests_list="$_GUEST_NAMES_ACTIVE"
+
 			__verify_guests $arg
 
 			# Skip remaining loop, as it is property specific.
