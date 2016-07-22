@@ -1,5 +1,5 @@
 NAME
-chyves(8) - bhyve(8) front end manager version 0.0.0
+chyves(8) - bhyve(8) front end manager version 0.0.5
 
 SYNOPSIS
 chyves dev

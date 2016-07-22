@@ -1,4 +1,39 @@
-#### Version 0.0.0 (2016 April 00)
+
+#### Version 0.0.5 (2016 July 21)
+
+Enhancements and fixes.
+
+- Added e1000 emulation possibility for tap interfaces on 12-CURRENT hosts. [4039608](https://github.com/chyves/chyves/commit/4039608f4fdc6c693ebb965dda7f36e5f012f666)
+
+- Added 'keepnet' keyword for `chyves <guest> delete keepnet`, which keeps network associations when deleting guests. [a787daf](https://github.com/chyves/chyves/commit/a787daf113da82733703af6ff2e0d87ae4e3240d)
+
+- Added 'system' network design handling mode, draft quality. [2737704](https://github.com/chyves/chyves/commit/2737704ada836aa068d869e12fb2a6c2c78d50d7)
+
+- Added `chyves dataset <pool> upgrade` as an upgrade mechanism. [31500b9](https://github.com/chyves/chyves/commit/31500b98ee15eb133ba134686d37a44ccb3dc7ff)
+
+- Fixed edge case when cloning templates. [34c374b](https://github.com/chyves/chyves/commit/34c374b0f7ccb978bfcf66944f8366c9f46abc4f)
+
+- Fixed typos and minor code cleanup, various commits.
+
+- Fixed issue when setting bridge to private mode and physical/vlan interfaces were on bridge. Added function `__network_private` for expanded functionality. [3939444](https://github.com/chyves/chyves/commit/39394444ff50b2d977413973b9ca80c6f6184116)
+
+- Added keyword 'all' for `chyves <guest> set <property>=<value>`, so now `chyves all set <property>=<value>` now works too. [9d0e05b](https://github.com/chyves/chyves/commit/9d0e05bb1682dd5bc9f82431ea2cd0c5310928c0)
+
+#### Version 0.0.3 (2016 July 16)
+
+@croquagei feedback fixes.
+
+- Fixed issue when renaming ISO or firmware resources.[ed94890](https://github.com/chyves/chyves/commit/ed94890bed629bf70e835e9422177da38a3f4670)
+
+- Fixed syntax in man page for starting guests. [1040c1b](https://github.com/chyves/chyves/commit/1040c1b2378e66d6699b622917f85ee82901d46b)
+
+#### Version 0.0.1 (2016 July 11)
+
+First private release. Shared with @croquagei for testing.
+
+- Fixed minor issue with `__generate_bhyve_net_string`. [a41906e](https://github.com/chyves/chyves/commit/a41906ee8b9d04345c3cb70dcbf6d43a352cd067)
+
+#### Version 0.0.0 (2016 April 16 through 2016 July 11)
 
 Internal development.
 
