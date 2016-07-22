@@ -396,6 +396,21 @@ __network_remove_dev_from_bridge() {
 	fi
 }
 
+# Makes a bridge private
+__network_private() {
+	local _bridge="$1"
+	__get_bridge_members_on_system $_bridge
+
+	# Remove any physical or vlan interfaces from 
+	for _phy_on_bridge in `echo "$_BRIDGE_members_on_system" | grep -E "$_FREEBSD_NET_DRIVERS_GREP_STRING|^${vlan_iface_base_name}[0-9]?[0-9]?$" | tr '\n' ' '`
+	do
+		__log 2 "Removing $_phy_on_bridge from $_bridge"
+		__network_remove_dev_from_bridge "$_bridge" "$_phy_on_bridge"
+	done
+
+	__write_property_value_to_config_file "global" "${_bridge}_phy_attach" "private"
+}
+
 # Verifies guest has iface configured for it.
 __verify_iface_on_bridge() {
 	local _guest_net_config _iface_in_question
