@@ -11,7 +11,7 @@ chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
 chyves <guest> console
 chyves <guest>|MG|all console {reset|tmux|vnc}
 chyves <guest>|MG create [<size>] [<pool>]
-chyves <guest>|MG|all delete [force]
+chyves <guest>|MG|all delete [force|keepnet]
 chyves <guest> disk add [<size>]
 chyves <guest> disk disk{n} description <description>
 chyves <guest> disk disk{n} notes <note>
@@ -797,8 +797,11 @@ GUEST SUB-COMMANDS
               primary pool is used. A tap interface is added and associated
               with the bridge set in defaults. Support for multi-guest.
 
-  delete        chyves <guest>|MG delete
-              Permanently delete a guest from the host.
+  delete        chyves <guest>|MG delete [force|keepnet]
+              Permanently delete a guest from the host. If the 'force' keyword
+              is used, then dependent clones are deleted as well. The 'keepnet'
+              keyword is used to keep the network associations, this is useful
+              for clones that share the exact parameters.
 
   get           chyves <guest> get {<property>|all}
               Gets property for guests. See parameters section above for more

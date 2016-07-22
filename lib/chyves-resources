@@ -68,12 +68,15 @@ __guest_delete_backend() {
 	zfs destroy -nr $_GUEST_pool/chyves/guests/$_GUEST_name > /dev/null 2>&1
 	[ "$?" != 0 ] && __fault_detected_exit "$_GUEST_name has dependent clones, see 'chyves list clones' or use 'chyves <guest> delete force'."
 
-	__log 2 "Removing tap interfaces from $_GUEST_name"
-	if [ -n "$_GP_net_ifaces" ]; then
-		for _iface in `echo $_GP_net_ifaces | tr ',' '\n' | grep tap | tr '\n' ' '`
-		do
-			__network_remove "$_iface"
-		done
+	# Remove network associations in chyves
+	if [ "$_force" != "keepnet" ]; then
+		__log 2 "Removing tap interfaces from $_GUEST_name"
+		if [ -n "$_GP_net_ifaces" ]; then
+			for _iface in `echo $_GP_net_ifaces | tr ',' '\n' | grep tap | tr '\n' ' '`
+			do
+				__network_remove "$_iface"
+			done
+		fi
 	fi
 
 	__log 1 "Deleting guest: '$_GUEST_name'..." -n
