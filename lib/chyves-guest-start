@@ -105,6 +105,9 @@ __generate_bhyve_disk_string() {
 # Generate bhyve slot string for network devices.
 __generate_bhyve_net_string() {
 
+	# Error message when system is incompataible with Intel e1000 emulation.
+	[ "$_GP_bhyve_net_type" = "e1000" ] && [ "$_OS_VERSION_DATE" -lt "1200000" ] && __log 1 "FreeBSD version incompataible with Intel e1000 emulation, falling back to 'virtio-net' attachment."
+
 	# Setup interfaces if any are configured.
 	for _iface in `echo "$_GP_net_ifaces" | tr ',' '\n'`
 	do
@@ -125,6 +128,13 @@ __generate_bhyve_net_string() {
 			__get_parent_bridge_for_tap_chyves $_iface
 			__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
 			__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+			# Handling for Intel e1000 emulation
+			if [ "$_GP_bhyve_net_type" = "e1000" ] && [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+				__log 2 "Attaching $_iface interface via Intel e1000 emulation."
+				[ -z "$_mac" ] && local _string="$_string e1000,$_iface"
+				[ -n "$_mac" ] && local _string="$_string e1000,$_iface,mac=${_mac}"
+				continue
+			fi
 		else
 			__fault_detected_exit "Only tap and VALE network interfaces can be attached to bhyve guests. $_iface was detected as a $_IFACE_type interface."
 		fi

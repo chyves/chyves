@@ -417,6 +417,9 @@ Guest Parameters:
     for complete list of flag options. Not to be changed unless directed. For
     complete list of flags used by chyves when starting a specific guest, turn
     on global configuration "dev_mode" to "on".
+  bhyve_net_type={virtio-net|e1000}
+    Sets the method to attach tap interfaces to the guest. Intel e1000 emulation
+    is only availble on 12-CURRENT.
   cpu={n}
     Sets number {n} of cpu cores to use, up to 16.
   chyves_guest_version=<MMmm>

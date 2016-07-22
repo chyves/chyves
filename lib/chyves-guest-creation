@@ -229,6 +229,7 @@ __create() {
 		zfs create -V $_disk_size $_ZVOL_disk_options_string $_GUEST_pool/chyves/guests/$_GUEST_name/disk0
 		__log 2 "Setting guest properties:"
 		__write_property_value_to_config_file "guest" "bargs"                 "$_GDP_bargs"
+		__write_property_value_to_config_file "guest" "bhyve_net_type"        "$_GDP_bhyve_net_type"
 		__write_property_value_to_config_file "guest" "cpu"                   "$_GDP_cpu"
 		__write_property_value_to_config_file "guest" "chyves_guest_version"  "$_VERSION_CHYVES_GUEST"
 		__write_property_value_to_config_file "guest" "template"              "$_GDP_template"
