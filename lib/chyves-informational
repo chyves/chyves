@@ -272,7 +272,7 @@ cat << 'EOT'
 Displays active guests and their disks on the system when no flags are used.
 The global property 'default_info_flags' is used when no flags are use. This
 property is populated with end user's preferred flags to use. The following
-flags are used in combination to display information vabout the guests and
+flags are used in combination to display information about the guests and
 disks. These flags are used in combination, meaning the correct syntax is
 "-rvs" rather than "-r -v -s". See below for a description of what each flag
 does:
