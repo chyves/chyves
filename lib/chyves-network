@@ -470,8 +470,8 @@ __verify_vale_system_compat() {
 	[ ! -e /dev/netmap ] && __fault_detected_exit "VALE requires the 'device netmap' be built into the kernel. Missing /dev/netmap."
 	__verify_binary_available vale-ctl
 	_VALE_system_compat=1
-	echo "Using VALE interface, can not verify if bhyve binary is patch. If interface has 'no carrier' then the bhyve binary has not been patch and no traffic can pass on interface."
-	echo "Keep in mind VALE support in chyves is experimental and not widely tested. All feedback is appreciated."
+	__log 1 "Using VALE interface, can not verify if bhyve binary is patched. If interface has 'no carrier' then the bhyve binary has not been patch and no traffic can pass on interface."
+	__log 1 "Keep in mind VALE support in chyves is experimental and not widely tested. All feedback is appreciated."
 }
 
 # Verifies interface is in valid format for type.
