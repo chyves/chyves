@@ -311,7 +311,7 @@ __gvset_first_disk() {
 # Return the next disk for a guest
 __get_next_disk_number() {
 	local _disk_last="$( zfs list -H -t volume -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d'/' -f5 | sed 's/disk//g' | sort -V | tail -n1 )"
-	if [ -z $_disk_last ]; then
+	if [ -z "$_disk_last" ]; then
 		local _disk_last=0
 	else
 		local _disk_last="$( expr $_disk_last + 1 )"
