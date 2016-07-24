@@ -275,9 +275,9 @@ __verify_user_input_for_properties() {
 	local _resource="$3"
 	_ADJUSTED_value=""        # Needs to be reset due to being reused and global.
 
-	#
+	# This statement should never normally be met but intended for debugging.
 	if [ "$_resource" = "" ]; then
-		__fault_detected_exit "No value supplied for $_property, aborting."
+		__fault_detected_exit "No resource type supplied for $_property, aborting."
 
 	# Guest and Defaults share many common properties. Last elif handles properties unique to defaults.
 	elif [ "$_resource" = "guest" ] || [ "$_resource" = "defaults" ]; then
