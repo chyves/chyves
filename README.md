@@ -17,11 +17,11 @@ This project has three branches it uses: master (stable), dev (testing but stabl
 See the following documents for their respective purpose:
 - [BUG-REPORTS.md](BUG-REPORTS.md) - How to report issues and get them resolved.
 - [CHANGELOG.md](CHANGELOG.md) - See a summarized list of changes to this project.
-- [chyves.8.txt](man/chyves.8.txt) - man page in text format.
 - [CREDITS.md](CREDITS.md) - See who has contributed to this project.
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Coding practices for chyves.
 - [LICENSE](LICENSE) - BSD 2-Clause License notice.
 - [Makefile](Makefile) - Used to install chyves from GitHub clone.
+- [MAN PAGE](man/chyves.8.html) - man page in html format.
 - [README.md](README.md) - This document.
 - [TODO.md](TODO.md) - Project goals.
 - [UPGRADING.md](UPGRADING.md) - Reference for needed changes from version to version
