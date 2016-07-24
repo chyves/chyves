@@ -83,7 +83,7 @@
 
   <h2 id="NAME">NAME</h2>
 <p class="man-name">
-  <code>chyves</code> - <span class="man-whatis"><span class="man-ref">bhyve<span class="s">(8)</span></span> front end manager -- version 0.0.5</span>
+  <code>chyves</code> - <span class="man-whatis"><a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> front end manager -- version 0.0.5</span>
 </p>
 
 <h2 id="SYNOPSIS">SYNOPSIS</h2>
@@ -162,11 +162,11 @@
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p><a class="man-ref" href="chyves.8.html">chyves<span class="s">(8)</span></a> relies on the FreeBSD hypervisor <span class="man-ref">bhyve<span class="s">(8)</span></span>, <span class="man-ref">zfs<span class="s">(8)</span></span>, <span class="man-ref">nmdm<span class="s">(4)</span></span>, Bourne shell <span class="man-ref">sh<span class="s">(1)</span></span>, and <span class="man-ref">cu<span class="s">(1)</span></span> to start and manage type 2 virtualized guests. Optionally grub2-bhyve and <span class="man-ref">tmux<span class="s">(1)</span></span> can be used to expand the capabilities of chyves. chyves uses configuration files,
+<p><a class="man-ref" href="chyves.8.html">chyves<span class="s">(8)</span></a> relies on the FreeBSD hypervisor <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a>, Bourne shell <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> to start and manage type 2 virtualized guests. Optionally grub2-bhyve and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> can be used to expand the capabilities of chyves. chyves uses configuration files,
 ZFS filesystem datasets and volumes to store guest, chyves settings, and chyves resources in an organized hierarchy. bhyve uses virtio drivers built into the GENERIC kernel for network virtualization. The virtio drivers are used to paravirtualize I/O for disk and
 network access.</p>
 
-<p>For networking, a guest is presented a PCI Ethernet device through the use of <span class="man-ref">virtio<span class="s">(4)</span></span>, on FreeBSD guests the <span class="man-ref">vtnet<span class="s">(4)</span></span> driver is used. The host communicates with this device through a <span class="man-ref">tap<span class="s">(3)</span></span> or <span class="man-ref">vale<span class="s">(4)</span></span> interface.</p>
+<p>For networking, a guest is presented a PCI Ethernet device through the use of <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?virtio(4)">virtio<span class="s">(4)</span></a>, on FreeBSD guests the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vtnet(4)">vtnet<span class="s">(4)</span></a> driver is used. The host communicates with this device through a <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tap(3)">tap<span class="s">(3)</span></a> or <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vale(4)">vale<span class="s">(4)</span></a> interface.</p>
 
 <p>For storage, guests are provided block storage device(s) via ZFS volumes from the host. Datasets are used to organize these block devices and other important data in a hierarchical structure. ZFS user properties store information used for chyves operations and
 guest parameters. See <a href="#PARAMETERS" title="PARAMETERS" data-bare-link="true">PARAMETERS</a> section.</p>
@@ -215,8 +215,8 @@ also certain binaries that enhance the capabilities. chyves checks for these com
 <h3 id="Hardware-dependencies-">Hardware dependencies:</h3>
 
 <p>bhyve is dependent on hardware virtualization CPU features. One feature is called Second Level Address Translation (SLAT), also known as nested paging. Intel's implementation is called Extended Page Tables (EPT) and AMD's implementation is called Rapid
-Virtualization Indexing (RVI). This CPU feature is referenced as 'POPCNT' in <span class="man-ref">dmesg<span class="s">(8)</span></span> under 'Features2:' line. There was an early series of CPUs from Intel (Xeon 5500) that had most of the necessary virtualization capabilities but lacked a feature Intel later
-implemented called unrestricted guest ('UG' in <span class="man-ref">dmesg<span class="s">(8)</span></span> under "VT-x:"). Without this feature bhyve is limited to FreeBSD guests and only one core can be assigned per guest. AMD has the <code>UG</code> functionality in all of it's RVI implementations.</p>
+Virtualization Indexing (RVI). This CPU feature is referenced as 'POPCNT' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under 'Features2:' line. There was an early series of CPUs from Intel (Xeon 5500) that had most of the necessary virtualization capabilities but lacked a feature Intel later
+implemented called unrestricted guest ('UG' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under "VT-x:"). Without this feature bhyve is limited to FreeBSD guests and only one core can be assigned per guest. AMD has the <code>UG</code> functionality in all of it's RVI implementations.</p>
 
 <p>PCI Pass-through support is also provided through another sub-set of hardware virtualization CPU features called I/O MMU virtualization. For Intel CPUs it is called <code>VT-d</code> and for AMD CPUs it is called <code>AMD-Vi</code>. See the <em>pcidev</em>{n}_ parameter under <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest
 Parameters</a> section for instructions on attaching PCI pass-through devices.</p>
@@ -226,9 +226,9 @@ Parameters</a> section for instructions on attaching PCI pass-through devices.</
 <p>The network mode is set by the global setting '<em>network_design_mode</em>' and determines how chyves handles network devices for the guests. The two modes are '<em>auto</em>' and '<em>system</em>', both modes are discussed below.</p>
 
 <p>VALE support is experimentally provided as a proof of concept. VALE support is not widely implemented and is feature limited at it's current development stage. To use VALE requires that 'device netmap' be compiled into the kernel and that 'vale-ctl' be compiled
-from '/usr/src/tools/tools/netmap' and moved to $PATH directory. VALE natively support <span class="man-ref">em<span class="s">(4)</span></span>, <span class="man-ref">igb<span class="s">(4)</span></span>, <span class="man-ref">ixgbe<span class="s">(4)</span></span>, <span class="man-ref">lem<span class="s">(4)</span></span>, and <span class="man-ref">re<span class="s">(4)</span></span>. Other NICs must use emulation which may (significantly) reduce performance. See <span class="man-ref">netmap<span class="s">(4)</span></span> for more information. That said, VALE
-interfaces are added to a guest the same way a tap interface is added using: "chyves network add vale{n}[:{p}]" where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch. Specifying a port is not recommended. VALE
-interfaces are clever in that the interface is commonly shared between other guests connecting to that 'virtual' VALE switch. Two guests using 'vale0' will be connected to the same virtual switch.</p>
+from '/usr/src/tools/tools/netmap' and moved to $PATH directory. VALE natively support <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?em(4)">em<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?igb(4)">igb<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ixgbe(4)">ixgbe<span class="s">(4)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?re(4)">re<span class="s">(4)</span></a>. Other NICs must use emulation which may (significantly) reduce performance. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?netmap(4)">netmap<span class="s">(4)</span></a> for more information. That said, VALE interfaces
+are added to a guest the same way a tap interface is added using: "chyves network add vale{n}[:{p}]" where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch. Specifying a port is not recommended. VALE interfaces are
+clever in that the interface is commonly shared between other guests connecting to that 'virtual' VALE switch. Two guests using 'vale0' will be connected to the same virtual switch.</p>
 
 <h3 id="AUTO-DESIGN-NETWORK-MODE">AUTO DESIGN NETWORK MODE</h3>
 
@@ -239,7 +239,7 @@ guest these designs are checked, verified, and then created if not existing. To 
 'bridge64' as the default. All tap interfaces created for guests are then associated with the bridge set in defaults.</p>
 
 <p>As indicated above, tap interfaces are attached to a bridge which optionally can be attached to a physical or vlan interface. If the bridge is not associated with a physical or vlan interface, the bridge must be put into 'private' mode. This is done by running
-'chyves network bridge64 private'. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network. A private bridge can also use <span class="man-ref">pf<span class="s">(4)</span></span> for NAT capabilities but this is not built into
+'chyves network bridge64 private'. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network. A private bridge can also use <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?pf(4)">pf<span class="s">(4)</span></a> for NAT capabilities but this is not built into
 chyves.</p>
 
 <h3 id="SYSTEM-DESIGN-NETWORK-MODE">SYSTEM DESIGN NETWORK MODE</h3>
@@ -380,7 +380,7 @@ conditions up to 208 PCI devices can be attached when set to "yes" on 11.0-RELEA
 <p>Displays the loader and bhyve commands used to start a guest.</p>
 
 <p>Allows for functions to be called direct from the command line using "chyves dev". Using the -xvn flags instead of the word "on" will use Bourne's "set" command to turn on special option flags during "chyves dev" execution. These flags can be used individually
-(-x|-v|-n) or combined (-xv). See <span class="man-ref">sh<span class="s">(1)</span></span>.</p></li>
+(-x|-v|-n) or combined (-xv). See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>.</p></li>
 <li><p><code>log_mode</code>={host|guest|dual}</p>
 
 <p><strong>User managed and settable.</strong></p>
@@ -459,7 +459,7 @@ guest and leaves it to the user to have configured everything else (correctly). 
 <ul>
 <li><p><code>bargs</code></p>
 
-<p>For advanced users to pass additional flags directly to bhyve. See <span class="man-ref">bhyve<span class="s">(8)</span></span> for complete list of flag options. For complete list of flags used by chyves when starting a specific guest, turn on global configuration "dev_mode" to "on" or check the global log file.</p></li>
+<p>For advanced users to pass additional flags directly to bhyve. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for complete list of flag options. For complete list of flags used by chyves when starting a specific guest, turn on global configuration "dev_mode" to "on" or check the global log file.</p></li>
 <li><p><code>bhyve_net_type</code>={virtio-net|e1000}</p>
 
 <p>Sets the method to attach tap interfaces to the guest. Intel e1000 emulation is only available on 12-CURRENT.</p></li>
@@ -509,9 +509,9 @@ guest and leaves it to the user to have configured everything else (correctly). 
 <p>Using 'custom' relies on the user to create these files in the guest directory.</p></li>
 <li><p><code>pcidev_{n}</code>={bhyve-pci-dev}</p>
 
-<p>This is an advance feature and assumes you have read <span class="man-ref">bhyve<span class="s">(8)</span></span> man page AND completely understood it. This parameter does NOT have a complete input verification suite or complete verification the host can support the action.</p>
+<p>This is an advance feature and assumes you have read <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> man page AND completely understood it. This parameter does NOT have a complete input verification suite or complete verification the host can support the action.</p>
 
-<p>This parameter attaches a bhyve PCI device to the guest. The {n} is completely arbitrary number and is only a matter of the order of attachment. {bhyve-pci-dev} is the bhyve PCI device to attach. See below for common uses or <span class="man-ref">bhyve<span class="s">(8)</span></span> for a complete list.</p>
+<p>This parameter attaches a bhyve PCI device to the guest. The {n} is completely arbitrary number and is only a matter of the order of attachment. {bhyve-pci-dev} is the bhyve PCI device to attach. See below for common uses or <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for a complete list.</p>
 
 <p>chyves attaches each custom PCI device alone on the PCI bus, except for pass through devices.</p>
 
@@ -560,7 +560,7 @@ boot. If multiple guest share the same priority number, then the guests are star
 <p>Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation.</p></li>
 <li><p><code>tap{n}_mac</code>={xx:xx:xx:yy:yy:yy}</p>
 
-<p>Where {n} is the tap interface number to assign the specified MAC address to be attached to the network adapter inside the guest OS. The MAC address is an ASCII string in <span class="man-ref">ethers<span class="s">(5)</span></span> format.</p>
+<p>Where {n} is the tap interface number to assign the specified MAC address to be attached to the network adapter inside the guest OS. The MAC address is an ASCII string in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ethers(5)">ethers<span class="s">(5)</span></a> format.</p>
 
 <p>Usage:</p>
 
@@ -620,9 +620,9 @@ guest OSes.</p></li>
 <p>Sets UUID for bhyve instance. Set by /bin/uuidgen at creation.</p></li>
 <li><p><code>virtio_block_options_disk{n}</code>=[nocache[,direct][,ro][,sectorsize=logical[/physical]]]</p>
 
-<p>This is an advance feature and assumes you have read <span class="man-ref">zfs<span class="s">(8)</span></span> man page AND completely understood it. This parameter does NOT have a complete input verification suite.</p>
+<p>This is an advance feature and assumes you have read <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a> man page AND completely understood it. This parameter does NOT have a complete input verification suite.</p>
 
-<p>This is a per disk setting used to append bhyve virtio-block options to a disk. While there is a very limited use case of these options, they can be utilized but it is not recommended. See <span class="man-ref">bhyve<span class="s">(8)</span></span> for what these options do.</p>
+<p>This is a per disk setting used to append bhyve virtio-block options to a disk. While there is a very limited use case of these options, they can be utilized but it is not recommended. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for what these options do.</p>
 
 <p>Keep in mind that the logical sectorsize is already used by chyves and pulled from the zvol's 'volblocksize' ZFS property when the <em>virtio_block_options</em> is not set. When the property "virtio_block_options_disk{n}" exists, the sectorsize is no longer
 automatically populated to prevent collision.</p>
@@ -672,7 +672,7 @@ reference.</p>
 
 
 <p>These default disk parameters are direct ZFS values used when creating disks for the guest. These parameters are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process.
-Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See <span class="man-ref">zfs<span class="s">(8)</span></span> on settable values but remember, think of the kittens and puppies. The intial default values are:</p>
+Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a> on settable values but remember, think of the kittens and puppies. The intial default values are:</p>
 
 <ul>
 <li><code>disk_volmode</code>=dev</li>
@@ -690,7 +690,7 @@ Heed this warning! The value "inherit" will inherit the value set by the ZFS (*g
 
 <p>chyves utilizes tmux by creating a session called "chyves", then creates a window named after the guest, then splits that window into two panes. The left pane is used to manage the guest and the right pane is the serial console for the guest. If a window named
 after the guest already exists, then the command is inserted into the active pane for that guest window and then the session is joined or rather 'attached' in tmux's parlance. Each additional guest has a window created under the same 'chyves' named session. See
-<span class="man-ref">tmux<span class="s">(1)</span></span> for full details on use.</p>
+<a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> for full details on use.</p>
 
 <p>To use a command for tmux, enter: 'Ctrl + b (release-keys) <var>command</var>'. Where Ctrl + b is the modifier, (release-keys) is literally releasing the Ctrl and b keys, and <var>command</var> is the case sensitive letter or command to type in. Sometimes this is written as 'C-m'
 where 'm' means modifier. In this man page, the abbreviated syntax used is 'C-b'. Below are necessary tmux commands for basic use with chyves:</p>
@@ -783,6 +783,26 @@ are populated.</p>
 <p><code>chyves dataset &lt;pool> install</code></p>
 
 <p>Creates ZFS datasets and parameters on pool. This is the first step to getting chyves running.</p></li>
+<li><p><code>offline</code></p>
+
+<p><code>chyves dataset &lt;pool> offline</code></p>
+
+<p>Offlines a pool. This completely removes the dataset, the guests, and parameters on a pool from any chyves commands or modifications. Only the 'online' command can bring this back to an operable state. Only secondary pools can be offlined.</p></li>
+<li><p><code>online</code></p>
+
+<p><code>chyves dataset &lt;pool> online</code></p>
+
+<p>Onlines an offline pool.</p></li>
+<li><p><code>promote</code></p>
+
+<p><code>chyves dataset &lt;pool> promote</code></p>
+
+<p>Promotes a secondary pool to the primary role. Moves ISO and Firmware resources. Also moves defaults and global parameters.</p></li>
+<li><p><code>uninstall</code></p>
+
+<p><code>chyves dataset &lt;pool> uninstall</code></p>
+
+<p>Uninstalls the ZFS datasets from pool. Secondary pools must be uninstalled before the primary pool.</p></li>
 <li><p><code>upgrade</code></p>
 
 <p><code>chyves dataset &lt;pool> upgrade</code></p>
@@ -932,7 +952,7 @@ See <a href="#UEFI-SUPPORT" title="UEFI SUPPORT" data-bare-link="true">UEFI SUPP
 
 <p><code>chyves &lt;guest> console</code></p>
 
-<p>Establishes a serial connection to a guest using <span class="man-ref">cu<span class="s">(1)</span></span> via the <span class="man-ref">nmdm<span class="s">(4)</span></span> device as configure in the 'con' property. To escape the <code>cu</code> connection, press tilde (~) twice, then period (.), sometimes hitting <code>ENTER</code> before that sequence is required. If that fails to
+<p>Establishes a serial connection to a guest using <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> via the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a> device as configure in the 'con' property. To escape the <code>cu</code> connection, press tilde (~) twice, then period (.), sometimes hitting <code>ENTER</code> before that sequence is required. If that fails to
 exit the console, try pressing tilde (~), then press Control + d (^d). If all else fails then use 'chyves <var>guest</var> console reset'.</p></li>
 <li><p><code>reset</code></p>
 
@@ -1151,7 +1171,7 @@ optionally {p} is the port on the VALE switch.</p></li>
 
 <p><code>chyves network bridge{n} attach iface{n}</code></p>
 
-<p>Used to associate a vlan or physical interface with a bridge. Keep in mind that a physical or vlan interface can only be on one bridge group. See <span class="man-ref">ifconfig<span class="s">(8)</span></span> for details.</p></li>
+<p>Used to associate a vlan or physical interface with a bridge. Keep in mind that a physical or vlan interface can only be on one bridge group. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ifconfig(8)">ifconfig<span class="s">(8)</span></a> for details.</p></li>
 <li><p><code>default</code></p>
 
 <p><code>chyves network bridge{n} default</code></p>
@@ -1373,7 +1393,7 @@ chyves bguest snapshot rollback @beforeupdate
 
 <h2 id="SEE-ALSO">SEE ALSO</h2>
 
-<p><span class="man-ref">bhyve<span class="s">(8)</span></span>, <span class="man-ref">bhyveload<span class="s">(8)</span></span>, <span class="man-ref">zfs<span class="s">(8)</span></span>, <span class="man-ref">nmdm<span class="s">(4)</span></span>, <span class="man-ref">cu<span class="s">(1)</span></span>, <span class="man-ref">if_bridge<span class="s">(4)</span></span>, <span class="man-ref">chyves-utils<span class="s">(8)</span></span>, <span class="man-ref">virtio<span class="s">(4)</span></span>, <span class="man-ref">ethers<span class="s">(5)</span></span>, <span class="man-ref">netmap<span class="s">(4)</span></span></p>
+<p><a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyveload(8)">bhyveload<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bridge(4)">bridge<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ethers(5)">ethers<span class="s">(5)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ifconfig(8)">ifconfig<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?netmap(4)">netmap<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?pf(4)">pf<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tap(3)">tap<span class="s">(3)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vale(4)">vale<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?virtio(4)">virtio<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vtnet(4)">vtnet<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a></p>
 
 
   <ol class='man-decor man-foot man foot'>
