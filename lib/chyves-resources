@@ -151,7 +151,7 @@ __resource_delete() {
 	esac
 }
 
-# Rename guest, ISO, and Firmware resources
+# Rename guest
 __guest_rename() {
 	local _new_name="$1"
 
