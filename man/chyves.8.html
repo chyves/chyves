@@ -114,6 +114,7 @@
 <li><code>chyves &lt;guest> snapshot rollback [&lt;@snapshotname>]</code></li>
 <li><code>chyves &lt;guest>|MG|all start [&lt;iso>]</code></li>
 <li><code>chyves &lt;guest>|MG|all stop [force]</code></li>
+<li><code>chyves &lt;guest>|MG|all upgrade</code></li>
 <li><code>chyves help</code></li>
 <li><code>chyves info [-zbprvstcdnakl|-h]</code></li>
 <li><code>chyves iso list</code></li>
@@ -877,6 +878,12 @@ needed to be attached to a guest using grub-bhyve, then manually adding a custom
 <p>Attempts to gracefully stop a guest. This is effectively like pressing the power button on a computer tower, this means the guest OS determines how to respond. Running '<code>poweroff</code>' (or the equivalent) will shutdown a guest and the VMM resources are reclaimed.
 Using the <em>[force]</em> option forces the guest to stop by running '<code>kill -9</code>' and then reclaiming the guest's VMM resources. <strong>USE EXTREME CAUTION WITH '<em>force</em>' AND ONLY AS A LAST RESORT, THIS CAN CAUSE A CORRUPT OS</strong>.</p></li>
 <li><p><code>upgrade</code></p>
+
+<p><code>chyves &lt;guest>|MG upgrade</code></p>
+
+<p>Upgrades a guest to the latest chyves guest version. This add, removes, and modifies guest properties to be compatible with the the current version of chyves. See 'chyves_guest_version' guest property for details.</p></li>
+</ul>
+
 
 <h3 id="GUEST-CLONE-SUB-SUB-COMMAND">GUEST CLONE SUB-SUB-COMMAND</h3>
 

@@ -325,7 +325,7 @@ EOT
 	[ -n "$( echo "$flags" | grep -E 'r|a' )" ] && printf "^%s" "Dataset Role"
 
 	# Print headers for -v flag
-	[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^%s^%s^%s^%s^%s" "OS" "Loader" "CGV" "net-ifaces" "Serial"
+	[ -n "$( echo "$flags" | grep -E 'v|a' )" ] && printf "^%s^%s^%s^%s^%s" "OS" "Loader" "CGV ($_VERSION_CHYVES_GUEST)" "net-ifaces" "Serial"
 
 	# Print headers for -s flag
 	[ -n "$( echo "$flags" | grep -E 's|a' )" ] && printf "^%s^%s^%s" "VMM" "Running" "rcboot"

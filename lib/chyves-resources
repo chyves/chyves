@@ -102,6 +102,7 @@ __guest_upgrade_chyves_guest_version() {
 		_GUEST_name=$_guest
 		__load_guest_parameters "$_GUEST_name"
 		__log 1 "$_GUEST_name is on chyves_guest_version $_GP_chyves_guest_version."
+		_RESTRICT_NEW_PROPERTY_NAMES=master-override
 
 		# Change version number and update the global variable.
 		__chyves_guest_version_gvreload_and_set() {
@@ -110,15 +111,15 @@ __guest_upgrade_chyves_guest_version() {
 			__load_guest_parameter_single "chyves_guest_version"
 		}
 
-		# Template for first change.
-		#if [ "${_GP_chyves_guest_version}" -lt "0101" ]; then
-		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0101."
-		#	<ACTION>
-		#	__chyves_guest_version_gvreload_and_set "0101"
-		#fi
+		# Change for addition of 'bhyve_net_type', only checks for value of 'e1000', a missing value causes no harm.
+		if [ "$_GP_chyves_guest_version" -eq "0100" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0101."
+			__write_property_value_to_config_file "guest" "bhyve_net_type" "$_GDP_bhyve_net_type"
+			__chyves_guest_version_gvreload_and_set "0101"
+		fi
 
 		# Template
-		#if [ "${_GP_chyves_guest_version}" -lt "9900" ]; then
+		#if [ "$_GP_chyves_guest_version" -lt "9900" ]; then
 		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."
 		#	 <ACTION>
 		#	__chyves_guest_version_gvreload_and_set "9900"

@@ -28,6 +28,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.5
 * `chyves <guest> snapshot rollback [<@snapshotname>]`
 * `chyves <guest>|MG|all start [<iso>]`
 * `chyves <guest>|MG|all stop [force]`
+* `chyves <guest>|MG|all upgrade`
 * `chyves help`
 * `chyves info [-zbprvstcdnakl|-h]`
 * `chyves iso list`
@@ -752,6 +753,12 @@ These sub-commands manage UEFI firmware resources.
   `chyves <guest>|MG stop [force]`
 
   Attempts to gracefully stop a guest. This is effectively like pressing the power button on a computer tower, this means the guest OS determines how to respond. Running '`poweroff`' (or the equivalent) will shutdown a guest and the VMM resources are reclaimed. Using the _[force]_ option forces the guest to stop by running '`kill -9`' and then reclaiming the guest's VMM resources. **USE EXTREME CAUTION WITH '_force_' AND ONLY AS A LAST RESORT, THIS CAN CAUSE A CORRUPT OS**.
+
+* `upgrade`
+
+  `chyves <guest>|MG upgrade`
+
+  Upgrades a guest to the latest chyves guest version. This add, removes, and modifies guest properties to be compatible with the the current version of chyves. See 'chyves_guest_version' guest property for details.
 
 ### GUEST CLONE SUB-SUB-COMMAND
 
