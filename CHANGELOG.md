@@ -327,7 +327,7 @@ Internal development.
 
 - Created the DEVELOPMENT.md document to give code examples, guidance, terminology, and general best practice when submitting PRs. This is to maintain a certain
 
-- Added `make buildman` directive to `Makefile` in order to build man page file: `chyves.8`.
+- Added `make docs` directive to `Makefile` in order to build man page file `chyves.8` and 'chyves.8.html` file using the Ruby tool `[ronn](https://github.com/rtomayko/ronn)` from the `chyves.8.ronn` file.
 
 - Added `make clean` directive to `Makefile` in order to remove man page `.gz` file. Useful before using `git commit` when using the directory to install and develop from.
 

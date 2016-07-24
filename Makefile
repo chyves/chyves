@@ -22,14 +22,16 @@ MAN_FILE=$(SCRIPT_NAME).8
 MKDIR=mkdir
 RM=rm
 CAT=cat
+RONN=ronn
 TXT2MAN=txt2man
 
 # Developer use:
 clean:
 	$(RM) -f $(.OBJDIR)/man/$(MAN_FILE).gz
 
-buildman:
-	$(CAT) $(.OBJDIR)/man/$(MAN_FILE).txt | $(TXT2MAN) -t $(PROJECT_NAME) -s 8 -v "FreeBSD System Manager's Manual" > $(.OBJDIR)/man/$(MAN_FILE)
+# Builds man page file and html file from chyves.8.ronn file using ronn
+docs:
+	$(RONN) --manual="FreeBSD System Manager's Manual" --date=`date +%Y-%m-%d` --organization="$(PROJECT_NAME)" --style=toc $(.OBJDIR)/man/$(MAN_FILE).ronn
 
 # General use:
 install:
