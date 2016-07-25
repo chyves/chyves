@@ -1,4 +1,10 @@
 
+#### Version 0.0.9 (2016 July 24)
+
+Fix.
+
+- Typo caught by /u/Open_Systems, `rcvar` != `sysrc`. [4a47aaf](https://github.com/chyves/chyves/commit/4a47aaf26860f86a5833ff6bbfda056d946cc458)
+
 #### Version 0.0.7 (2016 July 24)
 
 Docs and minor fixes.
