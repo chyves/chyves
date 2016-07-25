@@ -64,11 +64,12 @@
     <a href="#SYNTAX-NOMENCLATURE-">SYNTAX NOMENCLATURE:</a>
     <a href="#DESCRIPTION">DESCRIPTION</a>
     <a href="#DEPENDENCIES">DEPENDENCIES</a>
+    <a href="#ZFS">ZFS</a>
+    <a href="#LOGS">LOGS</a>
     <a href="#NETWORK">NETWORK</a>
     <a href="#PARAMETERS">PARAMETERS</a>
     <a href="#TMUX-SUPPORT">TMUX SUPPORT</a>
     <a href="#UEFI-SUPPORT">UEFI SUPPORT</a>
-    <a href="#VNC-CLIENT-SUPPORT">VNC CLIENT SUPPORT</a>
     <a href="#COMMANDS">COMMANDS</a>
     <a href="#EXAMPLES">EXAMPLES</a>
     <a href="#AUTHOR">AUTHOR</a>
@@ -162,41 +163,29 @@
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p><a class="man-ref" href="chyves.8.html">chyves<span class="s">(8)</span></a> relies on the FreeBSD hypervisor <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a>, Bourne shell <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> to start and manage type 2 virtualized guests. Optionally grub2-bhyve and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> can be used to expand the capabilities of chyves. chyves uses configuration files,
-ZFS filesystem datasets and volumes to store guest, chyves settings, and chyves resources in an organized hierarchy. bhyve uses virtio drivers built into the GENERIC kernel for network virtualization. The virtio drivers are used to paravirtualize I/O for disk and
-network access.</p>
+<p><a class="man-ref" href="chyves.8.html">chyves<span class="s">(8)</span></a> relies on the FreeBSD hypervisor <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a>, Bourne shell <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> to start and manage type 2 virtualized guests. Optionally grub2-bhyve and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> can be used to expand the capabilities of chyves. chyves uses configuration files, ZFS filesystem datasets and volumes to store guest, chyves settings, and chyves resources in an organized hierarchy. bhyve uses virtio drivers built into the GENERIC kernel for network virtualization. The virtio drivers are used to paravirtualize I/O for disk and network access.</p>
 
-<p>For networking, a guest is presented a PCI Ethernet device through the use of <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?virtio(4)">virtio<span class="s">(4)</span></a>, on FreeBSD guests the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vtnet(4)">vtnet<span class="s">(4)</span></a> driver is used. The host communicates with this device through a <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tap(3)">tap<span class="s">(3)</span></a> or <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vale(4)">vale<span class="s">(4)</span></a> interface.</p>
+<p>For networking, a guest is presented a PCI Ethernet device through the use of <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?virtio(4)">virtio<span class="s">(4)</span></a>, on FreeBSD guests the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vtnet(4)">vtnet<span class="s">(4)</span></a> driver is used. On 12-CURRENT, Intel e1000 emulation was added as an alternative to virtio-net. The host communicates with this device through a <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tap(3)">tap<span class="s">(3)</span></a> or <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?vale(4)">vale<span class="s">(4)</span></a> interface.</p>
 
-<p>For storage, guests are provided block storage device(s) via ZFS volumes from the host. Datasets are used to organize these block devices and other important data in a hierarchical structure. ZFS user properties store information used for chyves operations and
-guest parameters. See <a href="#PARAMETERS" title="PARAMETERS" data-bare-link="true">PARAMETERS</a> section.</p>
+<p>For storage, guests are provided block storage device(s) via ZFS volumes from the host. ZFS datasets are used to organize these block devices and other important data in a hierarchical structure. See <a href="#ZFS" title="ZFS" data-bare-link="true">ZFS</a> section for more information.</p>
 
-<p>Single and multiple pool hosts are supported. chyves pools get mounted to '/chyves/<var>pool</var>'.</p>
-
-<p>The pool configuration is stored in a file at '<var>pool</var>/chyves/.config/pool.cfg'. On the primary pool there is also a file in the same directory called 'global.cfg', this contains the global settings for chyves.</p>
-
-<p>The 'dataset_role' setting  is used to store the role of that pool containing the chyves datasets. Valid values are primary, secondary, and offline. Only one 'primary' dataset can be configured per system. The primary dataset is the only dataset that contains the
-ISO and firmware resources. The primary pool also has the only dataset for guest defaults. This is located at <var>pool</var>/chyves/guests/.defaults. This dataset is referenced when setting properties for new guests. The primary pool is also where new guests are created
-when the [<var>pool</var>] argument is not specified with 'chyves create'. All other active pools are set to the "secondary" role. Pools set to the 'offline' role are left untouched and is a good role to put a local replicated backup. The primary pool is critical to the
-operation of chyves. Without a primary pool set, only the 'dataset' sub-command is allowed to run. The first pool to be setup on the system is the primary pool. This can be changed later with 'chyves dataset <var>pool</var> promote'.</p>
-
-<p>Multi-guest [MG] support is the ability to specify multiple guest names that are comma separate for a sub-command. Not all sub-commands have this functionality but the ones that do, allow for rapid execution of the same command over many guests, this can be
-incredibly helpful for a fleet of VMs. Commands in the synopsis above with the "<var>guest</var>|MG" syntax indicate compatibility with multi-guest. Using the word 'all' instead of <var>guest</var> will specify all active guests on the system.</p>
+<p>Multi-guest [MG] support is the ability to specify multiple guest names that are comma separate for a sub-command. Not all sub-commands have this functionality but the ones that do, allow for rapid execution of the same command over many guests, this can be incredibly helpful for a fleet of VMs. Commands in the synopsis above with the "<var>guest</var>|MG" syntax indicate compatibility with multi-guest. Using the word 'all' instead of <var>guest</var> will specify all active guests on the system.</p>
 
 <h2 id="DEPENDENCIES">DEPENDENCIES</h2>
 
-<p>bhyve and chyves will run on a base FreeBSD installation, however the required kernel modules are not loaded by default.  The default settings for chyves attempts to get users running with minimal effort, so the kernel modules are loaded when needed. There are
-also certain binaries that enhance the capabilities. chyves checks for these components and in certain cases exits if a required component is not detected.</p>
+<p><a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> and <a class="man-ref" href="chyves.8.html">chyves<span class="s">(8)</span></a> will run on a base FreeBSD installation, however the required kernel modules are not loaded by default or within the GENERIC kernel. However <code>chyves</code> by default will attempt to load those kernel modules when needed. There are also certain binaries that enhance <code>chyves</code> capabilities. These binaries are checked-for and in certain cases, exits if the required component is not detected.</p>
+
+<p>At least one ZFS pool is required. All data is stored on one or many ZFS pools and depends on ZFS volumes for guest's disks backing. <code>chyves</code> capitalizes on multi-pool configurations. Multiple pool configurations are common in FreeNAS deployments, separated storage types (eg: SSD, HD, NVMe), and OS plus storage configurations.</p>
 
 <h3 id="Kernel-modules-">Kernel modules:</h3>
 
 <ul>
-<li><code>vmm</code>         Required to run the guests as this allocates the resources</li>
-<li><code>nmdm</code>        Required for serial console access to the guests</li>
-<li><code>if_tap</code>      Required for network access to the guests</li>
-<li><code>if_bridge</code>   Required for network access to the guests</li>
-<li><code>bridgestp</code>   Required by <code>if_bridge</code></li>
-<li><code>netmap</code>      Required for VALE support. Not compiled into GENERIC on 10.3.</li>
+<li><code>vmm</code>            - Required to run the guests as this allocates the resources</li>
+<li><code>nmdm(4)</code>        - Required for serial console access to the guests</li>
+<li><code>if_tap(4)</code>      - Required for network access to the guests</li>
+<li><code>if_bridge(4)</code>   - Required for network access to the guests</li>
+<li><code>bridgestp</code>      - Required by <code>if_bridge</code></li>
+<li><code>netmap(4)</code>      - Required for VALE support. Not compiled into GENERIC on 10.3.</li>
 </ul>
 
 
@@ -204,67 +193,131 @@ also certain binaries that enhance the capabilities. chyves checks for these com
 
 <ul>
 <li><code>bhyve</code>                   Custom variants required for VALE or UEFI SUPPORT.</li>
-<li><code>BHYVE_UEFI_20151002.fd</code>  Required to boot UEFI guests. In Peter Grehan's public FreeBSD file directory.</li>
-<li><code>BHYVE_UEFI_20160526.fd</code>  Required to boot UEFI guests with VNC support. In Peter Grehan's public FreeBSD file directory.</li>
+<li><code>BHYVE_UEFI_20151002.fd</code>  UEFI firmware required to boot UEFI guests. In Peter Grehan's public FreeBSD file directory.</li>
+<li><code>BHYVE_UEFI_20160526.fd</code>  UEFI firmware required to boot UEFI guests with VNC support. In Peter Grehan's public FreeBSD file directory.</li>
 <li><code>grub2-bhyve</code>             Required for booting non-FreeBSD or non-UEFI guests. In ports and pkg.</li>
-<li><code>tmux</code>                    Required when using the command 'chyves <var>guest</var> console tmux'. In ports and pkg.</li>
+<li><code>tmux</code>                    Required when using the command <code>chyves &lt;guest> console tmux</code>. In ports and pkg.</li>
 <li><code>vale-ctl</code>                Required for VALE networking support. In '/usr/src'.</li>
 </ul>
 
 
 <h3 id="Hardware-dependencies-">Hardware dependencies:</h3>
 
-<p>bhyve is dependent on hardware virtualization CPU features. One feature is called Second Level Address Translation (SLAT), also known as nested paging. Intel's implementation is called Extended Page Tables (EPT) and AMD's implementation is called Rapid
-Virtualization Indexing (RVI). This CPU feature is referenced as 'POPCNT' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under 'Features2:' line. There was an early series of CPUs from Intel (Xeon 5500) that had most of the necessary virtualization capabilities but lacked a feature Intel later
-implemented called unrestricted guest ('UG' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under "VT-x:"). Without this feature bhyve is limited to FreeBSD guests and only one core can be assigned per guest. AMD has the <code>UG</code> functionality in all of it's RVI implementations.</p>
+<p><a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> is dependent on hardware virtualization CPU features. One feature is called Second Level Address Translation (SLAT), also known as nested paging. Intel's implementation is called Extended Page Tables (EPT) and AMD's implementation is called Rapid Virtualization Indexing (RVI). This CPU feature is referenced as 'POPCNT' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under 'Features2:' line. There is an early series of CPUs from Intel (Xeon 5500) that has most of the necessary virtualization capabilities but lack a feature Intel later implemented called unrestricted guest ('<code>UG</code>' in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?dmesg(8)">dmesg<span class="s">(8)</span></a> under "VT-x:"). Without this feature bhyve is limited to FreeBSD guests with only one CPU core. AMD has the '<code>UG</code>' functionality in all of it's RVI implementations.</p>
 
-<p>PCI Pass-through support is also provided through another sub-set of hardware virtualization CPU features called I/O MMU virtualization. For Intel CPUs it is called <code>VT-d</code> and for AMD CPUs it is called <code>AMD-Vi</code>. See the <em>pcidev</em>{n}_ parameter under <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest
-Parameters</a> section for instructions on attaching PCI pass-through devices.</p>
+<p>PCI Pass-through support is also provided through another sub-set of hardware virtualization CPU features called I/O MMU virtualization. Intel calls their implementation '<code>VT-d</code>' and AMD calls their implementation '<code>AMD-Vi</code>'. See the <code>pcidev_{n}</code> parameter under <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section for instructions on attaching PCI pass-through devices. A check is ran before starting a guest that has PCI pass-through devices configured and will not start the guest if the host does not have the necessary CPU feature.</p>
+
+<h2 id="ZFS">ZFS</h2>
+
+<p>As mentioned in the <a href="#DEPENDENCIES" title="DEPENDENCIES" data-bare-link="true">DEPENDENCIES</a> section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool. There are many features that rely on ZFS, such as cloning. The ISO, UEFI firmware, and guest resources and parameters are stored within ZFS datasets.</p>
+
+<p>Single and multiple ZFS pools are supported, there is no loss in functionality for either. <code>chyves</code> datasets get mounted to '/chyves/<var>pool</var>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global parameters, and the comprehensive logs. The primary pool can be changed with <code>chyves dataset &lt;new-prim-pool> promote</code> which moves the resources and global configuration to <code>&lt;new-prim-pool></code> from the current primary pool.</p>
+
+<p>See <a href="#DATASET-SUB-COMMANDS" title="DATASET SUB-COMMANDS" data-bare-link="true">DATASET SUB-COMMANDS</a> section below for managing the <code>chyves</code> datasets.</p>
+
+<p>Example of a multi-pool folder structure:</p>
+
+<pre><code>/chyves/prim_pool/guests/
+                 /guests/&lt;guest1>/.config/.cfg              # File
+                 /guests/&lt;guest1>/disk{n}                   # Volumes
+                 /guests/&lt;guest1>/log                       # Dataset
+                 /guests/&lt;guest1>/log/YYYYMM.log            # Files
+                 /guests/&lt;guest2>/.config/.cfg              # File
+                 /guests/&lt;guest2>/disk{n}                   # Datasets
+                 /guests/&lt;guest2>/log                       # Dataset
+                 /guests/&lt;guest2>/log/YYYYMM.log            # Files
+                 /guests/.defaults                          # File
+                 /.config                                   # Dataset
+                 /.config/global.cfg                        # File
+                 /.config/pool.cfg                          # File
+                                  pool_role=primary         # Pool parameter
+                 /logs                                      # Dataset
+                 /logs/YYYYMM.log                           # Files
+                 /ISO                                       # Datasets
+                 /Firmware                                  # Datasets
+/chyves/secd_pool/guests
+                 /guests/&lt;guest3>/.config/.cfg              # File
+                 /guests/&lt;guest3>/disk{n}                   # Volumes
+                 /guests/&lt;guest3>/log                       # Dataset
+                 /guests/&lt;guest3>/log/YYYYMM.log            # Files
+                 /.config                                   # Dataset
+                 /.config/pool.cfg                          # File
+                                  pool_role=secondary       # Pool parameter
+/chyves/anther_pl/guests
+                 /guests/&lt;guest4>/.config/.cfg              # File
+                 /guests/&lt;guest4>/disk{n}                   # Volumes
+                 /guests/&lt;guest4>/log                       # Dataset
+                 /guests/&lt;guest4>/log/YYYYMM.log            # Files
+                 /.config                                   # Dataset
+                 /.config/pool.cfg                          # File
+                                  pool_role=secondary       # Pool parameter
+</code></pre>
+
+<p>  Offline dataset:
+    offlinePL/chyves_offline                                    # Datasets
+    offlinePL/chyves_offline/.config/pool.cfg                   # File
+                                             pool_role=offline  # Pool parameter</p>
+
+<p>Example of a single pool dataset hierarchy:</p>
+
+<pre><code>  /chyves/zroot/guests
+               /guests/&lt;guest1>/.config/.cfg                # File
+               /guests/&lt;guest1>/disk{n}                     # Volumes
+               /guests/&lt;guest1>/log                         # Dataset
+               /guests/.defaults                            # File
+               /.config                                     # Dataset
+               /.config/global.cfg                          # File
+               /.config/pool.cfg                            # File
+                                pool_role=primary           # Pool parameter
+               /logs                                        # Dataset
+               /ISO                                         # Datasets
+               /Firmware                                    # Datasets
+</code></pre>
+
+<h2 id="LOGS">LOGS</h2>
+
+<p>All logs entries are stored on the primary pool under <code>/chyves/&lt;primary-pool>/chyves/logs</code> with the dataset's compression turned on. The file are separated on a monthly basis using a <code>YYYYMM.log</code> file name. The log entries use the ISO 8601 date format for monitoring tools. There is a separate log file on a per guest basis, however at this time not all guest events are recorded to this file, however these events <em>are</em> recorded in the global logs regardless.</p>
+
+<pre><code>2016-07-09T21:27:00+0000 - [2] - Mimicking tap50 interface for g10.
+</code></pre>
+
+<p>The logs are dash delimited with leading and trailing single spaces. The first field indicates the time in ISO 8601 format, '2016-07-09T21:27:00+0000' in the example above. The second field is the 'stdout_level', '2' in the example above. The third field is the log event, 'Mimicking tap50 interface for g10.' in the example above.</p>
 
 <h2 id="NETWORK">NETWORK</h2>
 
-<p>The network mode is set by the global setting '<em>network_design_mode</em>' and determines how chyves handles network devices for the guests. The two modes are '<em>auto</em>' and '<em>system</em>', both modes are discussed below.</p>
+<p>The network mode is set by the global setting '<code>network_design_mode</code>' and determines how chyves handles network devices for the guests. The two modes are '<code>auto</code>' and '<code>system</code>', both modes are discussed below.</p>
 
-<p>VALE support is experimentally provided as a proof of concept. VALE support is not widely implemented and is feature limited at it's current development stage. To use VALE requires that 'device netmap' be compiled into the kernel and that 'vale-ctl' be compiled
-from '/usr/src/tools/tools/netmap' and moved to $PATH directory. VALE natively support <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?em(4)">em<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?igb(4)">igb<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ixgbe(4)">ixgbe<span class="s">(4)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?re(4)">re<span class="s">(4)</span></a>. Other NICs must use emulation which may (significantly) reduce performance. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?netmap(4)">netmap<span class="s">(4)</span></a> for more information. That said, VALE interfaces
-are added to a guest the same way a tap interface is added using: "chyves network add vale{n}[:{p}]" where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch. Specifying a port is not recommended. VALE interfaces are
-clever in that the interface is commonly shared between other guests connecting to that 'virtual' VALE switch. Two guests using 'vale0' will be connected to the same virtual switch.</p>
+<p>VALE support is experimentally provided as a proof of concept. VALE support is not widely implemented and is feature limited at it's current development stage. To use VALE requires that 'device netmap' be compiled into the kernel and that 'vale-ctl' be compiled from '/usr/src/tools/tools/netmap' and moved to $PATH directory. VALE natively support <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?em(4)">em<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?igb(4)">igb<span class="s">(4)</span></a>, <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ixgbe(4)">ixgbe<span class="s">(4)</span></a>, and <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?re(4)">re<span class="s">(4)</span></a>. Other NICs must use emulation which may (significantly) reduce performance. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?netmap(4)">netmap<span class="s">(4)</span></a> for more information. That said, VALE interfaces are added to a guest the same way a tap interface is added using: '<code>chyves network add vale{n}[:{p}]</code>' where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch. Specifying a port is not recommended. VALE interfaces are clever in that the interface is commonly shared between other guests connecting to that 'virtual' VALE switch. Two guests using 'vale0' will be connected to the same virtual switch.</p>
+
+<p>In 12-CURRENT r302504, guest Intel e1000 emulation was added as an alternative to using virtio-net. This can be utilized by setting 'bhyve_net_type' to 'e1000' from a 12-CURRENT host on a per guest basis.</p>
 
 <h3 id="AUTO-DESIGN-NETWORK-MODE">AUTO DESIGN NETWORK MODE</h3>
 
-<p>By default, chyves is configured to manage the complete network design layout. chyves keeps track of which physical, tap, and vlan interfaces are associated with which bridges, and which tap and VALE interfaces are associated with which guests. Upon starting a
-guest these designs are checked, verified, and then created if not existing. To manage the network design using this method, use the 'chyves network' commands to create the associations and 'chyves list bridges' for an overview.</p>
+<p>By default, chyves is configured to manage the complete network design layout. chyves keeps track of which physical, tap, and vlan interfaces are associated with which bridges, and which tap and VALE interfaces are associated with which guests. Upon starting a guest these designs are checked, verified, and then created if not existing. To manage the network design using this method, use the 'chyves network' commands to create the associations and 'chyves list bridges' for an overview.</p>
 
-<p>On a fresh simple installation, the only command needed is 'chyves network bridge0 attach em0'. This tells chyves to associate the interface 'em0' with the default bridge. To change the default bridge, the command would be 'chyves network bridge64 default' to set
-'bridge64' as the default. All tap interfaces created for guests are then associated with the bridge set in defaults.</p>
+<p>On a fresh simple installation, the only command needed is 'chyves network bridge0 attach em0'. This tells chyves to associate the interface 'em0' with the default bridge. To change the default bridge, the command would be 'chyves network bridge64 default' to set 'bridge64' as the default. All tap interfaces created for guests are then associated with the bridge set in defaults.</p>
 
-<p>As indicated above, tap interfaces are attached to a bridge which optionally can be attached to a physical or vlan interface. If the bridge is not associated with a physical or vlan interface, the bridge must be put into 'private' mode. This is done by running
-'chyves network bridge64 private'. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network. A private bridge can also use <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?pf(4)">pf<span class="s">(4)</span></a> for NAT capabilities but this is not built into
-chyves.</p>
+<p>As indicated above, tap interfaces are attached to a bridge, which optionally can be attached to a physical or vlan interface. If the bridge is not associated with a physical or vlan interface, the bridge must be put into 'private' mode. This is done by running 'chyves network bridge64 private'. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network. A private bridge can also use <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?pf(4)">pf<span class="s">(4)</span></a> for NAT capabilities but this is not built into chyves.</p>
 
 <h3 id="SYSTEM-DESIGN-NETWORK-MODE">SYSTEM DESIGN NETWORK MODE</h3>
 
-<p>The 'system' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the
-'net_ifaces' property.</p>
+<p>The 'system' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the 'net_ifaces' parameter.</p>
 
 <p>Converting from 'system' to 'auto' will not automatically start to work. Each device will need to be manually associated with each other.</p>
 
 <h2 id="PARAMETERS">PARAMETERS</h2>
 
-<p>There are four types of chyves parameters: global configuration parameters, pool parameters, per-guest parameters, and default guest parameters. Each is stored in a file in the chyves dataset hierarchy. <strong>It is not recommended to directly edit the '*.cfg' files,
-this is because there are no filters to stop typos, warn for incorrect property names, or invalid values.</strong> The filter is only applied when running the 'chyves <var>guest</var> set' command and not rechecked when pulling the values from the files.</p>
+<p>There are four types of chyves parameters: global configuration parameters, pool parameters, per-guest parameters, and default guest parameters. Each is stored in a file in the chyves dataset hierarchy. <strong>It is not recommended to directly edit the '*.cfg' files, this is because there are no filters to stop typos, warn for incorrect parameter names, or invalid values.</strong> The filter is only applied when running the 'chyves <var>guest</var> set' command and not rechecked when pulling the values from the files.</p>
 
-<p>Also certain actions are triggered when setting certain parameters. For example, setting the <em>template</em> guest parameter will set or unset the <em>readonly</em> flag on the ZFS dataset.</p>
+<p>Also certain actions are triggered when setting certain parameters. For example, setting the '<code>template</code>' guest parameter will set or unset the <em>readonly</em> flag on the ZFS dataset.</p>
 
-<p>One of the qualities that chyves capitalizes-on is multi-pool configurations. Multiple pool configurations are common in FreeNAS deployments, separated storage types (eg: SSD, HD, NVMe), and OS plus storage configurations. With multiple pools, it becomes necessary
-to have defined roles for each pool. This is facilitated through the use of a dataset called '<var>pool</var>/chyves/.config' where global and pool specific parameters are stored. The global parameters are only on the primary pool's dataset and are discussed in the <a href="#Global-Configuration-Parameters" title="Global Configuration Parameters" data-bare-link="true">Global
-Configuration Parameters</a> section below.</p>
+<p>The pool configuration is stored in a file at '/chyves/<var>pool</var>/.config/pool.cfg'. On the primary pool there is also a file in the same directory called 'global.cfg', this contains the global settings for chyves.</p>
 
-<p>Single pool configurations are supported and there is no loss in functionality. The first pool is always set as the primary pool, no changes are unique for single pool configurations.</p>
+<p>The 'dataset_role' setting  is used to store the role of that pool containing the chyves datasets. Valid values are primary, secondary, and offline. Only one 'primary' dataset can be configured per system. The primary dataset is the only dataset that contains the ISO and firmware resources. The primary pool also has the only dataset for guest defaults. These defaults are referenced when setting parameters for new guests. The primary pool is also where new guests are created when the [<var>pool</var>] argument is not declared with 'chyves create' command. All other active pools are set to the "secondary" role. Pools set to the 'offline' role are left untouched and is a good role to put a local replicated backup. The primary pool is critical to the operation of chyves. Without a primary pool set, only the 'dataset' sub-command is allowed to run. The first pool to be setup on the system is the primary pool. This can be changed later with 'chyves dataset <var>pool</var> promote'.</p>
 
 <h3 id="Pool-Parameters">Pool Parameters</h3>
 
-<p>These parameters keeps track of the version of the dataset and the role.</p>
+<p>These parameters keeps track of the version of the dataset and the role. With multiple pools, defined per-pool roles are necessary. This is defined through the use of a dataset called '<var>pool</var>/chyves/.config' where the pool specific parameters (<code>pool.cfg</code>) are stored.</p>
 
 <ul>
 <li><p><code>dataset_role={primary|secondary|offline}</code></p>
@@ -273,19 +326,16 @@ Configuration Parameters</a> section below.</p>
 
 <p>Vital in multi-pool configurations, each role type has different characteristics as explained below:</p>
 
-<p><code>primary</code> - Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources. Reference point for global parameters. New guest are defaulted to be created on this pool unless otherwise specified as a parameter for 'chyves
-create'. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations.</p>
+<p><code>primary</code> - Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources. Reference point for global parameters. New guest are defaulted to be created on this pool unless otherwise specified as a parameter for 'chyves create'. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations.</p>
 
 <p><code>secondary</code> - Pools in this role are utilized for storing other active guests not stored on the primary ZFS pool.</p>
 
-<p><code>offline</code> - Pools in this role are not utilized, this role is intended for backup. Guests on these pools are omitted from all subcommands. To further prevent action on 'offline' pools, the dataset is renamed to 'chyves_offline' which chyves will completely
-ignore.</p></li>
+<p><code>offline</code> - Pools in this role are not utilized, this role is intended for backup. Guests on these pools are omitted from all subcommands. To further prevent action on 'offline' pools, the dataset is renamed to 'chyves_offline' which chyves will completely ignore.</p></li>
 <li><p><code>pool_version={dataset-version}</code></p>
 
 <p><strong>Managed through 'chyves dataset' commands.</strong></p>
 
-<p>This parameter indicates the current version of the chyves pool. This an upgrade mechanism to ensure the dataset and it's child datasets contain the correct architecture. The command 'chyves dataset <var>pool</var> upgrade' brings a dataset incrementally to the latest
-version when there is a discrepancy between the dataset version and the chyves version. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves.</p></li>
+<p>This parameter indicates the current version of the chyves pool. This an upgrade mechanism to ensure the dataset and it's child datasets contain the correct architecture. The command 'chyves dataset <var>pool</var> upgrade' brings a dataset incrementally to the latest version when there is a discrepancy between the dataset version and the chyves version. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves.</p></li>
 </ul>
 
 
@@ -293,7 +343,7 @@ version when there is a discrepancy between the dataset version and the chyves v
 
 <p>These parameters control the behavior of chyves.</p>
 
-<p>Many of these global parameters are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as 'chyves network'. The preferred management method is given on the first line after the property.</p>
+<p>Many of these global parameters are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as '<code>chyves network</code>'. The preferred management method is given on the first line after each parameter in bold text.</p>
 
 <p>Usage:</p>
 
@@ -330,8 +380,7 @@ version when there is a discrepancy between the dataset version and the chyves v
 
 <p><strong>Managed through 'chyves network' commands.</strong></p>
 
-<p>This property is a comma separated list of the tap members for bridge{n}, where {n} is the interface number. Valid values for "n" are 0 to 32768. Guests are automatically added to this property using the bridge{n} that is set in 'defaults' under the "bridge"
-property.</p>
+<p>This property is a comma separated list of the tap members for bridge{n}, where {n} is the interface number. Valid values for "n" are 0 to 32768. Guests are automatically added to this property using the bridge{n} that is set in 'defaults' under the "bridge" property.</p>
 
 <p>Examples values:</p>
 
@@ -348,14 +397,12 @@ property.</p>
 
 <p><strong>User managed and settable.</strong></p>
 
-<p>This is a compatibility mechanism used to offset the first chyves null console modem number so that a collision are less likely with another application or bhyve front end manager. The initial default is set to "50". After the first guests are created, then the
-next highest console number is used to create the next guest.</p></li>
+<p>This is a compatibility mechanism used to offset the first chyves null console modem number so that a collision are less likely with another application or bhyve front end manager. The initial default is set to "50". After the first guests are created, then the next highest console number is used to create the next guest.</p></li>
 <li><p><code>consolidate_bhyve_pci_devices</code>={no|yes}</p>
 
 <p><strong>User managed and settable.</strong></p>
 
-<p>The default is set to "no" as it may have performance implications, however this may be necessary if more than 26 PCI devices are connect to a guest. This property signals the bhyve string generators to use all PCI functions for similar devices. In ideal
-conditions up to 208 PCI devices can be attached when set to "yes" on 11.0-RELEASE.</p></li>
+<p>The default is set to "no" as it may have performance implications, however this may be necessary if more than 26 PCI devices are connect to a guest. This property signals the bhyve string generators to use all PCI functions for similar devices. In ideal conditions up to 208 PCI devices can be attached when set to "yes" on 11.0-RELEASE and earlier. On 12-CURRENT or later up to 832 device could be connected in ideal conditions.</p></li>
 <li><p><code>default_info_flags</code></p>
 
 <p><strong>User managed and settable.</strong></p>
@@ -379,8 +426,7 @@ conditions up to 208 PCI devices can be attached when set to "yes" on 11.0-RELEA
 
 <p>Displays the loader and bhyve commands used to start a guest.</p>
 
-<p>Allows for functions to be called direct from the command line using "chyves dev". Using the -xvn flags instead of the word "on" will use Bourne's "set" command to turn on special option flags during "chyves dev" execution. These flags can be used individually
-(-x|-v|-n) or combined (-xv). See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>.</p></li>
+<p>Allows for functions to be called direct from the command line using "chyves dev". Using the -xvn flags instead of the word "on" will use Bourne's "set" command to turn on special option flags during "chyves dev" execution. These flags can be used individually (-x|-v|-n) or combined (-xv). See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>.</p></li>
 <li><p><code>log_mode</code>={host|guest|dual}</p>
 
 <p><strong>User managed and settable.</strong></p>
@@ -395,8 +441,7 @@ conditions up to 208 PCI devices can be attached when set to "yes" on 11.0-RELEA
 
 <p><strong>User managed and settable.</strong></p>
 
-<p>The default is 'auto', which means chyves manages everything above the physical or vlan Ethernet interface, all the way to the guest. This is managed through 'chyves network' commands. When set to 'system', chyves only attaches the tap or VALE interfaces to the
-guest and leaves it to the user to have configured everything else (correctly). See <a href="#NETWORK" title="NETWORK" data-bare-link="true">NETWORK</a> section above.</p></li>
+<p>The default is 'auto', which means chyves manages everything above the physical or vlan Ethernet interface, all the way to the guest. This is managed through 'chyves network' commands. When set to 'system', chyves only attaches the tap or VALE interfaces to the guest and leaves it to the user to have configured everything else (correctly). See <a href="#NETWORK" title="NETWORK" data-bare-link="true">NETWORK</a> section above.</p></li>
 <li><p><code>restrict_new_property_names</code>=[off|on]</p>
 
 <p><strong>User managed and settable, advanced feature.</strong></p>
@@ -440,7 +485,7 @@ guest and leaves it to the user to have configured everything else (correctly). 
 
 <h3 id="Guest-Parameters">Guest Parameters</h3>
 
-<p>These are parameters used by chyves to specify the parameters to pass to bhyve and grub-bhyve when starting a guest. This is facilitated through the use of datasets for each guest at '<var>pool</var>/chyves/guests/<var>guest</var>/.config'.</p>
+<p>These are parameters used by chyves to specify the parameters to pass to bhyve, grub-bhyve, and chyves itself when starting a guest. Changing these values on a running guest will not yield any change until the guest is completely stop and then started again.</p>
 
 <p>Usage:</p>
 
@@ -452,9 +497,9 @@ guest and leaves it to the user to have configured everything else (correctly). 
 
 <p><code>chyves list &lt;property></code></p>
 
-<p><code>chyves &lt;guest>|MG set &lt;property1>=&lt;value> &lt;property2>=&lt;value> &lt;property3>=&lt;value></code></p>
+<p><code>chyves &lt;guest>|MG|all set &lt;property1>=&lt;value> &lt;property2>=&lt;value> &lt;property3>=&lt;value></code></p>
 
-<p><code>chyves &lt;guest>|MG set &lt;property1>=&lt;value> &lt;property2>=&lt;value> &lt;property3>=&lt;value> &lt;guest2> &lt;property1>=&lt;value> &lt;property2>=&lt;value></code></p>
+<p><code>chyves &lt;guest>|MG|all set &lt;property1>=&lt;value> &lt;property2>=&lt;value> &lt;property3>=&lt;value> &lt;guest2> &lt;property1>=&lt;value> &lt;property2>=&lt;value></code></p>
 
 <ul>
 <li><p><code>bargs</code></p>
@@ -470,8 +515,7 @@ guest and leaves it to the user to have configured everything else (correctly). 
 
 <p><strong>Managed through 'chyves <var>guest</var> upgrade' command.</strong></p>
 
-<p>Used to ensure the guest contains latest parameters when moved between hosts on different versions of chyves. "MM" signifies the major version as an integer and "mm" as the minor version as an integer. Changes to the major version require an upgrade via 'chyves
-<var>guest</var> upgrade' because a guest property value format has changed or a new required property was added. Differences in the minor version do no require an upgrade but may not have full functionality.</p></li>
+<p>Used to ensure the guest contains latest parameters when moved between hosts on different versions of chyves. "MM" signifies the major version as an integer and "mm" as the minor version as an integer. Changes to the major version require an upgrade via 'chyves <var>guest</var> upgrade' because a guest property value format has changed or a new required property was added. Differences in the minor version do no require an upgrade but may not have full functionality.</p></li>
 <li><p><code>description</code>="<var>INSERT BRIEF DESCRIPTION</var>"</p>
 
 <p>Used to describe guest. Use double quotes when description contains spaces.</p></li>
@@ -502,59 +546,104 @@ guest and leaves it to the user to have configured everything else (correctly). 
 <p>Used to further describe guests. Use double quotes when description contains spaces.</p></li>
 <li><p><code>os</code>=<var>operating-system</var></p>
 
-<p>This value is used to determine the parameters to use for the grub.cfg and device.map files used by grub-bhyve to start a guest.</p>
+<p>Used to determine the parameters to use for the <code>grub.cfg</code> and <code>device.map</code> files when the <code>loader</code> parameter is set to <code>grub-bhyve</code>.</p>
 
-<p>Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom. Any other values are invalid.</p>
+<p>Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom. Any other values are invalid. <code>default</code> is the generic catch-all value.</p>
 
-<p>Using 'custom' relies on the user to create these files in the guest directory.</p></li>
+<p>Using <code>custom</code> relies on the user to manually create the <code>grub.cfg</code> and <code>device.map</code> files in the guest directory <code>/chyves/&lt;pool>/guests/&lt;guest></code>.</p>
+
+<p>Example:</p>
+
+<p>For an OpenBSD guest "obsd59" located in <code>/chyves/kubota/obsd59/</code> and an install ISO in <code>/chyves/dozer/ISO/install59.iso/</code>, your files will look like this:</p>
+
+<p><code>device.map</code> file:</p>
+
+<pre><code>(hd0) /dev/zvol/kubota/chyves/obsd59/disk0
+(cd0) /chyves/dozer/ISO/install59.iso/install59.iso
+</code></pre>
+
+<p><code>grub.cfg</code> file for installation:</p>
+
+<pre><code>kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd
+boot
+</code></pre>
+
+<p><code>grub.cfg</code> file after installation is complete:</p>
+
+<pre><code>kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd
+boot
+</code></pre>
+
+<p>The <code>chyves</code> project welcomes any OS submissions to help other users from re-discovering leg work done by others.</p></li>
 <li><p><code>pcidev_{n}</code>={bhyve-pci-dev}</p>
 
-<p>This is an advance feature and assumes you have read <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> man page AND completely understood it. This parameter does NOT have a complete input verification suite or complete verification the host can support the action.</p>
+<p>This is an advance feature and assumes you have read <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> AND understood it. This parameter does NOT have a complete input verification suite or complete host support verification.</p>
 
-<p>This parameter attaches a bhyve PCI device to the guest. The {n} is completely arbitrary number and is only a matter of the order of attachment. {bhyve-pci-dev} is the bhyve PCI device to attach. See below for common uses or <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for a complete list.</p>
+<p>This parameter attaches a bhyve PCI device to the guest. The '{n}' is completely arbitrary number and is only a matter of the order of attachment. '{bhyve-pci-dev}' is the bhyve PCI device to attach. See  <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for a complete list or below for common uses.</p>
 
-<p>chyves attaches each custom PCI device alone on the PCI bus, except for pass through devices.</p>
-
-<p>PCI pass through devices which share the same physical PCI slot number on the host also will share the same virtual physical slot number in the guest. This is due to the potential for kernel panics on certain devices such as Fiber Channel PCI cards. Keep in
-mind, only eight PCI functions can be assigned to a virtual physical slot in bhyve, additional devices are ignored. To set a PCI passthrough device use the follow command, where '0' and '1' are arbitrary values and '9/0/0' and '9/0/1' are the bus/slot/function of
-the PCI device on the host.</p>
-
-<p><code>chyves &lt;guest> set pcidev_0=passthru,9/0/0</code></p>
-
-<p><code>chyves &lt;guest> set pcidev_1=passthru,9/0/1</code></p>
-
-<p>To get the PCI triplet on the host, run:</p>
-
-<p><code>pciconf -lv | grep -A4 &lt;driver-name></code></p>
+<p><code>chyves</code> attaches each custom PCI device alone on the PCI bus, except for pass-through devices.</p>
 
 <p>To create a virtio RNG, the command would be</p>
 
-<p><code>chyves &lt;guest> set pcidev_2=virtio-rnd</code></p>
+<p><code>chyves &lt;guest> set pcidev_0=virtio-rnd</code></p>
 
 <p>To create a permanently attached optical media device using a chyves ISO resource where "cd.iso" is the ISO name, the command would be:</p>
 
-<p><code>chyves &lt;guest> set pcidev_3=ahci-cd,/chyves/&lt;primary-pool>/ISO/cd.iso/cd.iso</code></p>
+<p><code>chyves &lt;guest> set pcidev_1=ahci-cd,/chyves/&lt;primary-pool>/ISO/cd.iso/cd.iso</code></p>
 
 <p>To create a sparse 16G disk and attach the commands would be:</p>
 
 <p><code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/01.img</code></p>
 
-<p><code>chyves &lt;guest> set pcidev_4=ahci-hd,/chyves/&lt;pool>/guests/&lt;guest>/01.img[,block-options]</code></p>
+<p><code>chyves &lt;guest> set pcidev_2=ahci-hd,/chyves/&lt;pool>/guests/&lt;guest>/01.img[,block-options]</code></p>
 
 <p>Although not recommended, a tap interface can be manually attached using this command:</p>
 
-<p><code>chyves &lt;guest> set pcidev_5=virtio-net,tap10</code></p>
+<p><code>chyves &lt;guest> set pcidev_3=virtio-net,tap10</code></p>
 
-<p>... with an associated mac address:</p>
+<p>...using Intel e1000 emulation (only 12-CURRENT hosts):</p>
 
-<p><code>chyves &lt;guest> set pcidev_6=virtio-net,tap10,mac=58:9C:FC:00:00:00</code></p></li>
+<p><code>chyves &lt;guest> set pcidev_5=e1000,tap10</code></p>
+
+<p>...with an associated mac address:</p>
+
+<p><code>chyves &lt;guest> set pcidev_4=virtio-net,tap10,mac=58:9C:FC:00:00:00</code></p>
+
+<p>PCI pass-through devices which share the same physical PCI slot number on the host also will share the same virtual physical slot number in the guest. This is due to the potential for kernel panics on certain devices such as Fiber Channel PCI cards. Keep in mind, only eight PCI functions can be assigned to a virtual physical slot in <code>bhyve</code>, additional devices are ignored. To set a PCI pass-through device use the follow commands, where '6' and '7' are arbitrary values and '9/0/0' and '9/0/1' is the PCI bus/slot/function device triplet.</p>
+
+<p><code>chyves &lt;guest> set pcidev_6=passthru,9/0/0</code></p>
+
+<p><code>chyves &lt;guest> set pcidev_7=passthru,9/0/1</code></p>
+
+<p>To get the PCI triplet on the host, run:</p>
+
+<pre><code>root@bhost:~ # pciconf -lv | grep -A4 -E '^ppt'
+ppt0@pci0:9:0:0: class=0x0c0400 card=0x01461077 chip=0x24321077 rev=0x02 hdr=0x00
+vendor     = 'QLogic Corp.'
+device     = 'ISP2432-based 4Gb Fibre Channel to PCI Express HBA'
+class      = serial bus
+subclass   = Fibre Channel
+ppt1@pci0:9:0:1: class=0x0c0400 card=0x01461077 chip=0x24321077 rev=0x02 hdr=0x00
+vendor     = 'QLogic Corp.'
+device     = 'ISP2432-based 4Gb Fibre Channel to PCI Express HBA'
+class      = serial bus
+subclass   = Fibre Channel
+</code></pre>
+
+<p> Normally the device in the example above would use the <code>isp(4)</code> drivers. However, the devices need to be using the <code>ppt</code> drivers. The <code>ppt</code> drivers tell the host to ignore the device as it will be pass-through to a virtualized guest. To get a PCI device to load the <code>ppt</code> drivers instead of it's normal drivers, edit the <code>/boot/loader.conf</code> file to contain the PCI triplet of each device in the <code>pptdevs</code> directive. The following is consistent with our examples above:</p>
+
+<pre><code>pptdevs="9/0/0 9/0/1"
+</code></pre>
+
+<p>A reboot is necessary after editing the <code>/boot/loader.conf</code>.</p>
+
+<p>The '<code>-S</code>' flag <em>must</em> be appended to the current '<code>bargs</code>' guest parameter to wire the guest memory for PCI pass-through to work.</p></li>
 <li><p><code>ram</code>={n}[S]</p>
 
 <p>{n} is the number of bytes and [S] is the size denomination in "K" kilobytes, "M" megabytes,  "G" gigabytes, or "T" terabytes. Megabytes are assumed if no suffix is given.</p></li>
 <li><p><code>rcboot</code>={n}</p>
 
-<p>Any non-zero number tells chyves to start the guest upon host boot when the 'chyves_enable=YES' directive is used in '/etc/rc.conf'. The integer represents the boot priority where the highest numbered guest is started first. Using '0' disables starting on host
-boot. If multiple guest share the same priority number, then the guests are started alphabetically.</p></li>
+<p>Any non-zero number tells chyves to start the guest upon host boot when the 'chyves_enable=YES' directive is used in '/etc/rc.conf'. The integer represents the boot priority where the highest numbered guest is started first. Using '0' disables starting on host boot. If multiple guest share the same priority number, then those guests are started alphabetically.</p></li>
 <li><p><code>serial</code>=nmdm{n}</p>
 
 <p>Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation.</p></li>
@@ -570,11 +659,10 @@ boot. If multiple guest share the same priority number, then the guests are star
 <p>When set to 'yes' chyves will not start the guest. The guest's datasets are set to readonly so no changes can be made until set back to 'no'.</p></li>
 <li><p><code>uefi_console_output</code>={vnc|serial}</p>
 
-<p>When set to "serial", a UEFI guest will use the standard serial interface. Guests set to "vnc" will use a VNC connection on supported hosts. VNC output is experimental and introduced to bhyve in May 2016. VNC support requires at least 11-CURRENT (r300097) or
-later, a modified bhyve binary with graphics support, and the UEFI firmware "BHYVE_UEFI_20160526.fd".</p></li>
+<p>When set to "serial", a UEFI guest will use the standard serial interface. Guests set to "vnc" will use a VNC connection on supported hosts. VNC output is experimental and introduced to bhyve in May 2016. VNC support requires at least 11-CURRENT (r300097) or later, a modified bhyve binary with graphics support, and the UEFI firmware "BHYVE_UEFI_20160526.fd".</p></li>
 <li><p><code>uefi_firmware</code>=<var>firmware-resource-name</var></p>
 
-<p>UEFI firmware resource used to boot UEFI guests. These are available in Peter Grehan's public FreeBSD file directory or sysutils/uefi-edk2-bhyve.</p></li>
+<p>UEFI firmware bootrom file used to boot UEFI guests. These are available in Peter Grehan's public FreeBSD file directory or sysutils/uefi-edk2-bhyve. The value must be the exact name as displayed in 'chyves list firmware'.</p></li>
 <li><p><code>uefi_vnc_client</code>={print|freerdp|custom}</p>
 
 <p>This stores the preferred VNC client used to start a session with the guest parameters pre-populated.</p></li>
@@ -586,8 +674,7 @@ later, a modified bhyve binary with graphics support, and the UEFI firmware "BHY
 <p>Specifies the IP for the host to bind-to for VNC connections for the guest. The default is "0.0.0.0" which binds to all IPs on the host.</p></li>
 <li><p><code>uefi_vnc_mouse_type</code>=ps2|usb3</p>
 
-<p>This property is only used when the property "uefi_console_output" is set to "vnc". When set to "ps2" a PS/2 mouse is connected to the guest. When set "usb3" a USB 3.0 tablet is emulated which provides much better mouse performance but is only supported on newer
-guest OSes.</p></li>
+<p>This property is only used when the property "uefi_console_output" is set to "vnc". When set to "ps2" a PS/2 mouse is connected to the guest. When set "usb3" a USB 3.0 tablet is emulated which provides much better mouse performance but is only supported on newer guest OSes.</p></li>
 <li><p><code>uefi_vnc_pause_until_client_connect</code>={on|off}</p>
 
 <p>When set to "on" the guest will wait to boot until a VNC client connects. This is helpful for installations requiring a key press within a short timing window.</p></li>
@@ -624,8 +711,7 @@ guest OSes.</p></li>
 
 <p>This is a per disk setting used to append bhyve virtio-block options to a disk. While there is a very limited use case of these options, they can be utilized but it is not recommended. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for what these options do.</p>
 
-<p>Keep in mind that the logical sectorsize is already used by chyves and pulled from the zvol's 'volblocksize' ZFS property when the <em>virtio_block_options</em> is not set. When the property "virtio_block_options_disk{n}" exists, the sectorsize is no longer
-automatically populated to prevent collision.</p>
+<p>Keep in mind that the logical sectorsize is already used by chyves and pulled from the zvol's 'volblocksize' ZFS property when the <em>virtio_block_options</em> is not set. When the property "virtio_block_options_disk{n}" exists, the sectorsize is no longer automatically populated to prevent collision.</p>
 
 <p>To set this property for disk0 to have read only with a 512 sector size and a 4096 physical size:</p>
 
@@ -635,8 +721,7 @@ automatically populated to prevent collision.</p>
 
 <h3 id="Default-Guest-Parameters">Default Guest Parameters</h3>
 
-<p>These parameters are referenced when creating new guests. The guest section of parameters have the same purpose as described in <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section above, unless otherwise noted. Below are the initial default values on a fresh installation of chyves for
-reference.</p>
+<p>These parameters are referenced when creating new guests. The guest section of parameters have the same purpose as described in <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section above, unless otherwise noted. Below are the initial default values on a fresh installation of chyves for reference.</p>
 
 <p>The some UEFI parameters are not assigned until the 'loader' value is set to 'uefi'. This is to prevent assigning parameters to guests which can not utilize those features.</p>
 
@@ -652,18 +737,22 @@ reference.</p>
 
 <ul>
 <li><code>bargs</code>="-A -H -P"</li>
-<li><p><code>bridge</code>=bridge0</p>
+<li><code>bhyve_net_type</code>="virtio-net"</li>
+<li><p><code>bridge</code>="bridge0"</p>
 
-<p>Used to set the default bridge interface to join tap interfaces to.</p></li>
-<li><p><code>cpu</code>=1</p></li>
-<li><code>loader</code>=bhyveload</li>
+<p>Used to set the bridge to join tap interfaces to for new guests.</p></li>
+<li><p><code>cpu</code>="1"</p></li>
+<li><code>loader</code>="bhyveload"</li>
 <li><code>os</code>=default</li>
 <li><code>ram</code>=256M</li>
 <li><code>rcboot</code>=0</li>
 <li><p><code>size</code>=8G</p>
 
 <p>Used during guest and disk creation when the size parameter is omitted. No longer a guest property. The ZFS property 'usedbychildren' is used to show the size in 'chyves info -z'.</p></li>
-<li><p><code>uefi_console_output</code>=serial</p></li>
+<li><p><code>template</code>="no"</p></li>
+<li><code>uefi_console_output</code>=serial</li>
+<li><code>uefi_firmware</code>="-"</li>
+<li><code>uefi_vnc_client</code>="print"</li>
 <li><code>uefi_vnc_ip</code>=0.0.0.0</li>
 <li><code>uefi_vnc_mouse_type</code>=ps2</li>
 <li><code>uefi_vnc_pause_until_client_connect</code>=no</li>
@@ -671,8 +760,7 @@ reference.</p>
 </ul>
 
 
-<p>These default disk parameters are direct ZFS values used when creating disks for the guest. These parameters are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process.
-Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a> on settable values but remember, think of the kittens and puppies. The intial default values are:</p>
+<p>These default disk parameters are direct ZFS values used when creating disks for the guest. These parameters are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process. Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?zfs(8)">zfs<span class="s">(8)</span></a> on settable values but remember, think of the kittens and puppies. The initial default values are:</p>
 
 <ul>
 <li><code>disk_volmode</code>=dev</li>
@@ -688,12 +776,9 @@ Heed this warning! The value "inherit" will inherit the value set by the ZFS (*g
 
 <p>Utilization of tmux is provided under the command 'chyves <var>guest</var> console tmux'.</p>
 
-<p>chyves utilizes tmux by creating a session called "chyves", then creates a window named after the guest, then splits that window into two panes. The left pane is used to manage the guest and the right pane is the serial console for the guest. If a window named
-after the guest already exists, then the command is inserted into the active pane for that guest window and then the session is joined or rather 'attached' in tmux's parlance. Each additional guest has a window created under the same 'chyves' named session. See
-<a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> for full details on use.</p>
+<p>chyves utilizes tmux by creating a session called "chyves", then creates a window named after the guest, then splits that window into two panes. The left pane is used to manage the guest and the right pane is the serial console for the guest. If a window named after the guest already exists, then the command is inserted into the active pane for that guest window and then the session is joined or rather 'attached' in tmux's parlance. Each additional guest has a window created under the same 'chyves' named session. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?tmux(1)">tmux<span class="s">(1)</span></a> for full details on use.</p>
 
-<p>To use a command for tmux, enter: 'Ctrl + b (release-keys) <var>command</var>'. Where Ctrl + b is the modifier, (release-keys) is literally releasing the Ctrl and b keys, and <var>command</var> is the case sensitive letter or command to type in. Sometimes this is written as 'C-m'
-where 'm' means modifier. In this man page, the abbreviated syntax used is 'C-b'. Below are necessary tmux commands for basic use with chyves:</p>
+<p>To use a command for tmux, enter: 'Ctrl + b (release-keys) <var>command</var>'. Where Ctrl + b is the modifier, (release-keys) is literally releasing the Ctrl and b keys, and <var>command</var> is the case sensitive letter or command to type in. Sometimes this is written as 'C-m' where 'm' means modifier. In this man page, the abbreviated syntax used is 'C-b'. Below are necessary tmux commands for basic use with chyves:</p>
 
 <p>While in a tmux session:
 * <code>C-b n</code>   Go to next guest window.
@@ -725,18 +810,15 @@ where 'm' means modifier. In this man page, the abbreviated syntax used is 'C-b'
 
 <h2 id="UEFI-SUPPORT">UEFI SUPPORT</h2>
 
-<p>Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the 'uefi_firmware' property. This boot method is set by changing the 'loader' property to 'uefi'. When this is done for the first time on a guest, the other UEFI parameters
-are populated.</p>
+<p>Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the 'uefi_firmware' property. This boot method is set by changing the 'loader' property to 'uefi'. When this is done for the first time on a guest, the other UEFI parameters are populated.</p>
 
-<p>Graphical console support is provided via UEFI GOP as of May 2016, this replaces the serial interface. Support is provided as a technical preview as there are still sharp edges. Know issues: partial VNC client support and mouse mapping issues when
-'uefi_vnc_mouse_type' property set to 'ps2'. The following is required for graphical console use: the property 'uefi_console_output' must be set to 'vnc' on the guest, a host on 11-CURRENT, a bhyve binary compiled from bhyve_graphics the UEFI firmware
-'BHYVE_UEFI_20160526.fd', and a VNC client.</p>
+<p>Graphical console support is provided via UEFI GOP as of May 2016, this replaces the serial interface. Support is provided as a technical preview as there are still sharp edges. Know issues: partial VNC client support and mouse mapping issues when 'uefi_vnc_mouse_type' property set to 'ps2'. The following is required for graphical console use: the property 'uefi_console_output' must be set to 'vnc' on the guest, a host on 11-CURRENT, a bhyve binary compiled from bhyve_graphics the UEFI firmware 'BHYVE_UEFI_20160526.fd', and a VNC client.</p>
 
-<p>See <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section for complete list of related <em>uefi</em>*_ parameters.</p>
+<p>See <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section for complete list of related <code>uefi_*</code> parameters.</p>
 
-<h2 id="VNC-CLIENT-SUPPORT">VNC CLIENT SUPPORT</h2>
+<h3 id="VNC-CLIENT-SUPPORT">VNC CLIENT SUPPORT</h3>
 
-<p>Support for VNC client launching is utilized with 'chyves <var>guest</var> console vnc'. This either prints the VNC settings or starts a VNC session. Currently FreeRDP is preconfigured or a custom VNC client can be configured with the 'uefi_vnc_client_custom_cmd' property</p>
+<p>Support for VNC client launching is utilized with <code>chyves &lt;guest> console vnc</code>. This either prints the VNC settings or starts a VNC session. Currently FreeRDP is preconfigured or a custom VNC client can be configured with the 'uefi_vnc_client_custom_cmd' property.</p>
 
 <h2 id="COMMANDS">COMMANDS</h2>
 
@@ -762,7 +844,7 @@ are populated.</p>
 <p>The parameters are function indexed and only seven parameters are possible due to the way Bourne addresses parameter[10]. Double quotes are required for parameters with strings, such as commands.</p></li>
 <li><p><code>info</code></p>
 
-<p>See <a href="#INFO-COMMAND-FLAGS" title="INFO COMMAND FLAGS" data-bare-link="true">INFO COMMAND FLAGS</a> section.</p></li>
+<p>See <a href="#INFO-COMMAND" title="INFO COMMAND" data-bare-link="true">INFO COMMAND</a> section.</p></li>
 <li><p><code>iso</code></p>
 
 <p>See <a href="#ISO-SUB-COMMANDS" title="ISO SUB-COMMANDS" data-bare-link="true">ISO SUB-COMMANDS</a> section.</p></li>
@@ -807,8 +889,7 @@ are populated.</p>
 
 <p><code>chyves dataset &lt;pool> upgrade</code></p>
 
-<p>Upgrades dataset version from an old version to the newest version incrementally. This is done by adding, removing, and updating parameters which are required by the latest version of chyves. It is recommended to upgrade the primary pool first in case their are
-new defaults, otherwise the 'chyves <var>guest</var> upgrade' will need to be manually ran against the guests on secondary pools.</p></li>
+<p>Upgrades dataset version from an old version to the newest version incrementally. This is done by adding, removing, and updating parameters which are required by the latest version of chyves. It is recommended to upgrade the primary pool first in case their are new defaults, otherwise the 'chyves <var>guest</var> upgrade' will need to be manually ran against the guests on secondary pools.</p></li>
 </ul>
 
 
@@ -853,8 +934,7 @@ new defaults, otherwise the 'chyves <var>guest</var> upgrade' will need to be ma
 
 <p><code>chyves &lt;guest> create [&lt;size>] [&lt;pool>]</code></p>
 
-<p>Where <var>guest</var> is a uniquely identifying name used to reference the guest, optionally [<var>size</var>] is the size of the block device, and optionally [<var>pool</var>] is the pool to create the guest on in multi-pool configurations. If [<var>size</var>] is not supplied, then 'size' in
-defaults is used. If [<var>pool</var>] is not supplied, then the primary pool is used. A tap interface is added and associated with the bridge set in defaults. Support for multi-guest.</p></li>
+<p>Where <var>guest</var> is a uniquely identifying name used to reference the guest, optionally [<var>size</var>] is the size of the block device, and optionally [<var>pool</var>] is the pool to create the guest on in multi-pool configurations. If [<var>size</var>] is not supplied, then 'size' in defaults is used. If [<var>pool</var>] is not supplied, then the primary pool is used. A tap interface is added and associated with the bridge set in defaults. Support for multi-guest.</p></li>
 <li><p><code>delete</code></p>
 
 <p><code>chyves &lt;guest>|MG delete [force|keepnet]</code></p>
@@ -889,14 +969,12 @@ defaults is used. If [<var>pool</var>] is not supplied, then the primary pool is
 
 <p>Where <var>iso</var> is optionally the name of an ISO resource. This command starts bhyveload, grub-bhyve, and UEFI guests.</p>
 
-<p>For grub-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the 'os' property. This means the <em>device.map</em> and the <em>grub.cfg</em> files generated reflect booting from the installation CD. If a non-booting CD is
-needed to be attached to a guest using grub-bhyve, then manually adding a custom PCIDEV device is suggested. See the <em>pcidev</em>{n}_ parameter under <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section for instructions.</p></li>
+<p>For grub-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the 'os' property. This means the <em>device.map</em> and the <em>grub.cfg</em> files generated reflect booting from the installation CD. If a non-booting CD is needed to be attached to a guest using grub-bhyve, then manually adding a custom PCIDEV device is suggested. See the <em>pcidev</em>{n}_ parameter under <a href="#Guest-Parameters" title="Guest Parameters" data-bare-link="true">Guest Parameters</a> section for instructions.</p></li>
 <li><p><code>stop</code></p>
 
 <p><code>chyves &lt;guest>|MG stop [force]</code></p>
 
-<p>Attempts to gracefully stop a guest. This is effectively like pressing the power button on a computer tower, this means the guest OS determines how to respond. Running '<code>poweroff</code>' (or the equivalent) will shutdown a guest and the VMM resources are reclaimed.
-Using the <em>[force]</em> option forces the guest to stop by running '<code>kill -9</code>' and then reclaiming the guest's VMM resources. <strong>USE EXTREME CAUTION WITH '<em>force</em>' AND ONLY AS A LAST RESORT, THIS CAN CAUSE A CORRUPT OS</strong>.</p></li>
+<p>Attempts to gracefully stop a guest. This is effectively like pressing the power button on a computer tower, this means the guest OS determines how to respond. Running '<code>poweroff</code>' (or the equivalent) will shutdown a guest and the VMM resources are reclaimed. Using the <em>[force]</em> option forces the guest to stop by running '<code>kill -9</code>' and then reclaiming the guest's VMM resources. <strong>USE EXTREME CAUTION WITH '<em>force</em>' AND ONLY AS A LAST RESORT, THIS CAN CAUSE A CORRUPT OS</strong>.</p></li>
 <li><p><code>upgrade</code></p>
 
 <p><code>chyves &lt;guest>|MG upgrade</code></p>
@@ -909,8 +987,7 @@ Using the <em>[force]</em> option forces the guest to stop by running '<code>kil
 
 <p><code>chyves &lt;guest> clone &lt;clonename>|MG [-ce|-cu|-ie|-iu] [&lt;pool>]</code></p>
 
-<p>This clones a guest, there are four cloning methods that chyves uses. The cloning method is determined by the clone flag after the clone name(s). The first letter of the flag indicates the clone's dependency on the parent's datasets, the second letter indicates
-whether new unique parameters are created for the clone. If the cloning method flag is omitted, the default is used as defined in global property 'default_clone_flag', this is initially set to '-iu' as it is the safest and more performant.</p>
+<p>This clones a guest, there are four cloning methods that chyves uses. The cloning method is determined by the clone flag after the clone name(s). The first letter of the flag indicates the clone's dependency on the parent's datasets, the second letter indicates whether new unique parameters are created for the clone. If the cloning method flag is omitted, the default is used as defined in global property 'default_clone_flag', this is initially set to '-iu' as it is the safest and more performant.</p>
 
 <p>The <em>[pool]</em> parameter is used to clone the guest to a different pool than where the guest currently resides. This can only be done for independent clones.</p>
 
@@ -919,8 +996,7 @@ whether new unique parameters are created for the clone. If the cloning method f
 <ul>
 <li><p><code>-c</code></p>
 
-<p>Creates a ZFS clone of the guest's disks. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent's dataset. This also means, the clones must be deleted before the parent guest is
-deleted. See 'chyves list clones' to display the clone hierarchy. The [<var>pool</var>] parameter is ignored as the clone must reside on the same pool as it's parent.</p></li>
+<p>Creates a ZFS clone of the guest's disks. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent's dataset. This also means, the clones must be deleted before the parent guest is deleted. See 'chyves list clones' to display the clone hierarchy. The [<var>pool</var>] parameter is ignored as the clone must reside on the same pool as it's parent.</p></li>
 <li><p><code>-i</code></p>
 
 <p>Creates an independent clone which is not dependent on the parent's datasets. Using the [<var>pool</var>] parameter will clone the guest to the specified pool, otherwise the guest's pool is used.</p></li>
@@ -932,8 +1008,7 @@ deleted. See 'chyves list clones' to display the clone hierarchy. The [<var>pool
 <ul>
 <li><p><code>-e</code></p>
 
-<p>Copies the guest parameters exactly as the parent's. This means the parent can not start while the clone is running, or vise-versa due to the overlapping serial and tap interfaces. Use the 'keepnet' option when deleting these guests to prevent removing the
-network association.</p></li>
+<p>Copies the guest parameters exactly as the parent's. This means the parent can not start while the clone is running, or vise-versa due to the overlapping serial and tap interfaces. Use the 'keepnet' option when deleting these guests to prevent removing the network association.</p></li>
 <li><p><code>-u</code></p>
 
 <p>Sets new a unique: serial interface, a new tap is created for each interface of the parent under the same bridge, VALE interfaces are copied over and ports removed, a new unique port is used for uefi_vnc_port, and a new UUID is generated.</p>
@@ -944,32 +1019,29 @@ network association.</p></li>
 
 <h3 id="GUEST-CONSOLE-SUB-SUB-COMMANDS">GUEST CONSOLE SUB-SUB-COMMANDS</h3>
 
-<p>Manage a guest through a console using various methods described below. The primary method for managing guests is through a serial interface. On supported hosts and UEFI guests, video emulation is possible through an internal VNC server attached to a frame buffer.
-See <a href="#UEFI-SUPPORT" title="UEFI SUPPORT" data-bare-link="true">UEFI SUPPORT</a> above. All other guests need to be administered via a serial communication device.</p>
+<p>Manage a guest through a console using various methods described below. The primary method for managing guests is through a serial interface. On supported hosts and UEFI guests, video emulation is possible through an internal VNC server attached to a frame buffer. See <a href="#UEFI-SUPPORT" title="UEFI SUPPORT" data-bare-link="true">UEFI SUPPORT</a> above. All other guests need to be administered via a serial communication device.</p>
 
 <ul>
 <li><p><code>$null</code></p>
 
 <p><code>chyves &lt;guest> console</code></p>
 
-<p>Establishes a serial connection to a guest using <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> via the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a> device as configure in the 'con' property. To escape the <code>cu</code> connection, press tilde (~) twice, then period (.), sometimes hitting <code>ENTER</code> before that sequence is required. If that fails to
-exit the console, try pressing tilde (~), then press Control + d (^d). If all else fails then use 'chyves <var>guest</var> console reset'.</p></li>
+<p>Establishes a serial connection to a guest using <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?cu(1)">cu<span class="s">(1)</span></a> via the <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?nmdm(4)">nmdm<span class="s">(4)</span></a> device as configure in the 'serial' property. To escape the <code>cu</code> connection, press tilde (~) twice, then period (.), sometimes hitting <code>ENTER</code> before that sequence is required. If that fails to exit the console, try pressing tilde (~), then press Control + d (^d). If all else fails then use 'chyves <var>guest</var> console reset'.</p></li>
 <li><p><code>reset</code></p>
 
 <p><code>chyves &lt;guest>|MG console reset</code></p>
 
-<p>Resets the serial connection for a guest by using '<code>kill</code>' against the cu processes associated with the guest as set by the 'serial' property.</p></li>
+<p>Resets the serial connection for a guest by using '<code>kill</code>' against the <code>cu</code> processes associated with the guest as set by the 'serial' property.</p></li>
 <li><p><code>tmux</code></p>
 
 <p><code>chyves &lt;guest>|MG console tmux</code></p>
 
-<p>Creates a tmux session named chyves, then creates a window named after the guest, and then creates a vertically splits the window with two panes. The right pane is intended for guest management and the left pane contains the serial interface which is started
-with 'chyves <var>guest</var> console'. See <a href="#TMUX-SUPPORT" title="TMUX SUPPORT" data-bare-link="true">TMUX SUPPORT</a> section above.</p></li>
+<p>Creates a tmux session named chyves, then creates a window named after the guest, and then creates a vertically splits the window with two panes. The right pane is intended for guest management and the left pane contains the serial interface which is started with 'chyves <var>guest</var> console'. See <a href="#TMUX-SUPPORT" title="TMUX SUPPORT" data-bare-link="true">TMUX SUPPORT</a> section above.</p></li>
 <li><p><code>vnc</code></p>
 
 <p><code>chyves &lt;guest>|MG console vnc</code></p>
 
-<p>Requires a UEFI guest that is configured for VNC use on a host that supports UEFI graphics support. See <a href="#UEFI-SUPPORT" title="UEFI SUPPORT" data-bare-link="true">UEFI SUPPORT</a> above. Opens a X11 VNC client to the guest using the vnc_client* global properties. See <a href="#VNC-CLIENT-SUPPORT" title="VNC CLIENT SUPPORT" data-bare-link="true">VNC CLIENT SUPPORT</a> section above.</p></li>
+<p>Requires a UEFI guest that is configured for VNC use on a host that supports UEFI graphics support. See <a href="#UEFI-SUPPORT" title="UEFI SUPPORT" data-bare-link="true">UEFI SUPPORT</a> above. Opens a X11 VNC client to the guest using the <code>uefi_vnc_client_*</code> global properties. See <a href="#VNC-CLIENT-SUPPORT" title="VNC CLIENT SUPPORT" data-bare-link="true">VNC CLIENT SUPPORT</a> section above.</p></li>
 </ul>
 
 
@@ -987,7 +1059,7 @@ with 'chyves <var>guest</var> console'. See <a href="#TMUX-SUPPORT" title="TMUX 
 
 <p><code>chyves &lt;guest> disk disk{n} description &lt;description></code></p>
 
-<p>Sets a <em>description</em> parameter for a disk.</p></li>
+<p>Sets a <code>description</code> parameter for a disk.</p></li>
 <li><p><code>list</code></p>
 
 <p><code>chyves &lt;guest> disk list</code></p>
@@ -997,7 +1069,7 @@ with 'chyves <var>guest</var> console'. See <a href="#TMUX-SUPPORT" title="TMUX 
 
 <p><code>chyves &lt;guest> disk disk{n} notes &lt;note></code></p>
 
-<p>Sets a <em>notes</em> parameter for a disk.</p></li>
+<p>Sets a <code>notes</code> parameter for a disk.</p></li>
 <li><p><code>remove</code></p>
 
 <p><code>chyves &lt;guest> disk remove disk{n}</code></p>
@@ -1013,8 +1085,7 @@ with 'chyves <var>guest</var> console'. See <a href="#TMUX-SUPPORT" title="TMUX 
 
 <h3 id="GUEST-SNAPSHOT-SUB-SUB-COMMANDS">GUEST SNAPSHOT SUB-SUB-COMMANDS</h3>
 
-<p>Keep in mind that due to the way ZFS volumes work, when taking a snapshot all the bits must be able to be rewritten. This means if you have a 8GB chyves disk with 6GB written to it and you take a snapshot, there will be 14GB reserved for the disk until the
-snapshot is deleted. If another 2GB is written and another snapshot is taken, then 16GB will be consumed and so forth.</p>
+<p>Keep in mind that due to the way ZFS volumes work, when taking a snapshot all the bits must be able to be rewritten. This means if you have a 8GB chyves disk with 6GB written to it and you take a snapshot, there will be 14GB reserved for the disk until the snapshot is deleted. If another 2GB is written and another snapshot is taken, then 16GB will be consumed and so forth.</p>
 
 <ul>
 <li><p><code>$null</code></p>
@@ -1028,21 +1099,18 @@ snapshot is deleted. If another 2GB is written and another snapshot is taken, th
 
 <p><code>chyves &lt;guest> delete [@snapshot%[snapshot]]</code></p>
 
-<p>Deletes a snapshot or a range of snapshots. Use the '%' symbol to indicate a range of snapshots to be deleted. If a second name is not specified then then all snapshots are deleted up to the specified snapshot name. If a first name is not specified, then the
-latest top level guest snapshot is destroyed. Before deletion the amount of of space that will be recovered is displayed.</p></li>
+<p>Deletes a snapshot or a range of snapshots. Use the '%' symbol to indicate a range of snapshots to be deleted. If a second name is not specified then then all snapshots are deleted up to the specified snapshot name. If a first name is not specified, then the latest top level guest snapshot is destroyed. Before deletion the amount of of space that will be recovered is displayed.</p></li>
 <li><p><code>rollback</code></p>
 
 <p><code>chyves &lt;guest> snapshot rollback [@snapshot]</code></p>
 
-<p>Rolls back a guest and it's datasets to a previous snapshot state. When no name is given, the latest snapshot is the rollback point. If there are multiple snapshots in-between the snapshot and the given snapshot name, those are displayed before last deletion. A
-guest can not be rollback past a clone snapshot point until those clones are deleted.</p></li>
+<p>Rolls back a guest and it's datasets to a previous snapshot state. When no name is given, the latest snapshot is the rollback point. If there are multiple snapshots in-between the snapshot and the given snapshot name, those are displayed before last deletion. A guest can not be rollback past a clone snapshot point until those clones are deleted.</p></li>
 </ul>
 
 
-<h3 id="INFO-COMMAND-FLAGS">INFO COMMAND FLAGS</h3>
+<h3 id="INFO-COMMAND">INFO COMMAND</h3>
 
-<p>Displays active guests and their disks on the system when no flags are used. The global property 'default_info_flags' is used when no flags are given. This property is populated with end user's preferred flags. The following flags are used in combination to
-display information about the guests and disks. These flags are used in combination, meaning the correct syntax is "-rvs" rather than "-r -v -s". See below for a description of what each flag does:</p>
+<p>Displays active guests and their disks on the system when no flags are used. The global parameter 'default_info_flags' is used when no flags are given, this parameter is populated with end user's preferred flags. The following flags are used in combination to display information about the guests and disks. These flags are used in combination, meaning the correct syntax is "-rvs" rather than "-r -v -s". See below for a description of what each flag does:</p>
 
 <ul>
 <li><code>-z</code>    [si<strong>z</strong>e] Displays size, for guests this show what is being used by the dataset. For disks the size displays the volume size.</li>
@@ -1071,8 +1139,7 @@ display information about the guests and disks. These flags are used in combinat
 
 <p><code>chyves iso import {URL|&lt;local-path-to-iso>}</code></p>
 
-<p>Imports an ISO resource into chyves. Either a local or remote source can be give. Remote sources can be from http or ftp. The user is prompted for a file hash when a remote source is given. After the download completes the file hash is compared with what is
-actually hashed. MD5, SHA1, SHA256, and SHA512 are currently supported. If the hashes mis-match then the user is prompted to optionally delete the file. If no hash is supplied, the user is heckled.</p>
+<p>Imports an ISO resource into chyves. Either a local or remote source can be give. Remote sources can be from http or ftp. The user is prompted for a file hash when a remote source is given. After the download completes the file hash is compared with what is actually hashed. MD5, SHA1, SHA256, and SHA512 are currently supported. If the hashes mis-match then the user is prompted to optionally delete the file. If no hash is supplied, the user is heckled.</p>
 
 <p>Supplied ISO resources can be compressed with current support for files ending in .xz and .gz. Upon import these files are extracted.</p></li>
 <li><p><code>rename</code></p>
@@ -1154,9 +1221,7 @@ actually hashed. MD5, SHA1, SHA256, and SHA512 are currently supported. If the h
 
 <h3 id="NETWORK-SUB-COMMANDS">NETWORK SUB-COMMANDS</h3>
 
-<p>When global property 'network_design_mode' is set to 'auto', these commands are used to create and manage network design by storing properties about associate network devices and creates bridge and tap interfaces. The sub-commands below store properties that are
-referenced and later used to verify and (re)created the network design when starting a guest. The host still requires configuration of the vlan and physical interfaces. chyves will handle creating and associating the tap interfaces with the appropriate bridge
-interfaces and also attaching those configured vlan and physical interfaces to the bridges while starting a guest. Multiple bridges and taps per guest is supported.</p>
+<p>When global property 'network_design_mode' is set to 'auto', these commands are used to create and manage network design by storing properties about associate network devices and creates bridge and tap interfaces. The sub-commands below store properties that are referenced and later used to verify and (re)created the network design when starting a guest. The host still requires a user set configuration of the vlan and physical interfaces. chyves will handle creating and associating the tap interfaces with the appropriate bridge interfaces and also attaching those configured vlan and physical interfaces to the bridges while starting a guest. Multiple bridges and taps per guest is supported. See <a href="#NETWORK" title="NETWORK" data-bare-link="true">NETWORK</a> section above.</p>
 
 <ul>
 <li><p><code>add</code></p>
@@ -1165,8 +1230,7 @@ interfaces and also attaching those configured vlan and physical interfaces to t
 
 <p><code>chyves network &lt;guest> add {tap|tap{n}} bridge{n}</code></p>
 
-<p> Used to add a tap or VALE interface to a guest, this also adds the tap interface to the default bridge as set in defaults. When the 'tap' keyword is used, the next available tap interface is used. {n} is the tap number, {s} is the VALE switch number, and
-optionally {p} is the port on the VALE switch.</p></li>
+<p> Used to add a tap or VALE interface to a guest, this also adds the tap interface to the default bridge as set in defaults. When the 'tap' keyword is used, the next available tap interface is used. {n} is the tap number, {s} is the VALE switch number, and optionally {p} is the port on the VALE switch.</p></li>
 <li><p>attach</p>
 
 <p><code>chyves network bridge{n} attach iface{n}</code></p>
@@ -1191,8 +1255,7 @@ optionally {p} is the port on the VALE switch.</p></li>
 
 <p><code>chyves network bridge{n} private</code></p>
 
-<p>Used to set the bridge to private mode. This means there is not an external network connected. This can be useful when sensitive data is being exchanged over a network but not necessarily needing outside access such as a SQL database. This could also be used
-with NAT. However NAT support is not build into chyves.</p></li>
+<p>Used to set the bridge to private mode. This means there is not an external network connected. This can be useful when sensitive data is being exchanged over a network but not necessarily needing outside access such as a SQL database. This could also be used with NAT. However NAT support is not build into chyves.</p></li>
 <li><p><code>remove</code></p>
 
 <p><code>chyves network &lt;guest> remove {tap{n}|vale{s}[:{p}]}</code></p>
@@ -1208,58 +1271,12 @@ with NAT. However NAT support is not build into chyves.</p></li>
 
 <h2 id="EXAMPLES">EXAMPLES</h2>
 
-<p>Example of a multi-pool dataset hierarchy:</p>
-
-<pre><code>prim_pool/chyves/guests/
-                /guests/&lt;guest1>/.config
-                /guests/&lt;guest1>/disk{n}
-                /guests/&lt;guest1>/log
-                /guests/&lt;guest2>/.config
-                /guests/&lt;guest2>/disk{n}
-                /guests/&lt;guest2>/log
-                /.config
-                         pool_role=primary
-                /logs
-                /ISO
-                /Firmware
-secd_pool/chyves/guests
-                /guests/&lt;guest3>/.config
-                /guests/&lt;guest3>/disk{n}
-                /guests/&lt;guest3>/log
-                /.config
-                        pool_role=secondary
-anther_pl/chyves/guests
-                /guests/&lt;guest4>/.config
-                /guests/&lt;guest4>/disk{n}
-                /guests/&lt;guest4>/log
-                /.config
-                        pool_role=secondary
-offlinePL/chyves/guests
-                /guests/&lt;guest5>/.config
-                /guests/&lt;guest5>/disk{n}
-                /guests/&lt;guest5>/log
-                /.config
-                        pool_role=offline
-</code></pre>
-
-<p>Example of a single pool dataset hierarchy:</p>
-
-<pre><code>zroot/chyves/guests
-            /guests/&lt;guest1>/.config
-            /guests/&lt;guest1>/disk{n}
-            /guests/&lt;guest1>/log
-            /.config
-                    pool_role=primary
-            /ISO
-            /Firmware
-</code></pre>
-
-<p>Install chyves on zpool named zroot:</p>
+<p>Install chyves on zpool named <code>zroot</code>:</p>
 
 <pre><code>chyves dataset zroot install
 </code></pre>
 
-<p>Configure bridge0 to use em0 as the outside interface:</p>
+<p>Configure <code>bridge0</code> to use <code>em0</code> as the outside interface:</p>
 
 <pre><code>chyves network bridge0 attach em0
 </code></pre>
@@ -1269,22 +1286,29 @@ offlinePL/chyves/guests
 <pre><code>chyves iso import ftp://ftp.example.org/FreeBSD-10.2-RELEASE-amd64.iso
 </code></pre>
 
-<p>Create a new guest named bguest with the default size HDD:</p>
+<p>Create a new guest named <code>bguest</code> with the default size HDD:</p>
 
 <pre><code>chyves bguest create
 </code></pre>
 
 <p>Create three new guests named "gst1", "gst2", and "gst3" each with a 6 gigabyte HDD on a pool called "dev-pool":</p>
 
-<pre><code>chyves create gst1,gst2,gst3 6G dev-pool
+<pre><code>chyves gst1,gst2,gst3 create 6G dev-pool
 </code></pre>
 
-<p>List ISO's:</p>
+<p>List ISO and UEFI firmware resources:</p>
+
+<pre><code>chyves list iso
+chyves list firmware
+</code></pre>
+
+<p>or</p>
 
 <pre><code>chyves iso list
+chyves firmware list
 </code></pre>
 
-<p>Install the FreeBSD guest bguest:</p>
+<p>Install the FreeBSD guest <code>bguest</code>:</p>
 
 <pre><code>chyves bguest install FreeBSD-10.2-RELEASE-amd64.iso
 </code></pre>
@@ -1294,7 +1318,12 @@ offlinePL/chyves/guests
 <pre><code>chyves bguest console
 </code></pre>
 
-<p>Once installation is done, exit console (~~.) and reclaim the guest VMM resources:</p>
+<p>Once installation is done, exit console (~~.), and stop the guest (to prevent it from attempting to boot from the installation media):</p>
+
+<pre><code>chyves bguest stop
+</code></pre>
+
+<p>Reclaim the VMM resources, sometimes necessary:</p>
 
 <pre><code>chyves bguest reclaim
 </code></pre>
@@ -1309,21 +1338,37 @@ offlinePL/chyves/guests
 <pre><code>chyves bguest stop
 </code></pre>
 
-<p>List all guests created with:</p>
+<p>However some guest OS's need coercing:</p>
+
+<pre><code>chyves bguest stop force
+</code></pre>
+
+<p>List all guests:</p>
 
 <pre><code>chyves list
 </code></pre>
 
-<p>Start all guests</p>
+<p>Start all guests:</p>
 
 <pre><code>chyves all start
 </code></pre>
 
-<p>You can change guest properties by using set:</p>
+<p>Stop all guests:</p>
+
+<pre><code>chyves all stop
+</code></pre>
+
+<p>Change guest parameters by using set:</p>
 
 <pre><code>chyves bguest set ram=512M
 chyves bguest set cpu=1
 chyves bguest set os=netbsd
+</code></pre>
+
+<p>Set a <code>description</code> or <code>notes</code> to help identify <code>bguest</code>:</p>
+
+<pre><code>chyves bguest set description="FreeBSD chyves guest"
+chyves bguest set description="Runs internal webserver using nginx."
 </code></pre>
 
 <p>You can also change multiple properties for one guest in one command by:</p>
@@ -1336,55 +1381,168 @@ chyves bguest set os=netbsd
 <pre><code>chyves bguest,bguest2,bguest3 set ram=512M description="b cluster"
 </code></pre>
 
-<p>And even change multiple guests and multiple properties in one command by:</p>
+<p>Or change multiple guests and multiple properties in one command by:</p>
 
 <pre><code>chyves bguest,bguest2,bguest3 set cpu=1 ram=512M bguest4 rcboot=50
 </code></pre>
 
-<p>In the above example this changes the ram to 512M and cpu to 1 for bguest, bguest2, and bguest3. Then on bguest4, rcboot priority is set to 50.</p>
+<p>In the above example this changes the <code>ram</code> to '512M' and <code>cpu</code> to '1' for bguest, bguest2, and bguest3. Then on <code>bguest4</code>, <code>rcboot</code> priority is set to '50'.</p>
 
-<p>Get a specific guest property:</p>
+<p>Change all current guests parameters in one command by using the 'all' keyword:</p>
+
+<pre><code>chyves all set cpu=6 ram=4G
+</code></pre>
+
+<p>Change the default parameters for future created guests:</p>
+
+<pre><code>chyves defaults set cpu=4 ram=4G
+</code></pre>
+
+<p>List the default guest parameters:</p>
+
+<pre><code>chyves list defaults
+</code></pre>
+
+<p>Get a specific guest parameter for <code>bguest</code>:</p>
 
 <pre><code>chyves bguest get ram
 </code></pre>
 
-<p>Get all guest properties:</p>
+<p>Get all <code>bguest</code> parameters:</p>
 
 <pre><code>chyves bguest get all
 </code></pre>
 
-<p>Install and run a Debian guest:</p>
+<p>Display a lot of information about guests and their disks:</p>
 
-<pre><code>chyves debianvm create 8G
-chyves debianvm set loader=grub-bhyve os=debian
-chyves debianvm start deb8.1-net.iso
+<pre><code>chyves info -a
 </code></pre>
 
-<p>Take a snapshot of a guest:</p>
+<p>Get a list of available flags for <code>chyves info</code>:</p>
+
+<pre><code>chyves info -h
+</code></pre>
+
+<p>Set your preferred flags for <code>chyves info</code>:</p>
+
+<pre><code>chyves global set default_info_flags="-zps"
+</code></pre>
+
+<p>Set your preferred flags for <code>chyves list</code>:</p>
+
+<pre><code>chyves global set default_list_flags="-zps"
+</code></pre>
+
+<p>List global parameters:</p>
+
+<pre><code>chyves list global
+</code></pre>
+
+<p>Snapshot snapshot actions:</p>
 
 <pre><code>chyves bguest snapshot @beforeupdate
 chyves list snapshots
+chyves list snapshots bguest
 chyves bguest snapshot rollback @beforeupdate
 </code></pre>
 
-<p>Make a true ZFS clone of bguest with unique properties:</p>
+<p>To delete the default <code>disk0</code> ZFS volume, create a sparse 16G disk image, and attach to <code>bguest</code> as a custom bhyve PCI device:</p>
 
-<pre><code>chyves bguest clone -cu bclone1
+<pre><code>chyves bguest disk delete disk0
+truncate -s 16G /chyves/dozer/guests/bguest/01.img
+chyves bguest set pcidev_0=ahci-hd,/chyves/dozer/guests/bguest/01.img
 </code></pre>
 
-<p>Make two true ZFS clones of bguest with same exact properties:</p>
+<p>Create a true ZFS clone of '<code>bguest</code>' with unique parameters:</p>
 
-<pre><code>chyves bguest clone -ce bclone1,bclone2
+<pre><code>chyves bguest clone -cu bguest2
 </code></pre>
 
-<p>Make two independent clones of bguest with unique properties:</p>
+<p>Create two true ZFS clones of '<code>bguest</code>' with same exact parameters:</p>
 
-<pre><code>chyves bguest clone -iu bclone1,bclone2
+<pre><code>chyves bguest clone -ce exactCL1,exactCL2
 </code></pre>
 
-<p>Make independent clone of bguest with same exact properties:</p>
+<p>Create two independent clones of '<code>bguest</code>' with unique parameters:</p>
 
-<pre><code>chyves bguest clone -ie bclone1
+<pre><code>chyves bguest clone -iu bguest2,bguest3
+</code></pre>
+
+<p>Create independent clone of '<code>bguest</code>' with same exact parameters:</p>
+
+<pre><code>chyves bguest clone -ie exactCL1
+</code></pre>
+
+<p>Delete '<code>bguest2</code>' from system:</p>
+
+<pre><code>chyves '`bguest2`' delete
+</code></pre>
+
+<p>Delete '<code>bguest</code>' and dependent clones from system:</p>
+
+<pre><code>chyves '`bguest`' delete force
+</code></pre>
+
+<p>Delete '<code>exactCL1</code>' from system but keep network associations:</p>
+
+<pre><code>chyves '`exactCL1`' delete keepnet
+</code></pre>
+
+<p>Install and run a Debian guest <em>(note LVM installs require "os" be set to "d8lvm")</em> <strong>Seems to work with installation disks version 8.0 through 8.2, however something was changed in 8.3 that breaks the installation disk from working.</strong>:</p>
+
+<pre><code>chyves debianvm create 8G
+chyves debianvm set loader=grub-bhyve os=debian
+chyves debianvm start debian-8.2.0-amd64-i386-netinst.iso
+chyves debianvm console
+&lt;Installation completed>
+chyves debianvm stop        # This is done to boot from hard drive
+chyves debianvm start
+</code></pre>
+
+<p>Install and run a Arch Linux guest :</p>
+
+<pre><code>chyves archguest create
+chyves archguest set loader=grub-bhyve os=arch
+chyves archguest start archguest archlinux-2015.10.01-dual.iso
+chyves archguest console
+&lt;Installation completed>
+chyves archguest stop        # This is done to boot from hard drive
+chyves archguest start
+</code></pre>
+
+<p>Install and run a CentOS or RHEL guest, <em>(note version 6 would use os=centos6)</em>:</p>
+
+<pre><code>chyves centosguest create
+chyves centosguest set loader=grub-bhyve os=centos7
+chyves centosguest start CentOS-7-x86_64-Everything-1511.iso
+chyves centosguest consol
+&lt;Installation completed>
+chyves centosguest stop      # This is done to boot from hard drive
+chyves centosguest start
+</code></pre>
+
+<p>Install and run a Gentoo guest:</p>
+
+<pre><code>chyves gentooguest create
+chyves gentooguest set loader=grub-bhyve os=gentoo
+chyves gentooguest start install-amd64-minimal-20160414.iso
+chyves gentooguest console
+&lt;Installation completed>
+chyves gentooguest stop      # This is done to boot from hard drive
+chyves gentooguest start
+</code></pre>
+
+<p>Install and run an unlisted custom grub-bhyve guest, see <code>os</code> parameter for details:</p>
+
+<pre><code>chyves customgst create
+chyves customgst set loader=grub-bhyve os=custom
+&lt;Edit grub.cfg and device.map&gt;
+chyves customgst start install.iso
+chyves customgst console
+&lt;Installation completed>
+chyves customgst stop             # This is done to boot from hard drive
+&lt;Edit grub.cfg and device.map&gt;
+chyves customgst start
 </code></pre>
 
 <h2 id="AUTHOR">AUTHOR</h2>
@@ -1398,7 +1556,7 @@ chyves bguest snapshot rollback @beforeupdate
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>July 24 2016</li>
+    <li class='tc'>July 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 
