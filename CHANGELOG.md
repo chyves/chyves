@@ -1,4 +1,22 @@
 
+#### Version 0.0.7 (2016 July 24)
+
+Docs and minor fixes.
+
+- Converted to using Ruby gem: `ronn` for the man page from `txt2man`. See [issue #1](https://github.com/chyves/chyves/issues/1) for details. [ed90a46](https://github.com/chyves/chyves/commit/ed90a464baa491e1390008133e9f8653d063f621)
+
+- Referenced html man page in [README.md](README.md). [ee90338](https://github.com/chyves/chyves/commit/ee903385b365ace0ace3171d4a0c3723e50de954)
+
+- Utilized the '[LINK INDEXES](http://rtomayko.github.io/ronn/ronn.1#LINK-INDEXES)' function of `ronn` to link to external man pages (FreeBSD specifically). [0da85ca](https://github.com/chyves/chyves/commit/0da85cad21ddd3338bc6e180d99b16d41170c8e9)
+
+- Minor changes to `chyves <guest> upgrade`. This should have been committed in version 0.0.5 but there is no ill effects. Running `chyves <guest> upgrade` or waiting until the next dataset increment will resolve the issue. [7c338dd](https://github.com/chyves/chyves/commit/7c338ddfbd0f173d3decd71007a6b3b21f86e06e)
+
+- Refreshed docs: [README.md](README.md) [756193d](https://github.com/chyves/chyves/commit/756193db5be9d71171927b579abbee90897d631e), [MAN PAGE files](man/chyves.8.html) [4589d5a](https://github.com/chyves/chyves/commit/4589d5acbd3b20fdf6782dd72d45afbec52afd07), and [USAGE.md](USAGE.md) [28f5aa0](https://github.com/chyves/chyves/commit/28f5aa05dbaf5f36b7a956a08893a58f65184eee).
+
+- Refreshed table of contents in sbin/chyves. [5cf15a7](https://github.com/chyves/chyves/commit/5cf15a713b849dffd254ec8dc41ca5b5112b9431)
+
+- Other minor fixes.
+
 #### Version 0.0.5 (2016 July 21)
 
 Enhancements and fixes.
