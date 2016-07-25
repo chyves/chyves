@@ -205,8 +205,6 @@ chyves(8) relies on the FreeBSD hypervisor bhyve(8), zfs(8), nmdm(4), Bourne she
 For networking, a guest is presented a PCI Ethernet device through the use of virtio(4), on FreeBSD guests the vtnet(4) driver is used\. On 12\-CURRENT, Intel e1000 emulation was added as an alternative to virtio\-net\. The host communicates with this device through a tap(3) or vale(4) interface\.
 .
 .P
-.
-.P
 For storage, guests are provided block storage device(s) via ZFS volumes from the host\. ZFS datasets are used to organize these block devices and other important data in a hierarchical structure\. See \fIZFS\fR section for more information\.
 .
 .P
@@ -371,6 +369,8 @@ The network mode is set by the global setting \'\fBnetwork_design_mode\fR\' and 
 .
 .P
 VALE support is experimentally provided as a proof of concept\. VALE support is not widely implemented and is feature limited at it\'s current development stage\. To use VALE requires that \'device netmap\' be compiled into the kernel and that \'vale\-ctl\' be compiled from \'/usr/src/tools/tools/netmap\' and moved to $PATH directory\. VALE natively support em(4), igb(4), ixgbe(4), and re(4)\. Other NICs must use emulation which may (significantly) reduce performance\. See netmap(4) for more information\. That said, VALE interfaces are added to a guest the same way a tap interface is added using: \'\fBchyves network add vale{n}[:{p}]\fR\' where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch\. Specifying a port is not recommended\. VALE interfaces are clever in that the interface is commonly shared between other guests connecting to that \'virtual\' VALE switch\. Two guests using \'vale0\' will be connected to the same virtual switch\.
+.
+.P
 In 12\-CURRENT r302504, guest Intel e1000 emulation was added as an alternative to using virtio\-net\. This can be utilized by setting \'bhyve_net_type\' to \'e1000\' from a 12\-CURRENT host on a per guest basis\.
 .
 .SS "AUTO DESIGN NETWORK MODE"
@@ -889,6 +889,8 @@ PCI pass\-through devices which share the same physical PCI slot number on the h
 .
 .IP
 \fBchyves <guest> set pcidev_7=passthru,9/0/1\fR
+.
+.IP
 To get the PCI triplet on the host, run:
 .
 .IP "" 4
@@ -910,6 +912,8 @@ subclass   = Fibre Channel
 .fi
 .
 .IP "" 0
+.
+.IP
 Normally the device in the example above would use the \fBisp(4)\fR drivers\. However, the devices need to be using the \fBppt\fR drivers\. The \fBppt\fR drivers tell the host to ignore the device as it will be pass\-through to a virtualized guest\. To get a PCI device to load the \fBppt\fR drivers instead of it\'s normal drivers, edit the \fB/boot/loader\.conf\fR file to contain the PCI triplet of each device in the \fBpptdevs\fR directive\. The following is consistent with our examples above:
 .
 .IP "" 4
