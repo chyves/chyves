@@ -71,9 +71,9 @@ Add this line to `/etc/rc.conf`:
 chyves_enable="YES"
 ````
 
-Or use `rcvar`:
+Or use `sysrc(8)`:
 ```
-rcvar chyves_enable="YES"
+sysrc chyves_enable="YES"
 ```
 
 Or run the following from the source directory:
