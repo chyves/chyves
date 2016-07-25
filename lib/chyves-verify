@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Verify all modules in $_KERNEL_MODULES
-__verify_all_kernel_modules(){
+__verify_all_kernel_modules() {
 	local _flag="$1"
 	# Valid _flag are:
 	# $null   [no flag used] check only

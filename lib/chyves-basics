@@ -72,7 +72,7 @@ __gvset_primary_pool() {
 }
 
 # Converts user input to bytes
-__gvset_user_input_to_bytes(){
+__gvset_user_input_to_bytes() {
 	local _var="$1"
 
 	[ -n "$( echo "$_var" | grep -v -E '^[0-9]{1,}[kmgtKMGT]?$' )" ] && __fault_detected_exit "Unrecognized size: '$_var', must be any integer and optionally a suffix K, M, G, or T. Megabytes are assumed if not specified."
