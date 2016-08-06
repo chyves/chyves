@@ -250,6 +250,7 @@ __resource_import() {
 
 	# Local file copies only.
 	else
+		[ ! -f "$_URL" ] && __fault_detected_exit "File does not exists"
 		__verify_valid_dataset "$_resource_name/$_folder_name" -check_not_in_use
 		__log 2 "Creating ZFS dataset: $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name"
 		zfs create $_PRIMARY_POOL/chyves/$_resource_name/$_folder_name
