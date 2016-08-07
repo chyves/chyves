@@ -101,12 +101,12 @@ At least one ZFS pool is required. All data is stored on one or many ZFS pools a
 ### Hardware dependencies:
 bhyve(8) is dependent on hardware virtualization CPU features. One feature is called Second Level Address Translation (SLAT), also known as nested paging. Intel's implementation is called Extended Page Tables (EPT) and AMD's implementation is called Rapid Virtualization Indexing (RVI). This CPU feature is referenced as 'POPCNT' in dmesg(8) under 'Features2:' line. There is an early series of CPUs from Intel (Xeon 5500) that has most of the necessary virtualization capabilities but lack a feature Intel later implemented called unrestricted guest ('`UG`' in dmesg(8) under "VT-x:"). Without this feature bhyve is limited to FreeBSD guests with only one CPU core. AMD has the '`UG`' functionality in all of it's RVI implementations.
 
-PCI Pass-through support is also provided through another sub-set of hardware virtualization CPU features called I/O MMU virtualization. Intel calls their implementation '`VT-d`' and AMD calls their implementation '`AMD-Vi`'. See the `pcidev_{n}` parameter under [Guest Parameters][] section for instructions on attaching PCI pass-through devices. A check is ran before starting a guest that has PCI pass-through devices configured and will not start the guest if the host does not have the necessary CPU feature.
+PCI Pass-through support is also provided through another sub-set of hardware virtualization CPU features called I/O MMU virtualization. Intel calls their implementation '`VT-d`' and AMD calls their implementation '`AMD-Vi`'. See the `pcidev_{n}` property under [Guest Properties][] section for instructions on attaching PCI pass-through devices. A check is ran before starting a guest that has PCI pass-through devices configured and will not start the guest if the host does not have the necessary CPU feature.
 
 ## ZFS
-As mentioned in the [DEPENDENCIES][] section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool. There are many features that rely on ZFS, such as cloning. The ISO, UEFI firmware, and guest resources and parameters are stored within ZFS datasets.
+As mentioned in the [DEPENDENCIES][] section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool. There are many features that rely on ZFS, such as cloning. The ISO, UEFI firmware, and guest resources and properties are stored within ZFS datasets.
 
-Single and multiple ZFS pools are supported, there is no loss in functionality for either. `chyves` datasets get mounted to '/chyves/<pool>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global parameters, and the comprehensive logs. The primary pool can be changed with `chyves dataset <new-prim-pool> promote` which moves the resources and global configuration to `<new-prim-pool>` from the current primary pool.
+Single and multiple ZFS pools are supported, there is no loss in functionality for either. `chyves` datasets get mounted to '/chyves/<pool>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs. The primary pool can be changed with `chyves dataset <new-prim-pool> promote` which moves the resources and global configuration to `<new-prim-pool>` from the current primary pool.
 
 See [DATASET SUB-COMMANDS][] section below for managing the `chyves` datasets.
 
@@ -125,7 +125,7 @@ Example of a multi-pool folder structure:
                      /.config                                   # Dataset
                      /.config/global.cfg                        # File
                      /.config/pool.cfg                          # File
-                                      pool_role=primary         # Pool parameter
+                                      pool_role=primary         # Pool property
                      /logs                                      # Dataset
                      /logs/YYYYMM.log                           # Files
                      /ISO                                       # Datasets
@@ -137,7 +137,7 @@ Example of a multi-pool folder structure:
                      /guests/<guest3>/log/YYYYMM.log            # Files
                      /.config                                   # Dataset
                      /.config/pool.cfg                          # File
-                                      pool_role=secondary       # Pool parameter
+                                      pool_role=secondary       # Pool property
     /chyves/anther_pl/guests
                      /guests/<guest4>/.config/.cfg              # File
                      /guests/<guest4>/disk{n}                   # Volumes
@@ -145,12 +145,12 @@ Example of a multi-pool folder structure:
                      /guests/<guest4>/log/YYYYMM.log            # Files
                      /.config                                   # Dataset
                      /.config/pool.cfg                          # File
-                                      pool_role=secondary       # Pool parameter
+                                      pool_role=secondary       # Pool property
 
   Offline dataset:
     offlinePL/chyves_offline                                    # Datasets
     offlinePL/chyves_offline/.config/pool.cfg                   # File
-                                             pool_role=offline  # Pool parameter
+                                             pool_role=offline  # Pool property
 
 Example of a single pool dataset hierarchy:
 
@@ -162,7 +162,7 @@ Example of a single pool dataset hierarchy:
                    /.config                                     # Dataset
                    /.config/global.cfg                          # File
                    /.config/pool.cfg                            # File
-                                    pool_role=primary           # Pool parameter
+                                    pool_role=primary           # Pool property
                    /logs                                        # Dataset
                    /ISO                                         # Datasets
                    /Firmware                                    # Datasets
@@ -189,23 +189,23 @@ On a fresh simple installation, the only command needed is 'chyves network bridg
 As indicated above, tap interfaces are attached to a bridge, which optionally can be attached to a physical or vlan interface. If the bridge is not associated with a physical or vlan interface, the bridge must be put into 'private' mode. This is done by running 'chyves network bridge64 private'. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network. A private bridge can also use pf(4) for NAT capabilities but this is not built into chyves.
 
 ### SYSTEM DESIGN NETWORK MODE
-The 'system' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the 'net_ifaces' parameter.
+The 'system' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the 'net_ifaces' property.
 
 Converting from 'system' to 'auto' will not automatically start to work. Each device will need to be manually associated with each other.
 
-## PARAMETERS
-There are four types of chyves parameters: global configuration parameters, pool parameters, per-guest parameters, and default guest parameters. Each is stored in a file in the chyves dataset hierarchy. **It is not recommended to directly edit the '*.cfg' files, this is because there are no filters to stop typos, warn for incorrect parameter names, or invalid values.** The filter is only applied when running the 'chyves <guest> set' command and not rechecked when pulling the values from the files.
+## PROPERTIES
+There are four types of chyves properties: global configuration properties, pool properties, per-guest properties, and default guest properties. Each is stored in a file in the chyves dataset hierarchy. **It is not recommended to directly edit the '*.cfg' files, this is because there are no filters to stop typos, warn for incorrect property names, or invalid values.** The filter is only applied when running the 'chyves <guest> set' command and not rechecked when pulling the values from the files.
 
-Also certain actions are triggered when setting certain parameters. For example, setting the '`template`' guest parameter will set or unset the _readonly_ flag on the ZFS dataset.
+Also certain actions are triggered when setting certain properties. For example, setting the '`template`' guest property will set or unset the _readonly_ flag on the ZFS dataset.
 
 The pool configuration is stored in a file at '/chyves/<pool>/.config/pool.cfg'. On the primary pool there is also a file in the same directory called 'global.cfg', this contains the global settings for chyves.
 
 
-The 'dataset_role' setting  is used to store the role of that pool containing the chyves datasets. Valid values are primary, secondary, and offline. Only one 'primary' dataset can be configured per system. The primary dataset is the only dataset that contains the ISO and firmware resources. The primary pool also has the only dataset for guest defaults. These defaults are referenced when setting parameters for new guests. The primary pool is also where new guests are created when the [<pool>] argument is not declared with 'chyves create' command. All other active pools are set to the "secondary" role. Pools set to the 'offline' role are left untouched and is a good role to put a local replicated backup. The primary pool is critical to the operation of chyves. Without a primary pool set, only the 'dataset' sub-command is allowed to run. The first pool to be setup on the system is the primary pool. This can be changed later with 'chyves dataset <pool> promote'.
+The 'dataset_role' setting  is used to store the role of that pool containing the chyves datasets. Valid values are primary, secondary, and offline. Only one 'primary' dataset can be configured per system. The primary dataset is the only dataset that contains the ISO and firmware resources. The primary pool also has the only dataset for guest defaults. These defaults are referenced when setting properties for new guests. The primary pool is also where new guests are created when the [<pool>] argument is not declared with 'chyves create' command. All other active pools are set to the "secondary" role. Pools set to the 'offline' role are left untouched and is a good role to put a local replicated backup. The primary pool is critical to the operation of chyves. Without a primary pool set, only the 'dataset' sub-command is allowed to run. The first pool to be setup on the system is the primary pool. This can be changed later with 'chyves dataset <pool> promote'.
 
 
-### Pool Parameters
-These parameters keeps track of the version of the dataset and the role. With multiple pools, defined per-pool roles are necessary. This is defined through the use of a dataset called '<pool>/chyves/.config' where the pool specific parameters (`pool.cfg`) are stored.
+### Pool Properties
+These properties keeps track of the version of the dataset and the role. With multiple pools, defined per-pool roles are necessary. This is defined through the use of a dataset called '<pool>/chyves/.config' where the pool specific properties (`pool.cfg`) are stored.
 
 * `dataset_role={primary|secondary|offline}`
 
@@ -213,7 +213,7 @@ These parameters keeps track of the version of the dataset and the role. With mu
 
   Vital in multi-pool configurations, each role type has different characteristics as explained below:
 
-  `primary` - Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources. Reference point for global parameters. New guest are defaulted to be created on this pool unless otherwise specified as a parameter for 'chyves create'. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations.
+  `primary` - Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources. Reference point for global properties. New guest are defaulted to be created on this pool unless otherwise specified as a property for 'chyves create'. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations.
 
   `secondary` - Pools in this role are utilized for storing other active guests not stored on the primary ZFS pool.
 
@@ -223,12 +223,12 @@ These parameters keeps track of the version of the dataset and the role. With mu
 
   **Managed through 'chyves dataset' commands.**
 
-  This parameter indicates the current version of the chyves pool. This an upgrade mechanism to ensure the dataset and it's child datasets contain the correct architecture. The command 'chyves dataset <pool> upgrade' brings a dataset incrementally to the latest version when there is a discrepancy between the dataset version and the chyves version. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves.
+  This property indicates the current version of the chyves pool. This an upgrade mechanism to ensure the dataset and it's child datasets contain the correct architecture. The command 'chyves dataset <pool> upgrade' brings a dataset incrementally to the latest version when there is a discrepancy between the dataset version and the chyves version. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves.
 
-### Global Configuration Parameters
-These parameters control the behavior of chyves.
+### Global Configuration Properties
+These properties control the behavior of chyves.
 
-Many of these global parameters are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as '`chyves network`'. The preferred management method is given on the first line after each parameter in bold text.
+Many of these global properties are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as '`chyves network`'. The preferred management method is given on the first line after each property in bold text.
 
 Usage:
 
@@ -236,7 +236,7 @@ Usage:
 
   `chyves list global [<pool>]`
 
-Parameters:
+Properties:
 
 * `auto_load_kernel_mods`={yes|no}
 
@@ -342,7 +342,7 @@ Parameters:
 
   **User managed and settable, advanced feature.**
 
-  Setting to "on" allows for new parameters to be created with 'chyves set'. The default is set to "off" to prevent creating new parameters due to typos. Even when set to 'on' this will not allow a creation of new global or defaults parameters.
+  Setting to "on" allows for new properties to be created with 'chyves set'. The default is set to "off" to prevent creating new properties due to typos. Even when set to 'on' this will not allow a creation of new global or defaults properties.
 
 * `stdout_level`={0-3}
 
@@ -382,8 +382,8 @@ Parameters:
 
   This is a compatibility mechanism used to offset the first VNC port used by UEFI guests. The initial default is set to "5900", valid values are from 1 to 65536.
 
-### Guest Parameters
-These are parameters used by chyves to specify the parameters to pass to bhyve, grub-bhyve, and chyves itself when starting a guest. Changing these values on a running guest will not yield any change until the guest is completely stop and then started again.
+### Guest Properties
+These are properties used by chyves to specify the properties to pass to bhyve, grub-bhyve, and chyves itself when starting a guest. Changing these values on a running guest will not yield any change until the guest is completely stop and then started again.
 
 Usage:
 
@@ -415,7 +415,7 @@ Usage:
 
   **Managed through 'chyves <guest> upgrade' command.**
 
-  Used to ensure the guest contains latest parameters when moved between hosts on different versions of chyves. "MM" signifies the major version as an integer and "mm" as the minor version as an integer. Changes to the major version require an upgrade via 'chyves <guest> upgrade' because a guest property value format has changed or a new required property was added. Differences in the minor version do no require an upgrade but may not have full functionality.
+  Used to ensure the guest contains latest properties when moved between hosts on different versions of chyves. "MM" signifies the major version as an integer and "mm" as the minor version as an integer. Changes to the major version require an upgrade via 'chyves <guest> upgrade' because a guest property value format has changed or a new required property was added. Differences in the minor version do no require an upgrade but may not have full functionality.
 
 * `description`="<INSERT BRIEF DESCRIPTION>"
 
@@ -425,7 +425,7 @@ Usage:
 
   Tells which loader to use to boot guest. `bhyveload` is for FreeBSD based guests, `uefi` is used for UEFI based guests, and `grub-bhyve` is used for all other guests.
 
-  When setting a guest to use the `uefi` loader, some `uefi_*` parameters are populated. One of these parameters is `uefi_firmware` which is required for guests to start.
+  When setting a guest to use the `uefi` loader, some `uefi_*` properties are populated. One of these properties is `uefi_firmware` which is required for guests to start.
 
 * `net_ifaces`=tap{n}|vale{n}[:{p}]
 
@@ -451,7 +451,7 @@ Usage:
 
 * `os`=<operating-system>
 
-  Used to determine the parameters to use for the `grub.cfg` and `device.map` files when the `loader` parameter is set to `grub-bhyve`.
+  Used to determine the properties to use for the `grub.cfg` and `device.map` files when the `loader` property is set to `grub-bhyve`.
 
   Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom. Any other values are invalid. `default` is the generic catch-all value.
 
@@ -480,9 +480,9 @@ Usage:
 
 * `pcidev_{n}`={bhyve-pci-dev}
 
-  This is an advance feature and assumes you have read bhyve(8) AND understood it. This parameter does NOT have a complete input verification suite or complete host support verification.
+  This is an advance feature and assumes you have read bhyve(8) AND understood it. This property does NOT have a complete input verification suite or complete host support verification.
 
-  This parameter attaches a bhyve PCI device to the guest. The '{n}' is completely arbitrary number and is only a matter of the order of attachment. '{bhyve-pci-dev}' is the bhyve PCI device to attach. See  bhyve(8) for a complete list or below for common uses.
+  This property attaches a bhyve PCI device to the guest. The '{n}' is completely arbitrary number and is only a matter of the order of attachment. '{bhyve-pci-dev}' is the bhyve PCI device to attach. See  bhyve(8) for a complete list or below for common uses.
 
   `chyves` attaches each custom PCI device alone on the PCI bus, except for pass-through devices.
 
@@ -538,7 +538,7 @@ Usage:
 
   A reboot is necessary after editing the `/boot/loader.conf`.
 
-  The '`-S`' flag _must_ be appended to the current '`bargs`' guest parameter to wire the guest memory for PCI pass-through to work.
+  The '`-S`' flag _must_ be appended to the current '`bargs`' guest property to wire the guest memory for PCI pass-through to work.
 
 * `ram`={n}[S]
 
@@ -575,7 +575,7 @@ Usage:
 
 * `uefi_vnc_client`={print|freerdp|custom}
 
-  This stores the preferred VNC client used to start a session with the guest parameters pre-populated.
+  This stores the preferred VNC client used to start a session with the guest properties pre-populated.
 
 * `uefi_vnc_client_custom_cmd`
 
@@ -625,7 +625,7 @@ Usage:
 
 * `virtio_block_options_disk{n}`=[nocache[,direct][,ro][,sectorsize=logical[/physical]]]
 
-  This is an advance feature and assumes you have read zfs(8) man page AND completely understood it. This parameter does NOT have a complete input verification suite.
+  This is an advance feature and assumes you have read zfs(8) man page AND completely understood it. This property does NOT have a complete input verification suite.
 
   This is a per disk setting used to append bhyve virtio-block options to a disk. While there is a very limited use case of these options, they can be utilized but it is not recommended. See bhyve(8) for what these options do.
 
@@ -635,12 +635,12 @@ Usage:
 
   `chyves <guest> set virtio_block_options_disk0=ro,sectorsize=512/4096`
 
-### Default Guest Parameters
-These parameters are referenced when creating new guests. The guest section of parameters have the same purpose as described in [Guest Parameters][] section above, unless otherwise noted. Below are the initial default values on a fresh installation of chyves for reference.
+### Default Guest Properties
+These properties are referenced when creating new guests. The guest section of properties have the same purpose as described in [Guest Properties][] section above, unless otherwise noted. Below are the initial default values on a fresh installation of chyves for reference.
 
-The some UEFI parameters are not assigned until the 'loader' value is set to 'uefi'. This is to prevent assigning parameters to guests which can not utilize those features.
+The some UEFI properties are not assigned until the 'loader' value is set to 'uefi'. This is to prevent assigning properties to guests which can not utilize those features.
 
-The UEFI VNC parameters are not assigned until the 'uefi_console_output' value is set to 'vnc'. This is to prevent unused VNC port numbers from being assigned to guests which can not utilize those features.
+The UEFI VNC properties are not assigned until the 'uefi_console_output' value is set to 'vnc'. This is to prevent unused VNC port numbers from being assigned to guests which can not utilize those features.
 
 Usage:
 
@@ -663,7 +663,7 @@ Defaults and initial values:
 * `rcboot`=0
 * `size`=8G
 
-  Used during guest and disk creation when the size parameter is omitted. No longer a guest property. The ZFS property 'usedbychildren' is used to show the size in 'chyves info -z'.
+  Used during guest and disk creation when the size property is omitted. No longer a guest property. The ZFS property 'usedbychildren' is used to show the size in 'chyves info -z'.
 
 * `template`="no"
 * `uefi_console_output`=serial
@@ -674,7 +674,7 @@ Defaults and initial values:
 * `uefi_vnc_pause_until_client_connect`=no
 * `uefi_vnc_res`=800x600
 
-These default disk parameters are direct ZFS values used when creating disks for the guest. These parameters are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process. Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See zfs(8) on settable values but remember, think of the kittens and puppies. The initial default values are:
+These default disk properties are direct ZFS values used when creating disks for the guest. These properties are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process. Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents. See zfs(8) on settable values but remember, think of the kittens and puppies. The initial default values are:
 
 * `disk_volmode`=dev
 * `disk_volblocksize`=512
@@ -717,11 +717,11 @@ When not in a tmux session:
   Reattach to the last tmux session
 
 ## UEFI SUPPORT
-Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the 'uefi_firmware' property. This boot method is set by changing the 'loader' property to 'uefi'. When this is done for the first time on a guest, the other UEFI parameters are populated.
+Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the 'uefi_firmware' property. This boot method is set by changing the 'loader' property to 'uefi'. When this is done for the first time on a guest, the other UEFI properties are populated.
 
 Graphical console support is provided via UEFI GOP as of May 2016, this replaces the serial interface. Support is provided as a technical preview as there are still sharp edges. Know issues: partial VNC client support and mouse mapping issues when 'uefi_vnc_mouse_type' property set to 'ps2'. The following is required for graphical console use: the property 'uefi_console_output' must be set to 'vnc' on the guest, a host on 11-CURRENT, a bhyve binary compiled from bhyve_graphics the UEFI firmware 'BHYVE_UEFI_20160526.fd', and a VNC client.
 
-See [Guest Parameters][] section for complete list of related `uefi_*` parameters.
+See [Guest Properties][] section for complete list of related `uefi_*` properties.
 
 ### VNC CLIENT SUPPORT
 Support for VNC client launching is utilized with `chyves <guest> console vnc`. This either prints the VNC settings or starts a VNC session. Currently FreeRDP is preconfigured or a custom VNC client can be configured with the 'uefi_vnc_client_custom_cmd' property.
@@ -748,9 +748,9 @@ Support for VNC client launching is utilized with `chyves <guest> console vnc`. 
 
   `chyves dev [<function>|<command>] "param1" ... "param7"`
 
-  Allows for a function to be called direct from command line when developing for chyves. Requires _dev_mode_ to be set with something other than 'off'. This is globally set on the primary pool on. See [Global Configuration Parameters][] section above.
+  Allows for a function to be called direct from command line when developing for chyves. Requires _dev_mode_ to be set with something other than 'off'. This is globally set on the primary pool on. See [Global Configuration Properties][] section above.
 
-  The parameters are function indexed and only seven parameters are possible due to the way Bourne addresses parameter[10]. Double quotes are required for parameters with strings, such as commands.
+  The properties are function indexed and only seven properties are possible due to the way Bourne addresses property[10]. Double quotes are required for properties with strings, such as commands.
 
 * `info`
 
@@ -774,12 +774,12 @@ Support for VNC client launching is utilized with `chyves <guest> console vnc`. 
 
   `chyves dataset <pool> install`
 
-  Creates ZFS datasets and parameters on pool. This is the first step to getting chyves running.
+  Creates ZFS datasets and properties on pool. This is the first step to getting chyves running.
 * `upgrade`
 
   `chyves dataset <pool> upgrade`
 
-  Upgrades dataset version from an old version to the newest version incrementally. This is done by adding, removing, and updating parameters which are required by the latest version of chyves. It is recommended to upgrade the primary pool first in case their are new defaults, otherwise the 'chyves <guest> upgrade' will need to be manually ran against the guests on secondary pools.
+  Upgrades dataset version from an old version to the newest version incrementally. This is done by adding, removing, and updating properties which are required by the latest version of chyves. It is recommended to upgrade the primary pool first in case their are new defaults, otherwise the 'chyves <guest> upgrade' will need to be manually ran against the guests on secondary pools.
 
 ### FIRMWARE SUB-COMMANDS
 
@@ -829,13 +829,13 @@ These sub-commands manage UEFI firmware resources.
 
   `chyves <guest>|MG delete [force|keepnet]`
 
-  Permanently delete a guest from the host. If the 'force' keyword is used, then dependent clones are deleted as well. The 'keepnet' keyword is used to keep the network associations, this is useful for clones that share the exact parameters.
+  Permanently delete a guest from the host. If the 'force' keyword is used, then dependent clones are deleted as well. The 'keepnet' keyword is used to keep the network associations, this is useful for clones that share the exact properties.
 
 * `get`
 
   `chyves <guest> get {<property>|all}`
 
-  Gets property for guests. See [PARAMETERS][] section above for more detail. Use 'chyves list global' or 'chyves list defaults' for respective property types.
+  Gets property for guests. See [PROPERTIES][] section above for more detail. Use 'chyves list global' or 'chyves list defaults' for respective property types.
 
 * `reclaim`
 
@@ -865,7 +865,7 @@ These sub-commands manage UEFI firmware resources.
 
   Where <iso> is optionally the name of an ISO resource. This command starts bhyveload, grub-bhyve, and UEFI guests.
 
-  For grub-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the 'os' property. This means the _device.map_ and the _grub.cfg_ files generated reflect booting from the installation CD. If a non-booting CD is needed to be attached to a guest using grub-bhyve, then manually adding a custom PCIDEV device is suggested. See the _pcidev_{n}_ parameter under [Guest Parameters][] section for instructions.
+  For grub-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the 'os' property. This means the _device.map_ and the _grub.cfg_ files generated reflect booting from the installation CD. If a non-booting CD is needed to be attached to a guest using grub-bhyve, then manually adding a custom PCIDEV device is suggested. See the _pcidev_{n}_ property under [Guest Properties][] section for instructions.
 
 * `stop`
 
@@ -883,31 +883,31 @@ These sub-commands manage UEFI firmware resources.
 
 `chyves <guest> clone <clonename>|MG [-ce|-cu|-ie|-iu] [<pool>]`
 
-This clones a guest, there are four cloning methods that chyves uses. The cloning method is determined by the clone flag after the clone name(s). The first letter of the flag indicates the clone's dependency on the parent's datasets, the second letter indicates whether new unique parameters are created for the clone. If the cloning method flag is omitted, the default is used as defined in global property 'default_clone_flag', this is initially set to '-iu' as it is the safest and more performant.
+This clones a guest, there are four cloning methods that chyves uses. The cloning method is determined by the clone flag after the clone name(s). The first letter of the flag indicates the clone's dependency on the parent's datasets, the second letter indicates whether new unique properties are created for the clone. If the cloning method flag is omitted, the default is used as defined in global property 'default_clone_flag', this is initially set to '-iu' as it is the safest and more performant.
 
-The _[pool]_ parameter is used to clone the guest to a different pool than where the guest currently resides. This can only be done for independent clones.
+The _[pool]_ property is used to clone the guest to a different pool than where the guest currently resides. This can only be done for independent clones.
 
 Dataset dependency:
 
   * `-c`
 
-    Creates a ZFS clone of the guest's disks. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent's dataset. This also means, the clones must be deleted before the parent guest is deleted. See 'chyves list clones' to display the clone hierarchy. The [<pool>] parameter is ignored as the clone must reside on the same pool as it's parent.
+    Creates a ZFS clone of the guest's disks. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent's dataset. This also means, the clones must be deleted before the parent guest is deleted. See 'chyves list clones' to display the clone hierarchy. The [<pool>] property is ignored as the clone must reside on the same pool as it's parent.
 
   * `-i`
 
-    Creates an independent clone which is not dependent on the parent's datasets. Using the [<pool>] parameter will clone the guest to the specified pool, otherwise the guest's pool is used.
+    Creates an independent clone which is not dependent on the parent's datasets. Using the [<pool>] property will clone the guest to the specified pool, otherwise the guest's pool is used.
 
-Guest parameters:
+Guest properties:
 
   * `-e`
 
-    Copies the guest parameters exactly as the parent's. This means the parent can not start while the clone is running, or vise-versa due to the overlapping serial and tap interfaces. Use the 'keepnet' option when deleting these guests to prevent removing the network association.
+    Copies the guest properties exactly as the parent's. This means the parent can not start while the clone is running, or vise-versa due to the overlapping serial and tap interfaces. Use the 'keepnet' option when deleting these guests to prevent removing the network association.
 
   * `-u`
 
     Sets new a unique: serial interface, a new tap is created for each interface of the parent under the same bridge, VALE interfaces are copied over and ports removed, a new unique port is used for uefi_vnc_port, and a new UUID is generated.
 
-    If the guest's parameter 'template' is set to 'yes', then the parameter is temporarily set to 'no' to create unique properties, then after cloning the guests and clones have their parameter 'template' set to 'yes'.
+    If the guest's property 'template' is set to 'yes', then the property is temporarily set to 'no' to create unique properties, then after cloning the guests and clones have their property 'template' set to 'yes'.
 
 ### GUEST CONSOLE SUB-SUB-COMMANDS
 Manage a guest through a console using various methods described below. The primary method for managing guests is through a serial interface. On supported hosts and UEFI guests, video emulation is possible through an internal VNC server attached to a frame buffer. See [UEFI SUPPORT][] above. All other guests need to be administered via a serial communication device.
@@ -949,7 +949,7 @@ These sub commands deal with a guest's disk. Multi-guest is not supported for th
 
   `chyves <guest> disk disk{n} description <description>`
 
-  Sets a `description` parameter for a disk.
+  Sets a `description` property for a disk.
 
 * `list`
 
@@ -961,7 +961,7 @@ These sub commands deal with a guest's disk. Multi-guest is not supported for th
 
   `chyves <guest> disk disk{n} notes <note>`
 
-  Sets a `notes` parameter for a disk.
+  Sets a `notes` property for a disk.
 
 * `remove`
 
@@ -999,7 +999,7 @@ Keep in mind that due to the way ZFS volumes work, when taking a snapshot all th
   Rolls back a guest and it's datasets to a previous snapshot state. When no name is given, the latest snapshot is the rollback point. If there are multiple snapshots in-between the snapshot and the given snapshot name, those are displayed before last deletion. A guest can not be rollback past a clone snapshot point until those clones are deleted.
 
 ### INFO COMMAND
-Displays active guests and their disks on the system when no flags are used. The global parameter 'default_info_flags' is used when no flags are given, this parameter is populated with end user's preferred flags. The following flags are used in combination to display information about the guests and disks. These flags are used in combination, meaning the correct syntax is "-rvs" rather than "-r -v -s". See below for a description of what each flag does:
+Displays active guests and their disks on the system when no flags are used. The global property 'default_info_flags' is used when no flags are given, this property is populated with end user's preferred flags. The following flags are used in combination to display information about the guests and disks. These flags are used in combination, meaning the correct syntax is "-rvs" rather than "-r -v -s". See below for a description of what each flag does:
 
 * `-z`    [si**z**e] Displays size, for guests this show what is being used by the dataset. For disks the size displays the volume size.
 * `-b`    [**b**asic] CPU core count, and RAM allocation.
@@ -1102,7 +1102,7 @@ Displays information about various components for chyves.
 
 * `<property>`
 
-  List the property given for all the guests. See [Guest Parameters][] section above for a list
+  List the property given for all the guests. See [Guest Properties][] section above for a list
 
 * `snapshots`
 
@@ -1241,7 +1241,7 @@ Stop all guests:
 
     chyves all stop
 
-Change guest parameters by using set:
+Change guest properties by using set:
 
     chyves bguest set ram=512M
     chyves bguest set cpu=1
@@ -1266,23 +1266,23 @@ Or change multiple guests and multiple properties in one command by:
 
 In the above example this changes the `ram` to '512M' and `cpu` to '1' for bguest, bguest2, and bguest3. Then on `bguest4`, `rcboot` priority is set to '50'.
 
-Change all current guests parameters in one command by using the 'all' keyword:
+Change all current guests properties in one command by using the 'all' keyword:
 
     chyves all set cpu=6 ram=4G
 
-Change the default parameters for future created guests:
+Change the default properties for future created guests:
 
     chyves defaults set cpu=4 ram=4G
 
-List the default guest parameters:
+List the default guest properties:
 
     chyves list defaults
 
-Get a specific guest parameter for `bguest`:
+Get a specific guest property for `bguest`:
 
     chyves bguest get ram
 
-Get all `bguest` parameters:
+Get all `bguest` properties:
 
     chyves bguest get all
 
@@ -1302,7 +1302,7 @@ Set your preferred flags for `chyves list`:
 
     chyves global set default_list_flags="-zps"
 
-List global parameters:
+List global properties:
 
     chyves list global
 
@@ -1319,19 +1319,19 @@ To delete the default `disk0` ZFS volume, create a sparse 16G disk image, and at
     truncate -s 16G /chyves/dozer/guests/bguest/01.img
     chyves bguest set pcidev_0=ahci-hd,/chyves/dozer/guests/bguest/01.img
 
-Create a true ZFS clone of '`bguest`' with unique parameters:
+Create a true ZFS clone of '`bguest`' with unique properties:
 
     chyves bguest clone -cu bguest2
 
-Create two true ZFS clones of '`bguest`' with same exact parameters:
+Create two true ZFS clones of '`bguest`' with same exact properties:
 
     chyves bguest clone -ce exactCL1,exactCL2
 
-Create two independent clones of '`bguest`' with unique parameters:
+Create two independent clones of '`bguest`' with unique properties:
 
     chyves bguest clone -iu bguest2,bguest3
 
-Create independent clone of '`bguest`' with same exact parameters:
+Create independent clone of '`bguest`' with same exact properties:
 
     chyves bguest clone -ie exactCL1
 
@@ -1387,7 +1387,7 @@ Install and run a Gentoo guest:
     chyves gentooguest stop      # This is done to boot from hard drive
     chyves gentooguest start
 
-Install and run an unlisted custom grub-bhyve guest, see `os` parameter for details:
+Install and run an unlisted custom grub-bhyve guest, see `os` property for details:
 
     chyves customgst create
     chyves customgst set loader=grub-bhyve os=custom
