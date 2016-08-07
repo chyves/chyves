@@ -29,6 +29,10 @@ __guest_delete() {
 	local _guest_list="$1"
 	local _force="$2"
 
+	if [ -n "$3" ] && [ "$3" != "force" ] || [ -n "$3" ] && [ "$3" != "keepnet" ]; then
+		__fault_detected_exit "Only 'force' or 'keepnet' are valid parameters for 'chyves $1 delete [force|keepnet]'."
+	fi
+
 	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
 	[ "$_guest_list" = defaults ] && __fault_detected_exit "Can not delete defaults."
 	[ "$_guest_list" = global ] && __fault_detected_exit "Can not delete global."
