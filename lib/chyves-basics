@@ -116,8 +116,7 @@ chyves <guest>|MG|all console {reset|tmux|vnc}
 chyves <guest>|MG create [<size>] [<pool>]
 chyves <guest>|MG|all delete [force]
 chyves <guest> disk add [<size>]
-chyves <guest> disk disk{n} description <description>
-chyves <guest> disk disk{n} notes <note>
+chyves <guest> disk disk{n} {description|notes} <annotation>
 chyves <guest> disk delete disk{n}
 chyves <guest> disk resize disk{n} <new-size>
 chyves <guest> disk list
