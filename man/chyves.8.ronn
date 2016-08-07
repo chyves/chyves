@@ -14,8 +14,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.9
 * `chyves <guest>|MG create [<size>] [<pool>]`
 * `chyves <guest>|MG|all delete [force|keepnet]`
 * `chyves <guest> disk add [<size>]`
-* `chyves <guest> disk disk{n} description <description>`
-* `chyves <guest> disk disk{n} notes <note>`
+* `chyves <guest> disk disk{n} {description|notes} <annotation>`
 * `chyves <guest> disk delete disk{n}`
 * `chyves <guest> disk resize disk{n} <new-size>`
 * `chyves <guest> disk list`
