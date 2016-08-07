@@ -405,11 +405,17 @@ EOT
 			# Get clone information
 			if [ -n "$( echo "$flags" | grep -E 'c|a' )" ]; then
 				__gvset_first_disk
-				local _first_disk_origin="$( zfs get -H -o value origin $_GUEST_pool/chyves/guests/$_GUEST_name/$_FIRST_disk | cut -d'/' -f4 )"
-				if [ "$_first_disk_origin" = "-" ]; then
+
+				# This check is needed for diskless guests, say when images are used instead.
+				if [ -z "$_FIRST_disk" ]; then
 					printf "^%s" "NO"
 				else
-					printf "^%s" "Child of $_first_disk_origin"
+					local _first_disk_origin="$( zfs get -H -o value origin $_GUEST_pool/chyves/guests/$_GUEST_name/$_FIRST_disk | cut -d'/' -f4 )"
+					if [ "$_first_disk_origin" = "-" ]; then
+						printf "^%s" "NO"
+					else
+						printf "^%s" "Child of $_first_disk_origin"
+					fi
 				fi
 			fi
 
