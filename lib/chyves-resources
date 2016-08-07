@@ -275,7 +275,7 @@ __resource_import() {
 		__log 1 "$_file_name successfully imported as a chyves $_resource_name resource."
 	else
 		__log 1 "Operation unsuccessful: delete the dataset and try again."
-		__resource_functions $_resource delete "$_folder_name"
+		__resource_delete $_resource "$_folder_name"
 	fi
 }
 
