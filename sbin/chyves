@@ -90,7 +90,7 @@
 ## ../lib/chyves-guest-snapshot              ## Functions that deal with chyves snapshots
 # __destroy_guest_snapshot()                  # Destroy guest snapshot(s)
 # __rollback_guest_snapshot()                 # Rollback guest snapshot
-# __snapshot_guest()                          # Creat a snapshot for guest
+# __snapshot_guest()                          # Create a snapshot for guest
 #
 ## ../lib/chyves-guest-start                 ## Functions for starting guests
 # __generate_bhyve_custom_pci_string()        # Generates a bhyve slot string for custom PCI devices

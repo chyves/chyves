@@ -65,7 +65,7 @@ __rollback_guest_snapshot() {
 	__log 1 "done."
 }
 
-# Creat a snapshot for guest
+# Create a snapshot for guest
 __snapshot_guest() {
 	local _snapshot_name="$1"
 	__log 1 "Taking recursive snapshot: $_snapshot_name"
