@@ -537,7 +537,11 @@ __start() {
 					__log 3 "Exit code for $_GP_loader guest '$_GUEST_name' was '$_loader_exit_code'"
 
 					# Only exit codes of "0" are properly functioning.
-					[ "$_loader_exit_code" -ne 0 ] && __fault_detected_exit "$_GP_loader exited with a '$_loader_exit_code' code. '0' is the expected code for proper booting. Halting boot process for $_GUEST_name."
+					if [ "$_loader_exit_code" -ne 0 ]; then
+						__log 2 "Reclaiming $_GUEST_name VMM resources... "
+						bhyvectl --destroy --vm=chy-$_guest
+						__fault_detected_exit "$_GP_loader exited with a '$_loader_exit_code' code. '0' is the expected code for proper booting. Halting boot process for $_GUEST_name."
+					fi
 				fi
 
 				# Execute bhyve - Blank variables just create additional whitespace which is ignored.
