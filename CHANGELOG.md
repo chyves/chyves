@@ -1,4 +1,22 @@
 
+#### Version 0.0.11 (2016 August 12)
+
+- Fixed issue with bhyve string for VNC frame buffer. [a0d68d7](https://github.com/chyves/chyves/commit/a0d68d77bfe9dde4a90117fd5d41fe9a4725121e)
+
+- Merged fix for incorrect UEFI firmware path when starting guest. Thanks to [Andrew D.](https://github.com/chyves/chyves/commit/). [bb60b4b](https://github.com/chyves/chyves/commit/bb60b4be309358fedc10eb85bdb9ac3fc2783733)
+
+- Fixed issue with when deleting guest. [8387e7e](https://github.com/chyves/chyves/commit/8387e7eebd560e1e62a501d977f47e530f71f0bd)
+
+- Committed to using keyword 'properties' rather than 'parameters' for guests qualities. [aae3376](https://github.com/chyves/chyves/commit/aae33768c98e307786018271e6c4cf2dc065c32e)
+
+- Fixed issue for `chyves info` with diskless guests. [9baf434](https://github.com/chyves/chyves/commit/9baf43405e6f56a2eb10f06cd41e2c4adb65966c)
+
+- Consolidate disk note/desc in synopsis. [a7d21a4](https://github.com/chyves/chyves/commit/a7d21a47e2ec505af99c677f781b7dd1f4e4c306)
+
+- Fixed issue referencing renamed functioned. [404e9dd](https://github.com/chyves/chyves/commit/404e9dd5255f56a99743994f95d68e8f72b7bdbb)
+
+- Added check for existence of local file when importing. [9680c23](https://github.com/chyves/chyves/commit/9680c236b90b9ff691bf192c40fb31dc75d6615a)
+
 #### Version 0.0.9 (2016 July 24)
 
 Fix.

@@ -1,4 +1,4 @@
-chyves(8) -- bhyve(8) front end manager -- version 0.0.9
+chyves(8) -- bhyve(8) front end manager -- version 0.0.11
 =============================================
 
 ## SYNOPSIS
