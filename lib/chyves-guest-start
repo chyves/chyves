@@ -254,7 +254,7 @@ __generate_bhyve_vnc_string() {
 	local _string _vnc_h_res _vnc_w_res
 
 	# IP & Port
-	local _string="2:fbuf,tcp=${_GP_uefi_vnc_ip}:${_GP_uefi_vnc_port}"
+	local _string="-s 2,fbuf,tcp=${_GP_uefi_vnc_ip}:${_GP_uefi_vnc_port}"
 
 	# Resolution
 	local _vnc_h_res="$( echo $_GP_uefi_vnc_res | cut -d'x' -f2 )"
