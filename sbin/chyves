@@ -159,6 +159,7 @@
 # __load_guest_parameter_single()             # Load single guest parameter from config file to $_GP_($_var)
 # __load_guest_parameters()                   # Load guest parameters to global variables
 # __load_one_guest_parameters()               # For use by commands which do not support multi-guest to load parameters ### THIS NEEDS TO BE RENAMED ###
+# __remove_property_in_guest_config_file()    # Remove property in guest config file.
 # __return_property_list()                    # Get all chyves properties that are set on the system
 # __return_property_value_from_config_file()  # Returns property value from config file.
 # __set()                                     # Frontend interface to set chyves properties

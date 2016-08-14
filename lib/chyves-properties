@@ -136,6 +136,35 @@ __load_one_guest_parameters() {
 	__load_guest_parameters $_GUEST_name
 }
 
+# Remove property in guest config file.
+__remove_property_in_guest_config_file() {
+	local _guests_list _property
+	local _guests_list="$1"          # This is script indexed.
+	local _property="$2"
+
+	# If keywoard "all" used, replace with all guest names in comma separated list.
+	[ "$_guests_list" = all ] && local _guests_list="$_GUEST_NAMES_ACTIVE"
+
+	# Multi-guest support.
+	# Eg.: chyves set cpu=8 guest1,guest2,guest3 ram=512M
+	for _guest in `echo "$_guests_list" | tr ',' ' '`
+	do
+		_GUEST_name="$_guest"
+		__gvset_guest_pool "$_GUEST_name"
+		_GUEST_config_file="/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg"
+
+		[ ! -e "$_GUEST_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
+
+		if [ -z "$( echo "$_property" | grep -E '^pcidev_[0-9]{1,3}$' )" ]; then
+			__fault_detected_warning_break 1 "Only 'pcidev_{n}' devices can be removed from guests."
+		else
+			__log 2 "Removing $_property property from $_GUEST_name"
+			echo "$( grep -v -E "^$_property=" $_GUEST_config_file )" > $_GUEST_config_file
+		fi
+
+	done
+}
+
 # Get all chyves properties that are set on the system
 __return_property_list() {
 	local _flags="$1"

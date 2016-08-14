@@ -28,6 +28,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.11
 * `chyves <guest>|MG|all start [<iso>]`
 * `chyves <guest>|MG|all stop [force]`
 * `chyves <guest>|MG|all upgrade`
+* `chyves <guest>|MG|all unset <pcidev_{n}>`
 * `chyves help`
 * `chyves info [-zbprvstcdnakl|-h]`
 * `chyves iso list`
@@ -539,6 +540,8 @@ Usage:
 
   The '`-S`' flag _must_ be appended to the current '`bargs`' guest property to wire the guest memory for PCI pass-through to work.
 
+  To remove a `pcidev_{n}` from a guest run: `chyves <guest>|MG|all unset <pcidev_{n}>`.
+
 * `ram`={n}[S]
 
   {n} is the number of bytes and [S] is the size denomination in "K" kilobytes, "M" megabytes,  "G" gigabytes, or "T" terabytes. Megabytes are assumed if no suffix is given.
@@ -877,6 +880,12 @@ These sub-commands manage UEFI firmware resources.
   `chyves <guest>|MG upgrade`
 
   Upgrades a guest to the latest chyves guest version. This add, removes, and modifies guest properties to be compatible with the the current version of chyves. See 'chyves_guest_version' guest property for details.
+
+	* `unset`
+
+	  `chyves <guest>|MG|all unset <pcidev_{n}>`
+
+	  Removes a pcidev_{n} device from a guest.
 
 ### GUEST CLONE SUB-SUB-COMMAND
 

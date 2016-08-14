@@ -116,6 +116,7 @@
 <li><code>chyves &lt;guest>|MG|all start [&lt;iso>]</code></li>
 <li><code>chyves &lt;guest>|MG|all stop [force]</code></li>
 <li><code>chyves &lt;guest>|MG|all upgrade</code></li>
+<li><code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code></li>
 <li><code>chyves help</code></li>
 <li><code>chyves info [-zbprvstcdnakl|-h]</code></li>
 <li><code>chyves iso list</code></li>
@@ -638,6 +639,8 @@ subclass   = Fibre Channel
 <p>A reboot is necessary after editing the <code>/boot/loader.conf</code>.</p>
 
 <p>The '<code>-S</code>' flag <em>must</em> be appended to the current '<code>bargs</code>' guest parameter to wire the guest memory for PCI pass-through to work.</p></li>
+
+<p>To remove a <code>pcidev_{n}</code> from a guest run: <code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code>.</p></li>
 <li><p><code>ram</code>={n}[S]</p>
 
 <p>{n} is the number of bytes and [S] is the size denomination in "K" kilobytes, "M" megabytes,  "G" gigabytes, or "T" terabytes. Megabytes are assumed if no suffix is given.</p></li>
@@ -980,6 +983,15 @@ subclass   = Fibre Channel
 <p><code>chyves &lt;guest>|MG upgrade</code></p>
 
 <p>Upgrades a guest to the latest chyves guest version. This add, removes, and modifies guest properties to be compatible with the the current version of chyves. See 'chyves_guest_version' guest property for details.</p></li>
+
+<ul>
+<li><p><code>unset</code></p>
+
+<p><code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code></p>
+
+<p>Removes a pcidev_{n} device from a guest.</p></li>
+</ul>
+</li>
 </ul>
 
 
@@ -1556,7 +1568,7 @@ chyves customgst start
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>July 2016</li>
+    <li class='tc'>August 13 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 
