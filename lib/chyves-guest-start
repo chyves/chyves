@@ -56,6 +56,8 @@ __generate_bhyve_custom_pci_string() {
 
 # Generates a bhyve slot string for disks
 __generate_bhyve_disk_string() {
+	local _counter_ver12=0
+	local _num_of_disks_counter=1
 
 	# Find number of disk for guest
 	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | sort -k1V )"
@@ -68,38 +70,82 @@ __generate_bhyve_disk_string() {
 	do
 
 		# Parse disk name for pulling property
-		local _disk_name="$( echo "$_disk_dataset" | cut -d'/' -f5 )"
+		local _disk_name="$( basename $_disk_dataset )"
 
 		# See man page Advanced Properties section for more info.
 		local _virtio_block_options=$( __return_property_value_from_config_file "guest" "virtio_block_options_$_disk_name" )
 
-		# Typical handling
-		if [ -z "$_virtio_block_options" ]; then
+		# FreeBSD version before 12-CURRENT host - Attach up to 8 disk through PCI functions per bhyve PCI slot.
+		if [ "$_OS_VERSION_DATE" -lt "1200000" ]; then
 
-			# Pull the blocksize on the ZFS volume to optimize performance.
-			#local _disk_blocksize="$( zfs get -H -p -o value volblocksize "$_disk_dataset" )"
-			#local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,sectorsize=$_disk_blocksize"
+			# Typical handling
+			if [ -z "$_virtio_block_options" ]; then
 
-			# Temporary as only 512 byte size works.
-			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset"
+				# Pull the blocksize on the ZFS volume to optimize performance.
+				#local _disk_blocksize="$( zfs get -H -p -o value volblocksize "$_disk_dataset" )"
+				#local _string="$_string ahci-hd,$_disk_dataset,sectorsize=$_disk_blocksize"
 
-		# Handling if the expert property (virtio_block_options) is set. See man page Advanced Properties section for more info.
-		else
-			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,$_virtio_block_options"
-			local _virtio_block_options=""
+				# Temporary as only 512 byte size works.
+				local _string="$_string ahci-hd,$_disk_dataset"
+
+			# Handling if the expert property (virtio_block_options) is set. See man page Advanced Properties section for more info.
+			else
+				local _string="$_string ahci-hd,$_disk_dataset,$_virtio_block_options"
+				local _virtio_block_options=""
+			fi
+
+		# FreeBSD 12-CURRENT or later host - Attach up to 32 disks to one ahci controller, new syntax makes this complicated.
+		elif [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+
+			# Only disk handling
+			if [ "$_num_of_disks" = 1 ]; then
+				local _string="ahci,hd:$_disk_dataset"
+				__generate_bhyve_slot_string $_string 1
+				local _bhyve_disk_string_stage2="$_BHYVE_slot_string"
+
+			# First disk of multiple
+			elif [ "$_counter_ver12" = 0 ]; then
+				local _string="ahci,hd:$_disk_dataset"
+				local _counter_ver12="$( expr 1 + $_counter_ver12 )"
+
+			# Last disk of multiple
+			elif [ "$_counter_ver12" = 31 ] || [ "$_num_of_disks" = "$_num_of_disks_counter" ]; then
+
+				local _string="${_string},hd:$_disk_dataset"
+
+				__generate_bhyve_slot_string $_string 1
+				local _bhyve_disk_string_stage2="$_bhyve_disk_string_stage2 $_BHYVE_slot_string"
+				local _string=""
+				local _counter_ver12=0
+
+			# Not first or last of multiple disks
+			else
+				local _string="${_string},hd:$_disk_dataset"
+				local _counter_ver12="$( expr 1 + $_counter_ver12 )"
+			fi
+
+			local _num_of_disks_counter="$( expr 1 + $_num_of_disks_counter )"
 		fi
 	done
 
-	# UEFI can only use PCI slots 3-7 for ACHI devices, PCI slot 3 is used for optical, 3 slots remaining for disks.
-	if [ "$_GP_loader" = "uefi" ] && [ "$_num_of_disks" -gt 3 ]; then
-		__generate_bhyve_slot_string $_string 3
+	# FreeBSD version before 12-CURRENT need to generate the bhyve PCI string.
+	if [ "$_OS_VERSION_DATE" -lt "1200000" ]; then
 
-	# Other loader types do no have this restriction.
-	else
-		__generate_bhyve_slot_string "$_string"
+		# UEFI can only use PCI slots 3-7 for ACHI devices, PCI slot 3 is used for optical, 3 slots remaining for disks.
+		if [ "$_GP_loader" = "uefi" ] && [ "$_num_of_disks" -gt 3 ]; then
+			__generate_bhyve_slot_string $_string 3
+
+		# Other loader types do no have this restriction.
+		else
+			__generate_bhyve_slot_string "$_string"
+		fi
+
+		_BHYVE_disk_string="$_BHYVE_slot_string"
+
+	# FreeBSD 12-CURRENT or later hosts already have generated the bhyve PCI string.
+	elif [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+		_BHYVE_disk_string="$_bhyve_disk_string_stage2"
 	fi
-
-	_BHYVE_disk_string="$_BHYVE_slot_string"
 }
 
 # Generate bhyve slot string for network devices.
