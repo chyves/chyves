@@ -738,8 +738,12 @@ subclass   = Fibre Channel
 <p>Defaults and initial values:</p>
 
 <ul>
-<li><code>bargs</code>="-A -H -P"</li>
-<li><code>bhyve_net_type</code>="virtio-net"</li>
+<li><p><code>bargs</code></p>
+
+<p>"-A -H -P" - default for guests running on FreeBSD less than 10.3.</p>
+
+<p>"-A -H -P -S" - default for guests running on FreeBSD 10.3 or later.</p></li>
+<li><p><code>bhyve_net_type</code>="virtio-net"</p></li>
 <li><p><code>bridge</code>="bridge0"</p>
 
 <p>Used to set the bridge to join tap interfaces to for new guests.</p></li>
@@ -1570,7 +1574,7 @@ chyves customgst start
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>August 13 2016</li>
+    <li class='tc'>August 14 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

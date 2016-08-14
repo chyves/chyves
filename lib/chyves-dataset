@@ -58,7 +58,6 @@ __dataset_install() {
 		zfs create $_PRIMARY_POOL/chyves/ISO
 
 		__log 2 "Creating guest defaults dataset and properties..."
-		__write_property_value_to_config_file "defaults" "bargs"           "-A -H -P"
 		__write_property_value_to_config_file "defaults" "bhyve_net_type"  "virtio-net"
 		__write_property_value_to_config_file "defaults" "bridge"          "bridge0"
 		__write_property_value_to_config_file "defaults" "cpu"             "1"
@@ -68,7 +67,14 @@ __dataset_install() {
 		__write_property_value_to_config_file "defaults" "rcboot"          "0"
 		__write_property_value_to_config_file "defaults" "size"            "8G"
 		__write_property_value_to_config_file "defaults" "template"        "no"
+		# Hosts on FreeBSD 10.3 or above need to use the "-S" bhyve wire memory flag otherwise fun stuff happens at memory starvation.
+		if [ "$_OS_VERSION_DATE" -lt "1003000" ];
+			local _bhyve_args="-A -H -P"
+		else
+			local _bhyve_args="-A -H -P -S"
+		fi
 
+		__write_property_value_to_config_file "defaults" "bargs"                                "$_bhyve_args"
 		__write_property_value_to_config_file "defaults" "uefi_console_output"                  "serial"
 		__write_property_value_to_config_file "defaults" "uefi_firmware"                        "-"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_client"                      "print"

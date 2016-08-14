@@ -652,7 +652,12 @@ Usage:
 
 Defaults and initial values:
 
-* `bargs`="-A -H -P"
+* `bargs`
+
+  "-A -H -P" - default for guests running on FreeBSD less than 10.3.
+
+  "-A -H -P -S" - default for guests running on FreeBSD 10.3 or later.
+
 * `bhyve_net_type`="virtio-net"
 * `bridge`="bridge0"
 
