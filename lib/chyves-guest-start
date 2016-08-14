@@ -83,7 +83,7 @@ __generate_bhyve_disk_string() {
 			# Temporary as only 512 byte size works.
 			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset"
 
-		# Handling if the expert property (virtio_block_options) is set. See man page Manually Setting Properties section for more info.
+		# Handling if the expert property (virtio_block_options) is set. See man page Advanced Properties section for more info.
 		else
 			local _string="$_string ahci-hd,/dev/zvol/$_disk_dataset,$_virtio_block_options"
 			local _virtio_block_options=""
@@ -163,7 +163,7 @@ __generate_bhyve_slot_string() {
 	local _max_slot_count=1                                                  # Seeds counter used to ensure maximum slots are not exceeded.
 	local _num_devices="$( echo $_in_string | tr ' ' '\n' | grep -c "" )"    # Number of devices to connect from $_in_string, implies slot usage
 	local _func=0                                                            # Seeds PCI function number
-	local _device_counter=0                                                  # Seeds PCI function number
+	local _device_counter=0                                                  # Seeds counter
 
 	# Return when empty string is provided but erase $_BHYVE_slot_string beforehand.
 	[ -z "$_in_string" ] && _BHYVE_slot_string="" && return 0
