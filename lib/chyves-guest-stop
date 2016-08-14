@@ -73,7 +73,7 @@ __stop_guest_loader() {
 			__log 1 "Killing existing grub-bhyve process for guest ($_bhyveload_process_id)."
 			kill $_grub_bhyve_process_id
 		fi
-	elif [ "$_GP_loader" = "grub-bhyve" ]; then
+	elif [ "$_GP_loader" = "uefi" ]; then
 		__log 3 "No UEFI loader to kill because it is ran within bhyve."
 	else
 		__log 3 "[HELPHELPIAMATURTLE] This should not happen, \$_GP_loader ('$_GP_loader') is likely null. Inside __stop_guest_loader."
