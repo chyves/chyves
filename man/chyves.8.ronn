@@ -833,6 +833,10 @@ These sub-commands manage UEFI firmware resources.
 
   Permanently delete a guest from the host. If the 'force' keyword is used, then dependent clones are deleted as well. The 'keepnet' keyword is used to keep the network associations, this is useful for clones that share the exact properties.
 
+* `disk`
+
+  See [GUEST DISK SUB-SUB-COMMANDS][] section below.
+
 * `get`
 
   `chyves <guest> get {<property>|all}`
@@ -945,7 +949,7 @@ Manage a guest through a console using various methods described below. The prim
   Requires a UEFI guest that is configured for VNC use on a host that supports UEFI graphics support. See [UEFI SUPPORT][] above. Opens a X11 VNC client to the guest using the `uefi_vnc_client_*` global properties. See [VNC CLIENT SUPPORT][] section above.
 
 ### GUEST DISK SUB-SUB-COMMANDS
-These sub commands deal with a guest's disk. Multi-guest is not supported for these sub-comands.
+These sub-commands deal with a guest's disk, multi-guest is not supported.
 
 * `add`
 
