@@ -211,7 +211,6 @@ __return_property_value_from_config_file() {
 		local _config_file="$_DEFAULT_CONFIG_FILE"
 	elif [ "$_type" = "guest" ]; then
 		local _config_file="$_GUEST_config_file"
-		local _guest_message="for guest $_GUEST_name"
 	elif [ "$_type" = "manual" ]; then
 		local _config_file="$_manual_declare"
 	fi
