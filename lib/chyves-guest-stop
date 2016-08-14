@@ -35,7 +35,18 @@ __stop_guest_gracefully() {
 	# Eg.: chyves guest1,guest2,guest3 stop
 	for _guest in `echo "$_guest_list" | tr ',' ' '`
 	do
+		_GUEST_name="$_guest"
+		__gvset_guest_pool
+		_GUEST_config_file="/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg"
 
+		# Saves a lot of diagnostic trouble to kill the loader processes with this command.
+		__load_guest_parameter_single "loader"
+		if [ "$_GP_loader" = "bhyveload" ] || [ "$_GP_loader" = "grub-bhyve" ]; then
+			__log 2 "Checking if loader ('$_GP_loader') is running for guest"
+			__stop_guest_loader
+		fi
+
+		# Stop bhyve process for guest
 		local _pid=$(pgrep -fx "bhyve: chy-$_guest")
 		if [ -n "$_pid" ]; then
 			__log 1 "Stopping $_guest..."
