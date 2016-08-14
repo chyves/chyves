@@ -105,6 +105,7 @@
 #
 ## ../lib/chyves-guest-stop                  ## Functions for stopping and recovering VMM resouces.
 # __stop_guest_gracefully()                   # Gracefully stop a guest
+# __stop_guest_loader()                       # Stops a guest's loader
 # __destroy_guest_vmm_resouces()              # Reclaims a guest's VMM resources and also force an unclean shutdown.
 #
 ## ../lib/chyves-informational               ## Functions to display information about chyves to the user
