@@ -46,6 +46,29 @@ __stop_guest_gracefully() {
 	done
 }
 
+# Stops a guest's loader
+__stop_guest_loader() {
+
+	# Check if loader is running.
+	if [ "$_GP_loader" = "bhyveload" ]; then
+		local _bhyveload_process_id="$( __return_guest_bhyveload_pid )"
+		if [ -n "$_bhyveload_process_id" ]; then
+			__log 1 "Killing existing bhyveload process for guest ($_bhyveload_process_id)."
+			kill $_bhyveload_process_id
+		fi
+	elif [ "$_GP_loader" = "grub-bhyve" ]; then
+		local _grub_bhyve_process_id="$( __return_guest_grub_bhyve_pid )"
+		if [ -n "$_grub_bhyve_process_id" ]; then
+			__log 1 "Killing existing grub-bhyve process for guest ($_bhyveload_process_id)."
+			kill $_grub_bhyve_process_id
+		fi
+	elif [ "$_GP_loader" = "grub-bhyve" ]; then
+		__log 3 "No UEFI loader to kill because it is ran within bhyve."
+	else
+		__log 3 "[HELPHELPIAMATURTLE] This should not happen, \$_GP_loader ('$_GP_loader') is likely null. Inside __stop_guest_loader."
+	fi
+}
+
 # Reclaims a guest's VMM resources and also force an unclean shutdown.
 __destroy_guest_vmm_resouces() {
 	local _guest_list="$1"

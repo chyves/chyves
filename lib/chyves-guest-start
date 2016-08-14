@@ -401,19 +401,8 @@ __start() {
 		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running.\n"
 		__log 2 "not running."
 
-		if [ "$_GP_loader" = "bhyveload" ]; then
-			local _bhyveload_process_id="$( __return_guest_bhyveload_pid )"
-			if [ -n "$_bhyveload_process_id" ]; then
-				__log 1 "Killing existing bhyveload process for guest ($_bhyveload_process_id)."
-				kill $_bhyveload_process_id
-			fi
-		elif [ "$_GP_loader" = "grub-bhyve" ]; then
-			local _grub_bhyve_process_id="$( __return_guest_grub_bhyve_pid )"
-			if [ -n "$_grub_bhyve_process_id" ]; then
-				__log 1 "Killing existing grub-bhyve process for guest ($_bhyveload_process_id)."
-				kill $_grub_bhyve_process_id
-			fi
-		fi
+		# Check and stop if loader is already running.
+		__stop_guest_loader
 
 		__log 2 "Checking if VMM resources allocated... " -n
 		[ "$( __return_guest_vmm_allocated )" ] && __fault_detected_exit "\nVMM resources already allocated. Please reclaim the VMM resources before starting the guest with: 'chyves $_GUEST_name reclaim'"
