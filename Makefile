@@ -68,4 +68,14 @@ rcremove:
 	-/usr/sbin/sysrc -q -x $(PROJECT_NAME)_enable
 	-/usr/sbin/sysrc -q -x $(PROJECT_NAME)_flags
 
+what:
+	@echo "make directives for $(PROJECT_NAME):"
+	@echo "make clean      - Removes $(MAN_FILE).gz file for developers using git"
+	@echo "make docs       - Runs the '$(RONN)' command to build the roff and html document files. Requires Ruby gem '$(RONN)'"
+	@echo "make install    - Installs $(PROJECT_NAME) to '$(PREFIX)'."
+	@echo "make installrc  - Enables '$(PROJECT_NAME)_enable=YES' in '/etc/rc.conf' using 'sysrc'."
+	@echo "make deinstall  - Remove $(PROJECT_NAME) from '$(PREFIX)'."
+	@echo "make rcremove   - Removes '$(PROJECT_NAME)_enable=YES' from '/etc/rc.conf' using 'sysrc'."
+	@echo "make what       - Prints this."
+
 .include <bsd.prog.mk>
