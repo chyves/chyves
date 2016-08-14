@@ -359,7 +359,7 @@ EOT
 		for _guest in $_guest_list
 		do
 			__load_guest_parameters $_guest
-			local _size="$( zfs get -H -o value usedbychildren $_GUEST_pool/chyves/guests/$_GUEST_name )"
+			local _size="$( zfs get -H -o value used $_GUEST_pool/chyves/guests/$_GUEST_name )"
 
 			# Print common section (guest, size, cpu, raml)
 			printf "%s^%s^%s^%s^%s" "$_GUEST_name"
