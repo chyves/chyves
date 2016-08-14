@@ -269,7 +269,7 @@ __set() {
 
 			# Parse property name and desired value from $arg (aka positional parameter)
 			local _prop="$( echo $arg | cut -d '=' -f1 )"
-			local _val="$( echo $arg | cut -d '=' -f2 )"
+			local _val="$( echo $arg | cut -d '=' -f2- )"
 
 			__verify_user_input_for_properties "$_prop" "$_val" "$_type"
 
