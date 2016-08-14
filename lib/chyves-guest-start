@@ -171,12 +171,26 @@ __generate_bhyve_slot_string() {
 	# Populate $_PCI_slot if empty.
 	[ -z "$_PCI_slot" ] && _PCI_slot="$_PCI_SLOT_START"
 
-	# This will dwindle down the number of max device if not specified.
-	[ -z "$_max_slot" ] && local _max_slot=$( expr 30 - $_PCI_slot )
+	# When on PCI slot 30 or 31, max slot is '1' otherwise dwindle down the number of max slot when not specified.
+	if [ -z "$_max_slot" ]; then
+		if [ "$_PCI_slot" -ge 30 ]; then
+			local _max_slot=1
+		else
+			local _max_slot=$( expr 30 - $_PCI_slot )
+		fi
+	fi
+
+	# Do not attempt to attach anything after bhyve PCI slot 30.
+	if [ "$_PCI_slot" -gt 30 ]; then
+		__log 1 "No additional bhyve PCI slots are available, can not attach: $_in_string"
+		__log 1 "To consolidate similar devices to same PCI slot, run: 'chyves global set consolidate_bhyve_pci_devices=yes'"
+		_BHYVE_slot_string="" # Need to void out current value.
+		return 1
+	fi
 
 	# Choose whether or not to use PCI functions or only use on device per slot
 	if [ "$_num_devices" -gt "$_max_slot" ] || [ "$_use_pci_funcions" = "yes" ]; then
-		local _per_slot=$( expr $_max_slot / $_num_devices )
+		local _per_slot=$( expr $_num_devices / $_max_slot )
 
 		# Tell user that chyves can not exceed bhyve's eight PCI functions per PCI slot limit.
 		if [ "$_per_slot" -gt 7 ] || [ "$_use_pci_funcions" = "yes" ]; then
