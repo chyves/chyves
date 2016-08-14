@@ -28,9 +28,9 @@ __add_guest_disk() {
 	local _size="$1"
 	__generate_zvol_disk_options_string
 	__get_next_disk_number
-	__load_guest_default_parameters
 
 	if [ -z "$_size" ]; then
+		__load_guest_default_parameters
 		local _size="$_GDP_size"
 	fi
 
