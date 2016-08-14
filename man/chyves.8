@@ -108,7 +108,7 @@
 \fBchyves iso delete <iso>\fR
 .
 .IP "\(bu" 4
-\fBchyves list [bridges|clones|defaults|disks|firmware|iso|pools|properties|<property>]\fR
+\fBchyves list [bridges|clones|defaults|disks|firmware|iso|pools|\e properties|<property>]\fR
 .
 .IP "\(bu" 4
 \fBchyves list global [<pool>|primary]\fR
@@ -264,13 +264,13 @@ At least one ZFS pool is required\. All data is stored on one or many ZFS pools 
 bhyve(8) is dependent on hardware virtualization CPU features\. One feature is called Second Level Address Translation (SLAT), also known as nested paging\. Intel\'s implementation is called Extended Page Tables (EPT) and AMD\'s implementation is called Rapid Virtualization Indexing (RVI)\. This CPU feature is referenced as \'POPCNT\' in dmesg(8) under \'Features2:\' line\. There is an early series of CPUs from Intel (Xeon 5500) that has most of the necessary virtualization capabilities but lack a feature Intel later implemented called unrestricted guest (\'\fBUG\fR\' in dmesg(8) under "VT\-x:")\. Without this feature bhyve is limited to FreeBSD guests with only one CPU core\. AMD has the \'\fBUG\fR\' functionality in all of it\'s RVI implementations\.
 .
 .P
-PCI Pass\-through support is also provided through another sub\-set of hardware virtualization CPU features called I/O MMU virtualization\. Intel calls their implementation \'\fBVT\-d\fR\' and AMD calls their implementation \'\fBAMD\-Vi\fR\'\. See the \fBpcidev_{n}\fR parameter under \fIGuest Parameters\fR section for instructions on attaching PCI pass\-through devices\. A check is ran before starting a guest that has PCI pass\-through devices configured and will not start the guest if the host does not have the necessary CPU feature\.
+PCI Pass\-through support is also provided through another sub\-set of hardware virtualization CPU features called I/O MMU virtualization\. Intel calls their implementation \'\fBVT\-d\fR\' and AMD calls their implementation \'\fBAMD\-Vi\fR\'\. See the \fBpcidev_{n}\fR property under \fIGuest Properties\fR section for instructions on attaching PCI pass\-through devices\. A check is ran before starting a guest that has PCI pass\-through devices configured and will not start the guest if the host does not have the necessary CPU feature\.
 .
 .SH "ZFS"
-As mentioned in the \fIDEPENDENCIES\fR section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool\. There are many features that rely on ZFS, such as cloning\. The ISO, UEFI firmware, and guest resources and parameters are stored within ZFS datasets\.
+As mentioned in the \fIDEPENDENCIES\fR section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool\. There are many features that rely on ZFS, such as cloning\. The ISO, UEFI firmware, and guest resources and properties are stored within ZFS datasets\.
 .
 .P
-Single and multiple ZFS pools are supported, there is no loss in functionality for either\. \fBchyves\fR datasets get mounted to \'/chyves/\fIpool\fR\'\. The \'/chyves\' directory itself is stored on \'/\' and does not belong to any of the chyves datasets\. The first pool is assigned the primary pool role but this can be changed afterwards\. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global parameters, and the comprehensive logs\. The primary pool can be changed with \fBchyves dataset <new\-prim\-pool> promote\fR which moves the resources and global configuration to \fB<new\-prim\-pool>\fR from the current primary pool\.
+Single and multiple ZFS pools are supported, there is no loss in functionality for either\. \fBchyves\fR datasets get mounted to \'/chyves/\fIpool\fR\'\. The \'/chyves\' directory itself is stored on \'/\' and does not belong to any of the chyves datasets\. The first pool is assigned the primary pool role but this can be changed afterwards\. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs\. The primary pool can be changed with \fBchyves dataset <new\-prim\-pool> promote\fR which moves the resources and global configuration to \fB<new\-prim\-pool>\fR from the current primary pool\.
 .
 .P
 See \fIDATASET SUB\-COMMANDS\fR section below for managing the \fBchyves\fR datasets\.
@@ -295,7 +295,7 @@ Example of a multi\-pool folder structure:
                  /\.config                                   # Dataset
                  /\.config/global\.cfg                        # File
                  /\.config/pool\.cfg                          # File
-                                  pool_role=primary         # Pool parameter
+                                  pool_role=primary         # Pool property
                  /logs                                      # Dataset
                  /logs/YYYYMM\.log                           # Files
                  /ISO                                       # Datasets
@@ -307,7 +307,7 @@ Example of a multi\-pool folder structure:
                  /guests/<guest3>/log/YYYYMM\.log            # Files
                  /\.config                                   # Dataset
                  /\.config/pool\.cfg                          # File
-                                  pool_role=secondary       # Pool parameter
+                                  pool_role=secondary       # Pool property
 /chyves/anther_pl/guests
                  /guests/<guest4>/\.config/\.cfg              # File
                  /guests/<guest4>/disk{n}                   # Volumes
@@ -315,14 +315,14 @@ Example of a multi\-pool folder structure:
                  /guests/<guest4>/log/YYYYMM\.log            # Files
                  /\.config                                   # Dataset
                  /\.config/pool\.cfg                          # File
-                                  pool_role=secondary       # Pool parameter
+                                  pool_role=secondary       # Pool property
 .
 .fi
 .
 .IP "" 0
 .
 .P
-Offline dataset: offlinePL/chyves_offline # Datasets offlinePL/chyves_offline/\.config/pool\.cfg # File pool_role=offline # Pool parameter
+Offline dataset: offlinePL/chyves_offline # Datasets offlinePL/chyves_offline/\.config/pool\.cfg # File pool_role=offline # Pool property
 .
 .P
 Example of a single pool dataset hierarchy:
@@ -339,7 +339,7 @@ Example of a single pool dataset hierarchy:
                /\.config                                     # Dataset
                /\.config/global\.cfg                          # File
                /\.config/pool\.cfg                            # File
-                                pool_role=primary           # Pool parameter
+                                pool_role=primary           # Pool property
                /logs                                        # Dataset
                /ISO                                         # Datasets
                /Firmware                                    # Datasets
@@ -383,25 +383,25 @@ On a fresh simple installation, the only command needed is \'chyves network brid
 As indicated above, tap interfaces are attached to a bridge, which optionally can be attached to a physical or vlan interface\. If the bridge is not associated with a physical or vlan interface, the bridge must be put into \'private\' mode\. This is done by running \'chyves network bridge64 private\'\. A private bridge allows sensitive traffic to transverse the bridge without the possibility of traffic being monitored from an outside network\. A private bridge can also use pf(4) for NAT capabilities but this is not built into chyves\.
 .
 .SS "SYSTEM DESIGN NETWORK MODE"
-The \'system\' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices\. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the \'net_ifaces\' parameter\.
+The \'system\' mode assumes the user will correctly create and configure all devices on the host system, including the tap devices\. No checks are ran to test connectivity and chyves simply attaches tap or VALE interfaces to the guest as configured in the \'net_ifaces\' property\.
 .
 .P
 Converting from \'system\' to \'auto\' will not automatically start to work\. Each device will need to be manually associated with each other\.
 .
-.SH "PARAMETERS"
-There are four types of chyves parameters: global configuration parameters, pool parameters, per\-guest parameters, and default guest parameters\. Each is stored in a file in the chyves dataset hierarchy\. \fBIt is not recommended to directly edit the \'*\.cfg\' files, this is because there are no filters to stop typos, warn for incorrect parameter names, or invalid values\.\fR The filter is only applied when running the \'chyves \fIguest\fR set\' command and not rechecked when pulling the values from the files\.
+.SH "PROPERTIES"
+There are four types of chyves properties: global configuration properties, pool properties, per\-guest properties, and default guest properties\. Each is stored in a file in the chyves dataset hierarchy\. \fBIt is not recommended to directly edit the \'*\.cfg\' files, this is because there are no filters to stop typos, warn for incorrect property names, or invalid values\.\fR The filter is only applied when running the \'chyves \fIguest\fR set\' command and not rechecked when pulling the values from the files\.
 .
 .P
-Also certain actions are triggered when setting certain parameters\. For example, setting the \'\fBtemplate\fR\' guest parameter will set or unset the \fIreadonly\fR flag on the ZFS dataset\.
+Also certain actions are triggered when setting certain properties\. For example, setting the \'\fBtemplate\fR\' guest property will set or unset the \fIreadonly\fR flag on the ZFS dataset\.
 .
 .P
 The pool configuration is stored in a file at \'/chyves/\fIpool\fR/\.config/pool\.cfg\'\. On the primary pool there is also a file in the same directory called \'global\.cfg\', this contains the global settings for chyves\.
 .
 .P
-The \'dataset_role\' setting is used to store the role of that pool containing the chyves datasets\. Valid values are primary, secondary, and offline\. Only one \'primary\' dataset can be configured per system\. The primary dataset is the only dataset that contains the ISO and firmware resources\. The primary pool also has the only dataset for guest defaults\. These defaults are referenced when setting parameters for new guests\. The primary pool is also where new guests are created when the [\fIpool\fR] argument is not declared with \'chyves create\' command\. All other active pools are set to the "secondary" role\. Pools set to the \'offline\' role are left untouched and is a good role to put a local replicated backup\. The primary pool is critical to the operation of chyves\. Without a primary pool set, only the \'dataset\' sub\-command is allowed to run\. The first pool to be setup on the system is the primary pool\. This can be changed later with \'chyves dataset \fIpool\fR promote\'\.
+The \'dataset_role\' setting is used to store the role of that pool containing the chyves datasets\. Valid values are primary, secondary, and offline\. Only one \'primary\' dataset can be configured per system\. The primary dataset is the only dataset that contains the ISO and firmware resources\. The primary pool also has the only dataset for guest defaults\. These defaults are referenced when setting properties for new guests\. The primary pool is also where new guests are created when the [\fIpool\fR] argument is not declared with \'chyves create\' command\. All other active pools are set to the "secondary" role\. Pools set to the \'offline\' role are left untouched and is a good role to put a local replicated backup\. The primary pool is critical to the operation of chyves\. Without a primary pool set, only the \'dataset\' sub\-command is allowed to run\. The first pool to be setup on the system is the primary pool\. This can be changed later with \'chyves dataset \fIpool\fR promote\'\.
 .
-.SS "Pool Parameters"
-These parameters keeps track of the version of the dataset and the role\. With multiple pools, defined per\-pool roles are necessary\. This is defined through the use of a dataset called \'\fIpool\fR/chyves/\.config\' where the pool specific parameters (\fBpool\.cfg\fR) are stored\.
+.SS "Pool Properties"
+These properties keeps track of the version of the dataset and the role\. With multiple pools, defined per\-pool roles are necessary\. This is defined through the use of a dataset called \'\fIpool\fR/chyves/\.config\' where the pool specific properties (\fBpool\.cfg\fR) are stored\.
 .
 .IP "\(bu" 4
 \fBdataset_role={primary|secondary|offline}\fR
@@ -413,7 +413,7 @@ These parameters keeps track of the version of the dataset and the role\. With m
 Vital in multi\-pool configurations, each role type has different characteristics as explained below:
 .
 .IP
-\fBprimary\fR \- Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources\. Reference point for global parameters\. New guest are defaulted to be created on this pool unless otherwise specified as a parameter for \'chyves create\'\. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations\.
+\fBprimary\fR \- Pools in this role are utilized exclusively for the following purposes: Store ISO and Firmware resources\. Reference point for global properties\. New guest are defaulted to be created on this pool unless otherwise specified as a property for \'chyves create\'\. Only one ZFS pool can be in the primary role per system and is the only role for single zpool configurations\.
 .
 .IP
 \fBsecondary\fR \- Pools in this role are utilized for storing other active guests not stored on the primary ZFS pool\.
@@ -428,15 +428,15 @@ Vital in multi\-pool configurations, each role type has different characteristic
 \fBManaged through \'chyves dataset\' commands\.\fR
 .
 .IP
-This parameter indicates the current version of the chyves pool\. This an upgrade mechanism to ensure the dataset and it\'s child datasets contain the correct architecture\. The command \'chyves dataset \fIpool\fR upgrade\' brings a dataset incrementally to the latest version when there is a discrepancy between the dataset version and the chyves version\. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves\.
+This property indicates the current version of the chyves pool\. This an upgrade mechanism to ensure the dataset and it\'s child datasets contain the correct architecture\. The command \'chyves dataset \fIpool\fR upgrade\' brings a dataset incrementally to the latest version when there is a discrepancy between the dataset version and the chyves version\. A check is ran before execution to ensure the version of the pool is compatible with the version of chyves\.
 .
 .IP "" 0
 .
-.SS "Global Configuration Parameters"
-These parameters control the behavior of chyves\.
+.SS "Global Configuration Properties"
+These properties control the behavior of chyves\.
 .
 .P
-Many of these global parameters are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as \'\fBchyves network\fR\'\. The preferred management method is given on the first line after each parameter in bold text\.
+Many of these global properties are not recommended to be changed directly unless the scope of their impact is understood or when managed through subcommands such as \'\fBchyves network\fR\'\. The preferred management method is given on the first line after each property in bold text\.
 .
 .P
 Usage:
@@ -448,7 +448,7 @@ Usage:
 \fBchyves list global [<pool>]\fR
 .
 .P
-Parameters:
+Properties:
 .
 .IP "\(bu" 4
 \fBauto_load_kernel_mods\fR={yes|no}
@@ -607,7 +607,7 @@ The default is \'auto\', which means chyves manages everything above the physica
 \fBUser managed and settable, advanced feature\.\fR
 .
 .IP
-Setting to "on" allows for new parameters to be created with \'chyves set\'\. The default is set to "off" to prevent creating new parameters due to typos\. Even when set to \'on\' this will not allow a creation of new global or defaults parameters\.
+Setting to "on" allows for new properties to be created with \'chyves set\'\. The default is set to "off" to prevent creating new properties due to typos\. Even when set to \'on\' this will not allow a creation of new global or defaults properties\.
 .
 .IP "\(bu" 4
 \fBstdout_level\fR={0\-3}
@@ -668,8 +668,8 @@ This is a compatibility mechanism used to offset the first VNC port used by UEFI
 .
 .IP "" 0
 .
-.SS "Guest Parameters"
-These are parameters used by chyves to specify the parameters to pass to bhyve, grub\-bhyve, and chyves itself when starting a guest\. Changing these values on a running guest will not yield any change until the guest is completely stop and then started again\.
+.SS "Guest Properties"
+These are properties used by chyves to specify the properties to pass to bhyve, grub\-bhyve, and chyves itself when starting a guest\. Changing these values on a running guest will not yield any change until the guest is completely stop and then started again\.
 .
 .P
 Usage:
@@ -717,7 +717,7 @@ Sets number {n} of cpu cores to use, up to 16\.
 \fBManaged through \'chyves \fIguest\fR upgrade\' command\.\fR
 .
 .IP
-Used to ensure the guest contains latest parameters when moved between hosts on different versions of chyves\. "MM" signifies the major version as an integer and "mm" as the minor version as an integer\. Changes to the major version require an upgrade via \'chyves \fIguest\fR upgrade\' because a guest property value format has changed or a new required property was added\. Differences in the minor version do no require an upgrade but may not have full functionality\.
+Used to ensure the guest contains latest properties when moved between hosts on different versions of chyves\. "MM" signifies the major version as an integer and "mm" as the minor version as an integer\. Changes to the major version require an upgrade via \'chyves \fIguest\fR upgrade\' because a guest property value format has changed or a new required property was added\. Differences in the minor version do no require an upgrade but may not have full functionality\.
 .
 .IP "\(bu" 4
 \fBdescription\fR="\fIINSERT BRIEF DESCRIPTION\fR"
@@ -732,7 +732,7 @@ Used to describe guest\. Use double quotes when description contains spaces\.
 Tells which loader to use to boot guest\. \fBbhyveload\fR is for FreeBSD based guests, \fBuefi\fR is used for UEFI based guests, and \fBgrub\-bhyve\fR is used for all other guests\.
 .
 .IP
-When setting a guest to use the \fBuefi\fR loader, some \fBuefi_*\fR parameters are populated\. One of these parameters is \fBuefi_firmware\fR which is required for guests to start\.
+When setting a guest to use the \fBuefi\fR loader, some \fBuefi_*\fR properties are populated\. One of these properties is \fBuefi_firmware\fR which is required for guests to start\.
 .
 .IP "\(bu" 4
 \fBnet_ifaces\fR=tap{n}|vale{n}[:{p}]
@@ -771,7 +771,7 @@ Used to further describe guests\. Use double quotes when description contains sp
 \fBos\fR=\fIoperating\-system\fR
 .
 .IP
-Used to determine the parameters to use for the \fBgrub\.cfg\fR and \fBdevice\.map\fR files when the \fBloader\fR parameter is set to \fBgrub\-bhyve\fR\.
+Used to determine the properties to use for the \fBgrub\.cfg\fR and \fBdevice\.map\fR files when the \fBloader\fR property is set to \fBgrub\-bhyve\fR\.
 .
 .IP
 Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom\. Any other values are invalid\. \fBdefault\fR is the generic catch\-all value\.
@@ -834,10 +834,10 @@ The \fBchyves\fR project welcomes any OS submissions to help other users from re
 \fBpcidev_{n}\fR={bhyve\-pci\-dev}
 .
 .IP
-This is an advance feature and assumes you have read bhyve(8) AND understood it\. This parameter does NOT have a complete input verification suite or complete host support verification\.
+This is an advance feature and assumes you have read bhyve(8) AND understood it\. This property does NOT have a complete input verification suite or complete host support verification\.
 .
 .IP
-This parameter attaches a bhyve PCI device to the guest\. The \'{n}\' is completely arbitrary number and is only a matter of the order of attachment\. \'{bhyve\-pci\-dev}\' is the bhyve PCI device to attach\. See bhyve(8) for a complete list or below for common uses\.
+This property attaches a bhyve PCI device to the guest\. The \'{n}\' is completely arbitrary number and is only a matter of the order of attachment\. \'{bhyve\-pci\-dev}\' is the bhyve PCI device to attach\. See bhyve(8) for a complete list or below for common uses\.
 .
 .IP
 \fBchyves\fR attaches each custom PCI device alone on the PCI bus, except for pass\-through devices\.
@@ -930,7 +930,7 @@ pptdevs="9/0/0 9/0/1"
 A reboot is necessary after editing the \fB/boot/loader\.conf\fR\.
 .
 .IP
-The \'\fB\-S\fR\' flag \fImust\fR be appended to the current \'\fBbargs\fR\' guest parameter to wire the guest memory for PCI pass\-through to work\.
+The \'\fB\-S\fR\' flag \fImust\fR be appended to the current \'\fBbargs\fR\' guest property to wire the guest memory for PCI pass\-through to work\.
 .
 .IP
 To remove a \fBpcidev_{n}\fR from a guest run: \fBchyves <guest>|MG|all unset <pcidev_{n}>\fR\.
@@ -947,7 +947,6 @@ To remove a \fBpcidev_{n}\fR from a guest run: \fBchyves <guest>|MG|all unset <p
 .IP
 Any non\-zero number tells chyves to start the guest upon host boot when the \'chyves_enable=YES\' directive is used in \'/etc/rc\.conf\'\. The integer represents the boot priority where the highest numbered guest is started first\. Using \'0\' disables starting on host boot\. If multiple guest share the same priority number, then those guests are started alphabetically\.
 .IP
-Prior to starting and/or rebooting, a guest can be reverted to a previous snapshot state\. This is helpful for guests that get modified outside of specification such as easily compromised web servers or VDI instances\. Setting to \'start\' only reverts the guest when starting the guest, \'reboot\' only on reboots, \'both\' for both starts and restarts, and \'off\' to disable this feature on the guest\.
 .
 .IP "\(bu" 4
 \fBserial\fR=nmdm{n}
@@ -989,7 +988,7 @@ UEFI firmware bootrom file used to boot UEFI guests\. These are available in Pet
 \fBuefi_vnc_client\fR={print|freerdp|custom}
 .
 .IP
-This stores the preferred VNC client used to start a session with the guest parameters pre\-populated\.
+This stores the preferred VNC client used to start a session with the guest properties pre\-populated\.
 .
 .IP "\(bu" 4
 \fBuefi_vnc_client_custom_cmd\fR
@@ -1064,7 +1063,7 @@ Sets UUID for bhyve instance\. Set by /bin/uuidgen at creation\.
 \fBvirtio_block_options_disk{n}\fR=[nocache[,direct][,ro][,sectorsize=logical[/physical]]]
 .
 .IP
-This is an advance feature and assumes you have read zfs(8) man page AND completely understood it\. This parameter does NOT have a complete input verification suite\.
+This is an advance feature and assumes you have read zfs(8) man page AND completely understood it\. This property does NOT have a complete input verification suite\.
 .
 .IP
 This is a per disk setting used to append bhyve virtio\-block options to a disk\. While there is a very limited use case of these options, they can be utilized but it is not recommended\. See bhyve(8) for what these options do\.
@@ -1080,14 +1079,14 @@ To set this property for disk0 to have read only with a 512 sector size and a 40
 .
 .IP "" 0
 .
-.SS "Default Guest Parameters"
-These parameters are referenced when creating new guests\. The guest section of parameters have the same purpose as described in \fIGuest Parameters\fR section above, unless otherwise noted\. Below are the initial default values on a fresh installation of chyves for reference\.
+.SS "Default Guest Properties"
+These properties are referenced when creating new guests\. The guest section of properties have the same purpose as described in \fIGuest Properties\fR section above, unless otherwise noted\. Below are the initial default values on a fresh installation of chyves for reference\.
 .
 .P
-The some UEFI parameters are not assigned until the \'loader\' value is set to \'uefi\'\. This is to prevent assigning parameters to guests which can not utilize those features\.
+The some UEFI properties are not assigned until the \'loader\' value is set to \'uefi\'\. This is to prevent assigning properties to guests which can not utilize those features\.
 .
 .P
-The UEFI VNC parameters are not assigned until the \'uefi_console_output\' value is set to \'vnc\'\. This is to prevent unused VNC port numbers from being assigned to guests which can not utilize those features\.
+The UEFI VNC properties are not assigned until the \'uefi_console_output\' value is set to \'vnc\'\. This is to prevent unused VNC port numbers from being assigned to guests which can not utilize those features\.
 .
 .P
 Usage:
@@ -1132,7 +1131,7 @@ Used to set the bridge to join tap interfaces to for new guests\.
 \fBsize\fR=8G
 .
 .IP
-Used during guest and disk creation when the size parameter is omitted\. No longer a guest property\. The ZFS property \'usedbychildren\' is used to show the size in \'chyves info \-z\'\.
+Used during guest and disk creation when the size property is omitted\. No longer a guest property\. The ZFS property \'usedbychildren\' is used to show the size in \'chyves info \-z\'\.
 .
 .IP "\(bu" 4
 \fBtemplate\fR="no"
@@ -1161,7 +1160,7 @@ Used during guest and disk creation when the size parameter is omitted\. No long
 .IP "" 0
 .
 .P
-These default disk parameters are direct ZFS values used when creating disks for the guest\. These parameters are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process\. Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents\. See zfs(8) on settable values but remember, think of the kittens and puppies\. The initial default values are:
+These default disk properties are direct ZFS values used when creating disks for the guest\. These properties are not recommended to be changed, a person is liable to chainsaw a foot off and then massacre a nearby litter of kitten and or puppies in the process\. Heed this warning! The value "inherit" will inherit the value set by the ZFS (*grand)parents\. See zfs(8) on settable values but remember, think of the kittens and puppies\. The initial default values are:
 .
 .IP "\(bu" 4
 \fBdisk_volmode\fR=dev
@@ -1213,13 +1212,13 @@ Reattach to the last tmux session
 .IP "" 0
 .
 .SH "UEFI SUPPORT"
-Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the \'uefi_firmware\' property\. This boot method is set by changing the \'loader\' property to \'uefi\'\. When this is done for the first time on a guest, the other UEFI parameters are populated\.
+Support to boot guests via UEFI is provided through the use of a bootrom firmware set with the \'uefi_firmware\' property\. This boot method is set by changing the \'loader\' property to \'uefi\'\. When this is done for the first time on a guest, the other UEFI properties are populated\.
 .
 .P
 Graphical console support is provided via UEFI GOP as of May 2016, this replaces the serial interface\. Support is provided as a technical preview as there are still sharp edges\. Know issues: partial VNC client support and mouse mapping issues when \'uefi_vnc_mouse_type\' property set to \'ps2\'\. The following is required for graphical console use: the property \'uefi_console_output\' must be set to \'vnc\' on the guest, a host on 11\-CURRENT, a bhyve binary compiled from bhyve_graphics the UEFI firmware \'BHYVE_UEFI_20160526\.fd\', and a VNC client\.
 .
 .P
-See \fIGuest Parameters\fR section for complete list of related \fBuefi_*\fR parameters\.
+See \fIGuest Properties\fR section for complete list of related \fBuefi_*\fR properties\.
 .
 .SS "VNC CLIENT SUPPORT"
 Support for VNC client launching is utilized with \fBchyves <guest> console vnc\fR\. This either prints the VNC settings or starts a VNC session\. Currently FreeRDP is preconfigured or a custom VNC client can be configured with the \'uefi_vnc_client_custom_cmd\' property\.
@@ -1257,10 +1256,10 @@ Prints version information, command valid syntax\.
 \fBchyves dev [<function>|<command>] "param1" \.\.\. "param7"\fR
 .
 .IP
-Allows for a function to be called direct from command line when developing for chyves\. Requires \fIdev_mode\fR to be set with something other than \'off\'\. This is globally set on the primary pool on\. See \fIGlobal Configuration Parameters\fR section above\.
+Allows for a function to be called direct from command line when developing for chyves\. Requires \fIdev_mode\fR to be set with something other than \'off\'\. This is globally set on the primary pool on\. See \fIGlobal Configuration Properties\fR section above\.
 .
 .IP
-The parameters are function indexed and only seven parameters are possible due to the way Bourne addresses parameter[10]\. Double quotes are required for parameters with strings, such as commands\.
+The properties are function indexed and only seven properties are possible due to the way Bourne addresses property[10]\. Double quotes are required for properties with strings, such as commands\.
 .
 .IP "\(bu" 4
 \fBinfo\fR
@@ -1297,7 +1296,7 @@ Prints the current running version of chyves
 \fBchyves dataset <pool> install\fR
 .
 .IP
-Creates ZFS datasets and parameters on pool\. This is the first step to getting chyves running\.
+Creates ZFS datasets and properties on pool\. This is the first step to getting chyves running\.
 .
 .IP "\(bu" 4
 \fBoffline\fR
@@ -1306,7 +1305,7 @@ Creates ZFS datasets and parameters on pool\. This is the first step to getting 
 \fBchyves dataset <pool> offline\fR
 .
 .IP
-Offlines a pool\. This completely removes the dataset, the guests, and parameters on a pool from any chyves commands or modifications\. Only the \'online\' command can bring this back to an operable state\. Only secondary pools can be offlined\.
+Offlines a pool\. This completely removes the dataset, the guests, and properties on a pool from any chyves commands or modifications\. Only the \'online\' command can bring this back to an operable state\. Only secondary pools can be offlined\.
 .
 .IP "\(bu" 4
 \fBonline\fR
@@ -1324,7 +1323,7 @@ Onlines an offline pool\.
 \fBchyves dataset <pool> promote\fR
 .
 .IP
-Promotes a secondary pool to the primary role\. Moves ISO and Firmware resources\. Also moves defaults and global parameters\.
+Promotes a secondary pool to the primary role\. Moves ISO and Firmware resources\. Also moves defaults and global properties\.
 .
 .IP "\(bu" 4
 \fBuninstall\fR
@@ -1342,7 +1341,7 @@ Uninstalls the ZFS datasets from pool\. Secondary pools must be uninstalled befo
 \fBchyves dataset <pool> upgrade\fR
 .
 .IP
-Upgrades dataset version from an old version to the newest version incrementally\. This is done by adding, removing, and updating parameters which are required by the latest version of chyves\. It is recommended to upgrade the primary pool first in case their are new defaults, otherwise the \'chyves \fIguest\fR upgrade\' will need to be manually ran against the guests on secondary pools\.
+Upgrades dataset version from an old version to the newest version incrementally\. This is done by adding, removing, and updating properties which are required by the latest version of chyves\. It is recommended to upgrade the primary pool first in case their are new defaults, otherwise the \'chyves \fIguest\fR upgrade\' will need to be manually ran against the guests on secondary pools\.
 .
 .IP "" 0
 .
@@ -1417,7 +1416,7 @@ Where \fIguest\fR is a uniquely identifying name used to reference the guest, op
 \fBchyves <guest>|MG delete [force|keepnet]\fR
 .
 .IP
-Permanently delete a guest from the host\. If the \'force\' keyword is used, then dependent clones are deleted as well\. The \'keepnet\' keyword is used to keep the network associations, this is useful for clones that share the exact parameters\.
+Permanently delete a guest from the host\. If the \'force\' keyword is used, then dependent clones are deleted as well\. The \'keepnet\' keyword is used to keep the network associations, this is useful for clones that share the exact properties\.
 .
 .IP "\(bu" 4
 \fBget\fR
@@ -1426,7 +1425,7 @@ Permanently delete a guest from the host\. If the \'force\' keyword is used, the
 \fBchyves <guest> get {<property>|all}\fR
 .
 .IP
-Gets property for guests\. See \fIPARAMETERS\fR section above for more detail\. Use \'chyves list global\' or \'chyves list defaults\' for respective property types\.
+Gets property for guests\. See \fIPROPERTIES\fR section above for more detail\. Use \'chyves list global\' or \'chyves list defaults\' for respective property types\.
 .
 .IP "\(bu" 4
 \fBreclaim\fR
@@ -1471,7 +1470,7 @@ See \fIGUEST SNAPSHOT SUB\-SUB\-COMMANDS\fR section below\.
 Where \fIiso\fR is optionally the name of an ISO resource\. This command starts bhyveload, grub\-bhyve, and UEFI guests\.
 .
 .IP
-For grub\-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the \'os\' property\. This means the \fIdevice\.map\fR and the \fIgrub\.cfg\fR files generated reflect booting from the installation CD\. If a non\-booting CD is needed to be attached to a guest using grub\-bhyve, then manually adding a custom PCIDEV device is suggested\. See the \fIpcidev\fR{n}_ parameter under \fIGuest Parameters\fR section for instructions\.
+For grub\-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the \'os\' property\. This means the \fIdevice\.map\fR and the \fIgrub\.cfg\fR files generated reflect booting from the installation CD\. If a non\-booting CD is needed to be attached to a guest using grub\-bhyve, then manually adding a custom PCIDEV device is suggested\. See the \fIpcidev\fR{n}_ property under \fIGuest Properties\fR section for instructions\.
 .
 .IP "\(bu" 4
 \fBstop\fR
@@ -1509,10 +1508,10 @@ Removes a pcidev_{n} device from a guest\.
 \fBchyves <guest> clone <clonename>|MG [\-ce|\-cu|\-ie|\-iu] [<pool>]\fR
 .
 .P
-This clones a guest, there are four cloning methods that chyves uses\. The cloning method is determined by the clone flag after the clone name(s)\. The first letter of the flag indicates the clone\'s dependency on the parent\'s datasets, the second letter indicates whether new unique parameters are created for the clone\. If the cloning method flag is omitted, the default is used as defined in global property \'default_clone_flag\', this is initially set to \'\-iu\' as it is the safest and more performant\.
+This clones a guest, there are four cloning methods that chyves uses\. The cloning method is determined by the clone flag after the clone name(s)\. The first letter of the flag indicates the clone\'s dependency on the parent\'s datasets, the second letter indicates whether new unique properties are created for the clone\. If the cloning method flag is omitted, the default is used as defined in global property \'default_clone_flag\', this is initially set to \'\-iu\' as it is the safest and more performant\.
 .
 .P
-The \fI[pool]\fR parameter is used to clone the guest to a different pool than where the guest currently resides\. This can only be done for independent clones\.
+The \fI[pool]\fR property is used to clone the guest to a different pool than where the guest currently resides\. This can only be done for independent clones\.
 .
 .P
 Dataset dependency:
@@ -1521,24 +1520,24 @@ Dataset dependency:
 \fB\-c\fR
 .
 .IP
-Creates a ZFS clone of the guest\'s disks\. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent\'s dataset\. This also means, the clones must be deleted before the parent guest is deleted\. See \'chyves list clones\' to display the clone hierarchy\. The [\fIpool\fR] parameter is ignored as the clone must reside on the same pool as it\'s parent\.
+Creates a ZFS clone of the guest\'s disks\. Initially the clone shares the same blocks as the parent and only a few KB are consumed to point the clone dataset to the parent\'s dataset\. This also means, the clones must be deleted before the parent guest is deleted\. See \'chyves list clones\' to display the clone hierarchy\. The [\fIpool\fR] property is ignored as the clone must reside on the same pool as it\'s parent\.
 .
 .IP "\(bu" 4
 \fB\-i\fR
 .
 .IP
-Creates an independent clone which is not dependent on the parent\'s datasets\. Using the [\fIpool\fR] parameter will clone the guest to the specified pool, otherwise the guest\'s pool is used\.
+Creates an independent clone which is not dependent on the parent\'s datasets\. Using the [\fIpool\fR] property will clone the guest to the specified pool, otherwise the guest\'s pool is used\.
 .
 .IP "" 0
 .
 .P
-Guest parameters:
+Guest properties:
 .
 .IP "\(bu" 4
 \fB\-e\fR
 .
 .IP
-Copies the guest parameters exactly as the parent\'s\. This means the parent can not start while the clone is running, or vise\-versa due to the overlapping serial and tap interfaces\. Use the \'keepnet\' option when deleting these guests to prevent removing the network association\.
+Copies the guest properties exactly as the parent\'s\. This means the parent can not start while the clone is running, or vise\-versa due to the overlapping serial and tap interfaces\. Use the \'keepnet\' option when deleting these guests to prevent removing the network association\.
 .
 .IP "\(bu" 4
 \fB\-u\fR
@@ -1547,7 +1546,7 @@ Copies the guest parameters exactly as the parent\'s\. This means the parent can
 Sets new a unique: serial interface, a new tap is created for each interface of the parent under the same bridge, VALE interfaces are copied over and ports removed, a new unique port is used for uefi_vnc_port, and a new UUID is generated\.
 .
 .IP
-If the guest\'s parameter \'template\' is set to \'yes\', then the parameter is temporarily set to \'no\' to create unique properties, then after cloning the guests and clones have their parameter \'template\' set to \'yes\'\.
+If the guest\'s property \'template\' is set to \'yes\', then the property is temporarily set to \'no\' to create unique properties, then after cloning the guests and clones have their property \'template\' set to \'yes\'\.
 .
 .IP "" 0
 .
@@ -1593,7 +1592,7 @@ Requires a UEFI guest that is configured for VNC use on a host that supports UEF
 .IP "" 0
 .
 .SS "GUEST DISK SUB\-SUB\-COMMANDS"
-These sub commands deal with a guest\'s disk\. Multi\-guest is not supported for these sub\-comands\.
+These sub\-commands deal with a guest\'s disk, multi\-guest is not supported\.
 .
 .IP "\(bu" 4
 \fBadd\fR
@@ -1611,7 +1610,7 @@ Adds a new disk to the guest\. The \fI[\fIsize\fR]\fR field is optional and will
 \fBchyves <guest> disk disk{n} description <description>\fR
 .
 .IP
-Sets a \fBdescription\fR parameter for a disk\.
+Sets a \fBdescription\fR property for a disk\.
 .
 .IP "\(bu" 4
 \fBlist\fR
@@ -1629,7 +1628,7 @@ Lists the disks attached to a guest and each size, description, and notes for ea
 \fBchyves <guest> disk disk{n} notes <note>\fR
 .
 .IP
-Sets a \fBnotes\fR parameter for a disk\.
+Sets a \fBnotes\fR property for a disk\.
 .
 .IP "\(bu" 4
 \fBremove\fR
@@ -1687,7 +1686,7 @@ Rolls back a guest and it\'s datasets to a previous snapshot state\. When no nam
 .IP "" 0
 .
 .SS "INFO COMMAND"
-Displays active guests and their disks on the system when no flags are used\. The global parameter \'default_info_flags\' is used when no flags are given, this parameter is populated with end user\'s preferred flags\. The following flags are used in combination to display information about the guests and disks\. These flags are used in combination, meaning the correct syntax is "\-rvs" rather than "\-r \-v \-s"\. See below for a description of what each flag does:
+Displays active guests and their disks on the system when no flags are used\. The global property \'default_info_flags\' is used when no flags are given, this property is populated with end user\'s preferred flags\. The following flags are used in combination to display information about the guests and disks\. These flags are used in combination, meaning the correct syntax is "\-rvs" rather than "\-r \-v \-s"\. See below for a description of what each flag does:
 .
 .IP "\(bu" 4
 \fB\-z\fR [si\fBz\fRe] Displays size, for guests this show what is being used by the dataset\. For disks the size displays the volume size\.
@@ -1862,7 +1861,7 @@ List all properties on system\.
 \fB<property>\fR
 .
 .IP
-List the property given for all the guests\. See \fIGuest Parameters\fR section above for a list
+List the property given for all the guests\. See \fIGuest Properties\fR section above for a list
 .
 .IP "\(bu" 4
 \fBsnapshots\fR
@@ -2188,7 +2187,7 @@ chyves all stop
 .IP "" 0
 .
 .P
-Change guest parameters by using set:
+Change guest properties by using set:
 .
 .IP "" 4
 .
@@ -2259,7 +2258,7 @@ chyves bguest,bguest2,bguest3 set cpu=1 ram=512M bguest4 rcboot=50
 In the above example this changes the \fBram\fR to \'512M\' and \fBcpu\fR to \'1\' for bguest, bguest2, and bguest3\. Then on \fBbguest4\fR, \fBrcboot\fR priority is set to \'50\'\.
 .
 .P
-Change all current guests parameters in one command by using the \'all\' keyword:
+Change all current guests properties in one command by using the \'all\' keyword:
 .
 .IP "" 4
 .
@@ -2272,7 +2271,7 @@ chyves all set cpu=6 ram=4G
 .IP "" 0
 .
 .P
-Change the default parameters for future created guests:
+Change the default properties for future created guests:
 .
 .IP "" 4
 .
@@ -2285,7 +2284,7 @@ chyves defaults set cpu=4 ram=4G
 .IP "" 0
 .
 .P
-List the default guest parameters:
+List the default guest properties:
 .
 .IP "" 4
 .
@@ -2298,7 +2297,7 @@ chyves list defaults
 .IP "" 0
 .
 .P
-Get a specific guest parameter for \fBbguest\fR:
+Get a specific guest property for \fBbguest\fR:
 .
 .IP "" 4
 .
@@ -2311,7 +2310,7 @@ chyves bguest get ram
 .IP "" 0
 .
 .P
-Get all \fBbguest\fR parameters:
+Get all \fBbguest\fR properties:
 .
 .IP "" 4
 .
@@ -2376,7 +2375,7 @@ chyves global set default_list_flags="\-zps"
 .IP "" 0
 .
 .P
-List global parameters:
+List global properties:
 .
 .IP "" 4
 .
@@ -2420,7 +2419,7 @@ chyves bguest set pcidev_0=ahci\-hd,/chyves/dozer/guests/bguest/01\.img
 .IP "" 0
 .
 .P
-Create a true ZFS clone of \'\fBbguest\fR\' with unique parameters:
+Create a true ZFS clone of \'\fBbguest\fR\' with unique properties:
 .
 .IP "" 4
 .
@@ -2433,7 +2432,7 @@ chyves bguest clone \-cu bguest2
 .IP "" 0
 .
 .P
-Create two true ZFS clones of \'\fBbguest\fR\' with same exact parameters:
+Create two true ZFS clones of \'\fBbguest\fR\' with same exact properties:
 .
 .IP "" 4
 .
@@ -2446,7 +2445,7 @@ chyves bguest clone \-ce exactCL1,exactCL2
 .IP "" 0
 .
 .P
-Create two independent clones of \'\fBbguest\fR\' with unique parameters:
+Create two independent clones of \'\fBbguest\fR\' with unique properties:
 .
 .IP "" 4
 .
@@ -2459,7 +2458,7 @@ chyves bguest clone \-iu bguest2,bguest3
 .IP "" 0
 .
 .P
-Create independent clone of \'\fBbguest\fR\' with same exact parameters:
+Create independent clone of \'\fBbguest\fR\' with same exact properties:
 .
 .IP "" 4
 .
@@ -2587,7 +2586,7 @@ chyves gentooguest start
 .IP "" 0
 .
 .P
-Install and run an unlisted custom grub\-bhyve guest, see \fBos\fR parameter for details:
+Install and run an unlisted custom grub\-bhyve guest, see \fBos\fR property for details:
 .
 .IP "" 4
 .
