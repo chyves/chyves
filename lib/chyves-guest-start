@@ -391,9 +391,10 @@ __start() {
 			continue
 		fi
 
-		# Warn if older chyves guest version than latest.
-		if [ "$_VERSION_CHYVES_GUEST" -lt "$_GP_chyves_guest_version" ]; then
-			__log 1 "$_GUEST_name is on a newer chyves guest version ($_GP_chyves_guest_version), will continue to start guest but some functionality may be missing compared to the newer version."
+		# Do not let newer chyves_guest_version guests start.
+		if  [ -z "$_GP_chyves_guest_version" ] || [ "$_VERSION_CHYVES_GUEST" -lt "$_GP_chyves_guest_version" ]; then
+			__log 1 "$_GUEST_name is on a newer chyves guest version ($_GP_chyves_guest_version), not starting guest.\n"
+			continue
 		fi
 
 		__log 2 "Checking if guest is running... " -n
