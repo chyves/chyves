@@ -562,7 +562,9 @@ __verify_user_input_for_properties() {
 				__log 2 "Ubuntu slaugters kittens, don't be like Ubuntu."
 				__log 2 "Let's hope you know what you are doing, no input verification written for '$_property' property. Beware of dragons."
 
+#
 # Verify properties unique to defaults. This always needs to be just before the else catch all.
+#
 		elif [ "$_resource" = "defaults" ]; then
 
 # bridge
@@ -612,7 +614,9 @@ __verify_user_input_for_properties() {
 			__log 1 "No input verification for guest '$_property' property written. Beware of dragons."
 		fi
 
+#
 # Verify global properties
+#
 	elif [ "$_resource" = "global" ]; then
 
 # auto_load_kernel_mods
@@ -685,13 +689,13 @@ __verify_user_input_for_properties() {
 
 # default_info_flags
 		elif [ "$_property" = "default_info_flags" ]; then
-			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ] && [ -n "$_value" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', see 'chyves info -h' for valid values."
 			fi
 
 # default_list_flags
 		elif [ "$_property" = "default_list_flags" ]; then
-			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^-[zbprvstcdnakl]{1,}$|^-h$' )" ] && [ -n "$_value" ]; then
 				__fault_detected_warning_break 1 "Invalid value for '$_property', this function share the same backend as 'chyves info' see man page for valid values."
 			fi
 
