@@ -215,6 +215,8 @@ __list_properties() {
 __list_single_property() {
 	local _property="$1"
 
+	echo "Listing value of property ('$_property') for all guests."
+
 	# Displays singular property
 	(
 	echo "Guest:^$_property:"
