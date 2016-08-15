@@ -487,6 +487,9 @@ __start() {
 			__rollback_guest_snapshot "$_rollback_to_snapshot"
 		fi
 
+		# Set $_GUEST_disk_list in space delimited format for "for" loop below. Also set $_GUEST_disk_list_count.
+		__gvset_guest_disk_list -space
+
 		__log 2 "Checking which type of loader to use... " -n
 
 		# bhyveload
