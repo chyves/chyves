@@ -1,3 +1,38 @@
+#### Version 0.0.13 (2016 August 15)
+
+- Guests can now be reverted to a previous snapshot state on start, reboot, both, or not at all (default). The new properties 'revert_to_snapshot' and 'revert_to_snapshot_method' control the snapshot and the method respectively for this process. [0e7f083](https://github.com/chyves/chyves/commit/0e7f083b24d24afd38da3e47bfe4c44620eb4c05)
+
+- Added limited support for raw file based images. [3c37e0a](https://github.com/chyves/chyves/commit/3c37e0a8168ff3fe8e8ae3e4749cb5175550475f)
+
+- Added verbosity to `chyves list property` and now checks for two parameters. [fb2eb31](https://github.com/chyves/chyves/commit/fb2eb31d8886d906e640f59ff9468c09f04afb8d)
+
+- Changed the reported size value from `usedbychildren` to `used` for `chyves info -z`. [0e9dca2](https://github.com/chyves/chyves/commit/0e9dca2070b8ea4d17aa1351753acc58024f0a3c)
+
+- Allow trailing 'b' for size denominations. [4d60946](https://github.com/chyves/chyves/commit/4d60946507fac60b63b096e38a2359b126002f6f)
+
+- Support for 32 AHCI hard drive devices on a single PCI slot for hosts running 12-CURRENT. [d9f769f](https://github.com/chyves/chyves/commit/d9f769f0b83598fa9af5665898e168f9c4ea2cde)
+
+- Set defaults based on host OS version for 'bargs', use '-S' flag on 10.3+. [60d6d15](https://github.com/chyves/chyves/commit/60d6d157c80e04125c0f7733dbb5c664101022a0)
+
+- Minor revisions in `__generate_bhyve_slot_string()`. [e98e7a3](https://github.com/chyves/chyves/commit/e98e7a34c4ed8ecd0777dfa3c7064c20e1a655b3)
+
+- Added new function `__stop_guest_loader()` to stop a hung loader process on guest boot and for `chyves <guest> stop`.  [ed324bb](https://github.com/chyves/chyves/commit/ed324bb5c60fa12df9c38804debb1ac73baa10dc)
+
+- Newer chyves guest version are not allowed to start on older versions. This is preventative for the future. [2b8fce5](https://github.com/chyves/chyves/commit/2b8fce564b8e9cd979c72bea8cc038b51f85e5ea)
+
+- Added `make what` directive to show what commands were available. [a66943a](https://github.com/chyves/chyves/commit/a66943a87769206d425d3b72879594b3d6f7e913)
+
+- Fixed missing disk sub-section in man page. [e89035c](https://github.com/chyves/chyves/commit/e89035c36a48d5c8d7625e2bac38a39b689aeb16)
+
+- Finished commit to using keyword 'properties' rather than 'parameters' for guests qualities. [b111b03](https://github.com/chyves/chyves/commit/b111b03295e21b32943e46decff2b2925f60d269)
+
+- Finished commit for consolidate disk note/desc in synopsis. [b111b03](https://github.com/chyves/chyves/commit/b111b03295e21b32943e46decff2b2925f60d269)
+
+- Null value can now be set for `default_info_flags` and `default_list_flags`. [79a641a](https://github.com/chyves/chyves/commit/79a641a0805221be6ad959d6719b584368ea45f9)
+
+- Created new command `chyves <guest>|MG|all unset <pcidev_{n}>` to unset a property on a guest. [260f4ae](https://github.com/chyves/chyves/commit/260f4ae07827636b16b7c905b1384db091f8554e)
+
+- Minor speed improvement from loading order in `__add_guest_disk()`. [acba72d](https://github.com/chyves/chyves/commit/acba72d87fb5188c611e414f70e32f8f229ccd8c)
 
 #### Version 0.0.11 (2016 August 12)
 
