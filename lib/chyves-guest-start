@@ -454,7 +454,7 @@ __start() {
 		fi
 
 		__log 2 "Checking if guest is running... " -n
-		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running, PID: $__return_guest_bhyve_pid\n"
+		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running, PID: `__return_guest_bhyve_pid`\n"
 		__log 2 "not running."
 
 		# Check and stop if loader is already running.
