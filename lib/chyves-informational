@@ -404,21 +404,11 @@ EOT
 				printf "^%s" "$_template"
 			fi
 
-			# Get clone information
+			# Get clone information to report for guest level, based on first disk. (Yes this is flawed.)
 			if [ -n "$( echo "$flags" | grep -E 'c|a' )" ]; then
 				__gvset_first_disk
-
-				# This check is needed for diskless guests, say when images are used instead.
-				if [ -z "$_FIRST_disk" ]; then
-					printf "^%s" "NO"
-				else
-					local _first_disk_origin="$( zfs get -H -o value origin $_GUEST_pool/chyves/guests/$_GUEST_name/$_FIRST_disk | cut -d'/' -f4 )"
-					if [ "$_first_disk_origin" = "-" ]; then
-						printf "^%s" "NO"
-					else
-						printf "^%s" "Child of $_first_disk_origin"
-					fi
-				fi
+				__gvset_disk_clone_origin_for_info_func $_FIRST_disk
+				printf "^%s" "$_DISK_clone_origin_for_info_func"
 			fi
 
 			# Print description if flag set
@@ -433,14 +423,30 @@ EOT
 			# Print Disks when the -k flag is not used
 			if [ -z "$( echo "$flags" | grep 'k' )" ]; then
 
-				for _disk in `__return_guest_disk_list -space`
+				# Set $_GUEST_disk_list in space delimited format for "for" loop below.
+				__gvset_guest_disk_list -space
+
+				# Iterate over each disk
+				for _disk in `echo $_GUEST_disk_list`
 				do
 
 					# Save the cycles if not showing size
-					[ -n "$(echo "$flags" | grep -E 'z|a')" ] && local _size="$( zfs get -H -t volume -o value volsize $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk )"
+					if [ -n "$( echo "$flags" | grep -E 'z|a' )" ]; then
 
-					# Print common header (Disk Size)
-					printf "  %s" "$_disk"
+						# Handling for raw images files
+						if [ -z "$( echo "$_disk" | grep -E 'disk[0-9]{1,}$' )" ]; then
+							local _size="$( ls -hal $_disk | awk '{ print $5 }' )"
+							local _disk_name="$( echo $_disk | cut -d'/' -f7- )"
+
+						# Handling for traditional ZFS volume backed disks
+						else
+							local _disk_name="$( echo $_disk | cut -d'/' -f8- )"
+							local _size="$( zfs get -H -t volume -o value volsize $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk_name )"
+						fi
+					fi
+
+					# Print common header (Disk name)
+					printf "  %s" "$_disk_name"
 
 					# Print qualites (Size, CPU, RAM)
 					[ -n "$( echo "$flags" | grep -E 'z|a' )" ] && printf "^%s" "$_size"
@@ -468,23 +474,23 @@ EOT
 
 						# Print "-" for Clone
 						if [ -n "$( echo "$flags" | grep -E 'c|a' )" ]; then
-							local _first_disk_origin="$( zfs get -H -o value origin $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk | cut -d'/' -f4 )"
-							if [ "$_first_disk_origin" = "-" ]; then
-								printf "^-"
-							else
-								printf "^%s" "Child of $_first_disk_origin"
-							fi
+							__gvset_disk_clone_origin_for_info_func "$_disk"
+							printf "^%s" "$_DISK_clone_origin_for_info_func"
+							_DISK_clone_origin_for_info_func=
+							#printf "^%s" "$_disk"
 						fi
 
 						# Print Description (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'd|a' )" ]; then
-							local _disk_desc="$( __return_property_value_from_config_file "guest" "${_disk}_description" )"
+							local _disk_desc="$( __return_property_value_from_config_file "guest" "${_disk_name}_description" )"
+							[ -z "$_disk_desc" ] && local _disk_desc=-
 							printf "^%s" "$_disk_desc"
 						fi
 
 						# Print Notes (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'n|a' )" ]; then
-							local _disk_notes="$( __return_property_value_from_config_file "guest" "${_disk}_notes" )"
+							local _disk_notes="$( __return_property_value_from_config_file "guest" "${_disk_name}_notes" )"
+							[ -z "$_disk_notes" ] && local _disk_notes=-
 							printf "^%s" "$_disk_notes"
 						fi
 					fi

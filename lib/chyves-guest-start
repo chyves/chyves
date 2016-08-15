@@ -59,14 +59,10 @@ __generate_bhyve_disk_string() {
 	local _counter_ver12=0
 	local _num_of_disks_counter=1
 
-	# Find number of disk for guest
-	local _disks_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | sort -k1V )"
-	local _num_of_disks="$( echo $_disks_dataset_list | grep -c "" )"
-
-	[ "$_num_of_disks" = 0 ] && echo "Guest has no disks." && return 0
+	[ "$_GUEST_disk_list_count" = 0 ] && echo "Guest has no disks." && return 0
 
 	# Create device list for bhyve
-	for _disk_dataset in `echo $_disks_dataset_list | tr '\n' ' '`
+	for _disk_dataset in `echo $_GUEST_disk_list`
 	do
 
 		# Parse disk name for pulling property
@@ -98,7 +94,7 @@ __generate_bhyve_disk_string() {
 		elif [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
 
 			# Only disk handling
-			if [ "$_num_of_disks" = 1 ]; then
+			if [ "$_GUEST_disk_list_count" = 1 ]; then
 				local _string="ahci,hd:$_disk_dataset"
 				__generate_bhyve_slot_string $_string 1
 				local _bhyve_disk_string_stage2="$_BHYVE_slot_string"
@@ -109,7 +105,7 @@ __generate_bhyve_disk_string() {
 				local _counter_ver12="$( expr 1 + $_counter_ver12 )"
 
 			# Last disk of multiple
-			elif [ "$_counter_ver12" = 31 ] || [ "$_num_of_disks" = "$_num_of_disks_counter" ]; then
+			elif [ "$_counter_ver12" = 31 ] || [ "$_GUEST_disk_list_count" = "$_num_of_disks_counter" ]; then
 
 				local _string="${_string},hd:$_disk_dataset"
 
@@ -132,7 +128,7 @@ __generate_bhyve_disk_string() {
 	if [ "$_OS_VERSION_DATE" -lt "1200000" ]; then
 
 		# UEFI can only use PCI slots 3-7 for ACHI devices, PCI slot 3 is used for optical, 3 slots remaining for disks.
-		if [ "$_GP_loader" = "uefi" ] && [ "$_num_of_disks" -gt 3 ]; then
+		if [ "$_GP_loader" = "uefi" ] && [ "$_GUEST_disk_list_count" -gt 3 ]; then
 			__generate_bhyve_slot_string $_string 3
 
 		# Other loader types do no have this restriction.
@@ -287,7 +283,7 @@ __generate_bhyve_slot_string() {
 			if [ "$_max_slot_count" -gt "$_max_slot" ]; then
 
 				# Do not display the warning message for PCI Custom devices or when propery $_CONSOLIDATE_BHYVE_PCI_DEVICES is set to "yes".
-				[ "$_use_pci_funcions" != "yes" ] && __log 1 "Can not attach any additional PCI devices to guest per chyves, attaching what can be attached."
+				[ "$_use_pci_funcions" != "yes" ] && __log 3 "Can not attach any additional devices to PCI slot $_PCI_slot."
 
 				# Return to the function that called this one after setting $_BHYVE_slot_string to what has been done.
 				_BHYVE_slot_string="$_out_string"
@@ -333,7 +329,7 @@ __generate_generic_device_map() {
 	local _path="$1"
 	local _disk="$2"
 	local _iso="$3"
-	printf '\(hd0\)\ /dev/zvol/'$_disk'\n' > $_path/device.map
+	printf '\(hd0\)\ '$_disk'\n' > $_path/device.map
 	[ -n "$_iso" ] && printf '\(cd0\)\ '$_iso'\n' >> $_path/device.map
 }
 
@@ -347,7 +343,7 @@ __generate_grub_bhyve_command() {
 	__verify_binary_available "grub-bhyve"
 
 	# Create a device map for none custom OSes
-	[ $_GP_os != "custom" ] && __generate_generic_device_map "$_GUEST_mountpoint" "$_GUEST_pool/chyves/guests/$_guest/$_FIRST_disk" "$_media"
+	[ $_GP_os != "custom" ] && __generate_generic_device_map "$_GUEST_mountpoint" "$_FIRST_disk" "$_media"
 
 	# Boot from optical media when present.
 	if [ -n "$_media" ]; then
@@ -490,12 +486,12 @@ __start() {
 			else
 				__gvset_first_disk
 				__log 2 "using $_FIRST_disk as boot device... " -n
-				local _media_string_bhyveload="/dev/zvol/$_GUEST_pool/chyves/guests/$_GUEST_name/$_FIRST_disk"
+				local _media_string_bhyveload="$_FIRST_disk"
 			fi
 			_LOADER_cmd="bhyveload $_GUEST_wire_memory -m $_GP_ram -d $_media_string_bhyveload -c /dev/${_GP_serial}A chy-$_guest"
 			__log 2 "done."
 
-			__log 2 "Generating bhyve PCI string for disks... " -n
+			__log 2 "Generating bhyve PCI string for $_GUEST_disk_list_count disks... " -n
 			__generate_bhyve_disk_string
 			__log 2 "done."
 
@@ -507,7 +503,7 @@ __start() {
 			__generate_grub_bhyve_command "$_guest" "$_media"    # _LOADER_cmd is set here.
 			__log 2 "done."
 
-			__log 2 "Generating bhyve PCI string for disks... " -n
+			__log 2 "Generating bhyve PCI string for $_GUEST_disk_list_count disks... " -n
 			__generate_bhyve_disk_string
 			__log 2 "done."
 
@@ -525,7 +521,7 @@ __start() {
 			# Optical Media is required by UEFI
 			[ -z "$_media" ] && local _media="null.iso"
 
-			__log 2 "Generating bhyve PCI string for disks... " -n
+			__log 2 "Generating bhyve PCI string for $_GUEST_disk_list_count disks... " -n
 			__generate_bhyve_disk_string
 			__log 2 "done."
 

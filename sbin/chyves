@@ -75,7 +75,6 @@
 # __create()                                  # Create guest(s)
 # __generate_new_uuid_guest_use()             # Set new UUID in _UUID_GUEST_USE
 # __generate_zvol_disk_options_string()       # Creates string used to create ZFS volume for disks
-# __gvset_first_disk()                        # Return the first disk for a guest
 # __get_next_disk_number()                    # Return the next disk for a guest
 # __get_next_serial()                         # Return the next serial interface to use
 # __get_next_tap()                            # Return the next tap interface to use
@@ -85,6 +84,9 @@
 ## ../lib/chyves-guests-disks                ## Functions handling disk functions
 # __add_guest_disk()                          # Add a new disk to guest
 # __delete_guest_disk()                       # Delete disk from guest
+# __gvset_disk_clone_origin_for_info_func()   # Set GV indicating clone origin of disk as requested by $1
+# __gvset_first_disk()                        # Set GV for the first disk for a guest
+# __gvset_guest_disk_list()                   # Set GV of list of guests' disks and count
 # __resize_guest_disk()                       # Resize a disk
 #
 ## ../lib/chyves-guest-snapshot              ## Functions that deal with chyves snapshots
@@ -181,7 +183,6 @@
 # __return_guest_bhyve_pid()                   # Check bhyve process running status
 # __return_guest_bhyveload_pid()               # Check bhyve process running status
 # __return_guest_dataset_mountpoint()          # Get path for dataset
-# __return_guest_disk_list()                   # Return a list of guests' disks
 # __return_guest_grub_bhyve_pid()              # Check bhyve process running status
 # __return_guest_list()                        # Get a list of guests on system
 # __return_guest_rcboot_priority()             # Displays the boot priority of a guest "YES (xxx)" where xxx is the priority

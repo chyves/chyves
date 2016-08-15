@@ -71,28 +71,6 @@ __return_guest_dataset_mountpoint() {
 	zfs list -H -t filesystem -o mountpoint $_GUEST_pool/chyves/guests/$_GUEST_name
 }
 
-# Return a list of guests' disks
-__return_guest_disk_list() {
-	local _flags _disks_string
-	local _flags="$1"
-	# -space
-	# -comma
-	# -grep
-	# -new-line
-
-	local _disks_string="$( zfs list -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | sort -k1V | cut -d'/' -f5 )"
-
-	if [ "$_flags" = "-new-line" ]; then
-		echo "$_disks_string"
-	elif [ "$_flags" = "-comma" ]; then
-		echo "$_disks_string" | tr '\n' ','
-	elif [ "$_flags" = "-grep" ]; then
-		echo "$_disks_string" | tr '\n' '|'
-	elif [ "$_flags" = "-space" ]; then
-		echo "$_disks_string" | tr '\n' ' '
-	fi
-}
-
 # Check bhyve process running status
 __return_guest_grub_bhyve_pid() {
 	local _flags=$1

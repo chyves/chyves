@@ -83,6 +83,95 @@ __delete_guest_disk() {
 	esac
 }
 
+# Set GV indicating clone origin of disk as requested by $1
+__gvset_disk_clone_origin_for_info_func() {
+	local _disk_in_question="$1"
+
+	# This check is needed for diskless guests. This could happen for custom attached raw image files.
+	if [ -z "$_disk_in_question" ]; then
+		local _answer="^NO"
+	else
+
+		# Check if the first disk is image based.
+		if [ -n "$( echo "$_disk_in_question" | grep "/chyves/$_GUEST_pool/guests/$_GUEST_name/img" )" ]; then
+
+			# Find the ZFS dataset that the first disk belongs to.
+			local _dataset_name="$_disk_in_question"
+			while [ ! $_found_root_dataset ];
+			do
+				local _dataset_name="$( dirname $_dataset_name )"
+				zfs list $_dataset_name > /dev/null 2>&1
+				if [ "$?" -eq 0 ]; then
+					local _image_origin="$( zfs get -H -o value origin $_dataset_name | cut -d'/' -f4 | head -n1 )"
+					local _found_root_dataset=1
+				fi
+			done
+
+			# Print the results
+			if [ "$_image_origin" = "-" ]; then
+				local _answer="NO"
+			else
+				local _answer="Child of $_image_origin"
+			fi
+
+		# Catch all, assumes the disk is ZFS volume backed.
+		else
+
+			local _disk_in_question="$( echo "$_disk_in_question" | cut -d'/' -f4- )"       # The 'cut' removes the "/dev/zvol" portion of $_FIRST_disk value.
+			local _disk_origin="$( zfs get -H -o value origin $_disk_in_question | cut -d'/' -f4 | head -n1 )"
+			if [ "$_disk_origin" = "-" ]; then
+				local _answer="NO"
+			else
+				local _answer="Child of $_disk_origin"
+			fi
+		fi
+	fi
+
+	_DISK_clone_origin_for_info_func="$_answer"
+}
+
+# Set GV for the first disk for a guest
+__gvset_first_disk() {
+	__gvset_guest_disk_list -new-line
+	_FIRST_disk="$( echo "$_GUEST_disk_list" | head -n1 )"
+}
+
+# Set GV of list of guests' disks and count
+__gvset_guest_disk_list() {
+	local _disks_string _final_count _flags _num_of_raw _num_of_volumes _raw_dataset_list _volumes_dataset_list
+	local _flags="$1"
+	# -space
+	# -comma
+	# -grep
+	# -new-line
+
+	# Volumes for guest
+	local _volumes_dataset_list="$( zfs list -d 4 -H -r -t volume -o name $_GUEST_pool/chyves/guests/$_GUEST_name | awk '{ print "/dev/zvol/"$1 }' | sort -k1V )"
+	local _num_of_volumes="$( echo $_volumes_dataset_list | tr ' ' '\n' | grep -c "" )"
+
+	# Raw images for guest
+	local _raw_dataset_list="$( find /chyves/$_GUEST_pool/guests/$_GUEST_name/img/ -type f -print )"
+	local _num_of_raw="$( echo $_raw_dataset_list | tr ' ' '\n' | grep -c "" )"
+
+	# Combine raw images and volumes
+	local _disks_dataset_list="$( echo -e "$_raw_dataset_list\n$_volumes_dataset_list" )"
+	local _final_count="$( echo $_disks_dataset_list | tr ' ' '\n' | grep -c "" )"
+
+	# Formatting statements
+	if [ "$_flags" = "-new-line" ]; then
+		local _final_formated_output="$( echo "$_disks_dataset_list" )"
+	elif [ "$_flags" = "-comma" ]; then
+		local _final_formated_output="$( echo "$_disks_dataset_list" | tr '\n' ',' )"
+	elif [ "$_flags" = "-grep" ]; then
+		local _final_formated_output="$( echo "$_disks_dataset_list" | tr '\n' '|' )"
+	elif [ "$_flags" = "-space" ]; then
+		local _final_formated_output="$( echo "$_disks_dataset_list" | tr '\n' ' ' )"
+	fi
+
+	_GUEST_disk_list="$_final_formated_output"
+	_GUEST_disk_list_count="$_final_count"
+}
+
 # Resize a disk
 __resize_guest_disk() {
 	local _disk="$1"

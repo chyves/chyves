@@ -220,10 +220,12 @@
 <pre><code>/chyves/prim_pool/guests/
                  /guests/&lt;guest1>/.config/.cfg              # File
                  /guests/&lt;guest1>/disk{n}                   # Volumes
+                 /guests/&lt;guest1>/img                       # Dataset(s)
                  /guests/&lt;guest1>/log                       # Dataset
                  /guests/&lt;guest1>/log/YYYYMM.log            # Files
                  /guests/&lt;guest2>/.config/.cfg              # File
                  /guests/&lt;guest2>/disk{n}                   # Datasets
+                 /guests/&lt;guest2>/img                       # Dataset(s)
                  /guests/&lt;guest2>/log                       # Dataset
                  /guests/&lt;guest2>/log/YYYYMM.log            # Files
                  /guests/.defaults                          # File
@@ -238,6 +240,7 @@
 /chyves/secd_pool/guests
                  /guests/&lt;guest3>/.config/.cfg              # File
                  /guests/&lt;guest3>/disk{n}                   # Volumes
+                 /guests/&lt;guest3>/img                       # Dataset(s)
                  /guests/&lt;guest3>/log                       # Dataset
                  /guests/&lt;guest3>/log/YYYYMM.log            # Files
                  /.config                                   # Dataset
@@ -246,6 +249,7 @@
 /chyves/anther_pl/guests
                  /guests/&lt;guest4>/.config/.cfg              # File
                  /guests/&lt;guest4>/disk{n}                   # Volumes
+                 /guests/&lt;guest4>/img                       # Dataset(s)
                  /guests/&lt;guest4>/log                       # Dataset
                  /guests/&lt;guest4>/log/YYYYMM.log            # Files
                  /.config                                   # Dataset
@@ -263,6 +267,7 @@
 <pre><code>  /chyves/zroot/guests
                /guests/&lt;guest1>/.config/.cfg                # File
                /guests/&lt;guest1>/disk{n}                     # Volumes
+               /guests/&lt;guest1>/img                         # Dataset(s)
                /guests/&lt;guest1>/log                         # Dataset
                /guests/.defaults                            # File
                /.config                                     # Dataset
@@ -273,6 +278,12 @@
                /ISO                                         # Datasets
                /Firmware                                    # Datasets
 </code></pre>
+
+<h3 id="GUEST-STORAGE">GUEST STORAGE</h3>
+
+<p>By default, chyves uses ZFS volumes as guest storage backing. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller.</p>
+
+<p>There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. <strong>All files</strong> in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under <code>&lt;pool>/chyves/guests/&lt;guest>/img</code>, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command 'chyves info' reports the raw image files and their size. To create a sparse raw image run <code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/img/&lt;image-name></code>.</p>
 
 <h2 id="LOGS">LOGS</h2>
 

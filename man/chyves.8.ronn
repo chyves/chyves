@@ -115,10 +115,12 @@ Example of a multi-pool folder structure:
     /chyves/prim_pool/guests/
                      /guests/<guest1>/.config/.cfg              # File
                      /guests/<guest1>/disk{n}                   # Volumes
+                     /guests/<guest1>/img                       # Dataset(s)
                      /guests/<guest1>/log                       # Dataset
                      /guests/<guest1>/log/YYYYMM.log            # Files
                      /guests/<guest2>/.config/.cfg              # File
                      /guests/<guest2>/disk{n}                   # Datasets
+                     /guests/<guest2>/img                       # Dataset(s)
                      /guests/<guest2>/log                       # Dataset
                      /guests/<guest2>/log/YYYYMM.log            # Files
                      /guests/.defaults                          # File
@@ -133,6 +135,7 @@ Example of a multi-pool folder structure:
     /chyves/secd_pool/guests
                      /guests/<guest3>/.config/.cfg              # File
                      /guests/<guest3>/disk{n}                   # Volumes
+                     /guests/<guest3>/img                       # Dataset(s)
                      /guests/<guest3>/log                       # Dataset
                      /guests/<guest3>/log/YYYYMM.log            # Files
                      /.config                                   # Dataset
@@ -141,6 +144,7 @@ Example of a multi-pool folder structure:
     /chyves/anther_pl/guests
                      /guests/<guest4>/.config/.cfg              # File
                      /guests/<guest4>/disk{n}                   # Volumes
+                     /guests/<guest4>/img                       # Dataset(s)
                      /guests/<guest4>/log                       # Dataset
                      /guests/<guest4>/log/YYYYMM.log            # Files
                      /.config                                   # Dataset
@@ -157,6 +161,7 @@ Example of a single pool dataset hierarchy:
       /chyves/zroot/guests
                    /guests/<guest1>/.config/.cfg                # File
                    /guests/<guest1>/disk{n}                     # Volumes
+                   /guests/<guest1>/img                         # Dataset(s)
                    /guests/<guest1>/log                         # Dataset
                    /guests/.defaults                            # File
                    /.config                                     # Dataset
@@ -166,6 +171,11 @@ Example of a single pool dataset hierarchy:
                    /logs                                        # Dataset
                    /ISO                                         # Datasets
                    /Firmware                                    # Datasets
+
+### GUEST STORAGE
+By default, chyves uses ZFS volumes as guest storage backing. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller.
+
+There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. **All files** in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under `<pool>/chyves/guests/<guest>/img`, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command `chyves info` reports the raw image files and size. To create a sparse raw image run `truncate -s 16G /chyves/<pool>/guests/<guest>/img/<image-name>`.
 
 ## LOGS
 All logs entries are stored on the primary pool under `/chyves/<primary-pool>/chyves/logs` with the dataset's compression turned on. The file are separated on a monthly basis using a `YYYYMM.log` file name. The log entries use the ISO 8601 date format for monitoring tools. There is a separate log file on a per guest basis, however at this time not all guest events are recorded to this file, however these events _are_ recorded in the global logs regardless.

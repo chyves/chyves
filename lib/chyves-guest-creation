@@ -97,7 +97,7 @@ __clone_guest() {
 			zfs send -R $_src_pool/chyves/guests/$_GUEST_name/.config@chyves-clone-process-$_UUID_GENERAL_USE | zfs recv $_dst_pool/chyves/guests/$_cname/.config
 
 			__log 2 "Creating ZFS clones of each disk dataset..."
-			for _dataset in `zfs list -H -r -t volume -o name $_src_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
+			for _dataset in `zfs list -H -r -t volume,filesystem -o name $_src_pool/chyves/guests/$_GUEST_name | grep -v -E '/logs$|/.config$' | tail +2 | tr '\n' ' '`
 			do
 				local _dataset_suffix="$( echo "$_dataset" | cut -d '/' -f 5 )"
 				__log 2 "Cloning: $_dataset@chyves-clone-process-$_UUID_GENERAL_USE"
@@ -252,6 +252,8 @@ __create() {
 
 		__log 2 "Creating log dataset with compression turned on."
 		zfs create -o compression=on $_GUEST_pool/chyves/guests/$_GUEST_name/logs
+		__log 2 "Creating raw image dataset: $_GUEST_pool/chyves/guests/$_GUEST_name/img"
+		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name/img
 		__log 2 "Creating $_disk_size disk0 with options: $_ZVOL_disk_options_string"
 		zfs create -V $_disk_size $_ZVOL_disk_options_string $_GUEST_pool/chyves/guests/$_GUEST_name/disk0
 		__log 2 "Setting guest properties:"
@@ -300,12 +302,6 @@ __generate_zvol_disk_options_string() {
 	[ "${_GDP_disk_secondarycache}" != "inherit" ] && local _disk_options="$_disk_options -o secondarycache=$_GDP_disk_secondarycache"
 
 	_ZVOL_disk_options_string="$_disk_options"
-}
-
-# Return the first disk for a guest
-__gvset_first_disk() {
-	local _disk_first="$( zfs list -H -t volume -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | cut -d'/' -f5 | sort -V | head -n1 )"
-	_FIRST_disk="$_disk_first"
 }
 
 # Return the next disk for a guest
