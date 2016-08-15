@@ -390,6 +390,18 @@ __verify_user_input_for_properties() {
 				__fault_detected_warning_break 1 "Correct values for 'rcboot' property is any positive integer or zero."
 			fi
 
+# revert_to_snapshot
+		elif [ "$_property" = "revert_to_snapshot" ]; then
+			__log 2 "Verifying snapshot declared in 'revert_to_snapshot'... " -n
+			__verify_valid_dataset "guests/$_GUEST_name/"
+			__log 2 "done"
+
+# revert_to_snapshot_method
+		elif [ "$_property" = "revert_to_snapshot_method" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^both$|^off$|^reboot$|^start$' )" ]; then
+				__fault_detected_warning_break 1 "Unrecognized 'revert_to_snapshot_method' value. Recognized values are both, off, reboot, or start."
+			fi
+
 # serial
 		elif [ "$_property" = "serial" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^nmdm[0-9]{1,}$' )" ]; then

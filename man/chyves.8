@@ -357,7 +357,7 @@ Example of a single pool dataset hierarchy:
 By default, chyves uses ZFS volumes as guest storage backing\. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller\.
 .
 .P
-There is limited support for raw file backed guest storage\. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files\. \fBAll files\fR in the \'img/\' folder and child folders are attached to the guest on start\. To have independent snapshots for each raw image, create a child datasets under \fB<pool>/chyves/guests/<guest>/img\fR, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots\. The command \'chyves info\' reports the raw image files and their size\. To create a sparse raw image run \fBtruncate \-s 16G /chyves/<pool>/guests/<guest>/img/<image\-name>\fR\.
+There is limited support for raw file backed guest storage\. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files\. \fBAll files\fR in the \'img/\' folder and child folders are attached to the guest on start\. To have independent snapshots for each raw image, create a child datasets under \fB<pool>/chyves/guests/<guest>/img\fR, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots\. The command \fBchyves info\fR reports the raw image files and size\. To create a sparse raw image run \fBtruncate \-s 16G /chyves/<pool>/guests/<guest>/img/<image\-name>\fR\.
 .
 .SH "LOGS"
 All logs entries are stored on the primary pool under \fB/chyves/<primary\-pool>/chyves/logs\fR with the dataset\'s compression turned on\. The file are separated on a monthly basis using a \fBYYYYMM\.log\fR file name\. The log entries use the ISO 8601 date format for monitoring tools\. There is a separate log file on a per guest basis, however at this time not all guest events are recorded to this file, however these events \fIare\fR recorded in the global logs regardless\.
@@ -957,7 +957,18 @@ To remove a \fBpcidev_{n}\fR from a guest run: \fBchyves <guest>|MG|all unset <p
 .
 .IP
 Any non\-zero number tells chyves to start the guest upon host boot when the \'chyves_enable=YES\' directive is used in \'/etc/rc\.conf\'\. The integer represents the boot priority where the highest numbered guest is started first\. Using \'0\' disables starting on host boot\. If multiple guest share the same priority number, then those guests are started alphabetically\.
+.
+.IP "\(bu" 4
+\fBrevert_to_snapshot\fR=@snapshot\-name
+.
 .IP
+Describes the snapshot to revert to based on the handling method specified in \'revert_to_snapshot_method\'\. If this property is blank but a method is specified, then the latest snapshot is used\.
+.
+.IP "\(bu" 4
+\fBrevert_to_snapshot_method\fR={both|off|reboot|start}
+.
+.IP
+Prior to starting and/or rebooting, a guest can be reverted to a previous snapshot state\. This is helpful for guests that get modified outside of specification such as frequently compromised web server or VDI instances\. Setting to \'start\' only reverts the guest when starting the guest, \'reboot\' only on reboots, \'both\' for both starts and restarts, and \'off\' to disable this feature on the guest\.
 .
 .IP "\(bu" 4
 \fBserial\fR=nmdm{n}
@@ -1121,19 +1132,19 @@ Defaults and initial values:
 "\-A \-H \-P \-S" \- default for guests running on FreeBSD 10\.3 or later\.
 .
 .IP "\(bu" 4
-\fBbhyve_net_type\fR="virtio\-net"
+\fBbhyve_net_type\fR=virtio\-net
 .
 .IP "\(bu" 4
-\fBbridge\fR="bridge0"
+\fBbridge\fR=bridge0
 .
 .IP
 Used to set the bridge to join tap interfaces to for new guests\.
 .
 .IP "\(bu" 4
-\fBcpu\fR="1"
+\fBcpu\fR=1
 .
 .IP "\(bu" 4
-\fBloader\fR="bhyveload"
+\fBloader\fR=bhyveload
 .
 .IP "\(bu" 4
 \fBos\fR=default
@@ -1145,13 +1156,19 @@ Used to set the bridge to join tap interfaces to for new guests\.
 \fBrcboot\fR=0
 .
 .IP "\(bu" 4
+\fBrevert_to_snapshot\fR=""
+.
+.IP "\(bu" 4
+\fBrevert_to_snapshot_method\fR=off
+.
+.IP "\(bu" 4
 \fBsize\fR=8G
 .
 .IP
-Used during guest and disk creation when the size property is omitted\. No longer a guest property\. The ZFS property \'usedbychildren\' is used to show the size in \'chyves info \-z\'\.
+Used during guest and disk creation when the size property is omitted\. No longer a guest property\. The ZFS property \'used\' is used to show the size in \'chyves info \-z\'\.
 .
 .IP "\(bu" 4
-\fBtemplate\fR="no"
+\fBtemplate\fR=no
 .
 .IP "\(bu" 4
 \fBuefi_console_output\fR=serial
@@ -1160,7 +1177,7 @@ Used during guest and disk creation when the size property is omitted\. No longe
 \fBuefi_firmware\fR="\-"
 .
 .IP "\(bu" 4
-\fBuefi_vnc_client\fR="print"
+\fBuefi_vnc_client\fR=print
 .
 .IP "\(bu" 4
 \fBuefi_vnc_ip\fR=0\.0\.0\.0

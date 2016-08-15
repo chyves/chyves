@@ -35,7 +35,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.11
 * `chyves iso import {http-URL|ftp-URL|local-path}`
 * `chyves iso rename <iso> <new-iso-name>`
 * `chyves iso delete <iso>`
-* `chyves list [bridges|clones|defaults|disks|firmware|iso|pools|properties|<property>]`
+* `chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|<property>]`
 * `chyves list global [<pool>|primary]`
 * `chyves list {processes|snapshots} [<guest>]`
 * `chyves list tap active`
@@ -560,6 +560,13 @@ Usage:
 
   Any non-zero number tells chyves to start the guest upon host boot when the 'chyves_enable=YES' directive is used in '/etc/rc.conf'. The integer represents the boot priority where the highest numbered guest is started first. Using '0' disables starting on host boot. If multiple guest share the same priority number, then those guests are started alphabetically.
 
+* `revert_to_snapshot`=@snapshot-name
+
+  Describes the snapshot to revert to based on the handling method specified in 'revert_to_snapshot_method'. If this property is blank but a method is specified, then the latest snapshot is used.
+
+* `revert_to_snapshot_method`={both|off|reboot|start}
+
+  Prior to starting and/or rebooting, a guest can be reverted to a previous snapshot state. This is helpful for guests that get modified outside of specification such as frequently compromised web server or VDI instances. Setting to 'start' only reverts the guest when starting the guest, 'reboot' only on reboots, 'both' for both starts and restarts, and 'off' to disable this feature on the guest.
 
 * `serial`=nmdm{n}
 
@@ -668,24 +675,26 @@ Defaults and initial values:
 
   "-A -H -P -S" - default for guests running on FreeBSD 10.3 or later.
 
-* `bhyve_net_type`="virtio-net"
-* `bridge`="bridge0"
+* `bhyve_net_type`=virtio-net
+* `bridge`=bridge0
 
   Used to set the bridge to join tap interfaces to for new guests.
 
-* `cpu`="1"
-* `loader`="bhyveload"
+* `cpu`=1
+* `loader`=bhyveload
 * `os`=default
 * `ram`=256M
 * `rcboot`=0
+* `revert_to_snapshot`=""
+* `revert_to_snapshot_method`=off
 * `size`=8G
 
-  Used during guest and disk creation when the size property is omitted. No longer a guest property. The ZFS property 'usedbychildren' is used to show the size in 'chyves info -z'.
+  Used during guest and disk creation when the size property is omitted. No longer a guest property. The ZFS property 'used' is used to show the size in 'chyves info -z'.
 
-* `template`="no"
+* `template`=no
 * `uefi_console_output`=serial
 * `uefi_firmware`="-"
-* `uefi_vnc_client`="print"
+* `uefi_vnc_client`=print
 * `uefi_vnc_ip`=0.0.0.0
 * `uefi_vnc_mouse_type`=ps2
 * `uefi_vnc_pause_until_client_connect`=no

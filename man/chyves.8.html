@@ -283,7 +283,7 @@
 
 <p>By default, chyves uses ZFS volumes as guest storage backing. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller.</p>
 
-<p>There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. <strong>All files</strong> in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under <code>&lt;pool>/chyves/guests/&lt;guest>/img</code>, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command 'chyves info' reports the raw image files and their size. To create a sparse raw image run <code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/img/&lt;image-name></code>.</p>
+<p>There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. <strong>All files</strong> in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under <code>&lt;pool>/chyves/guests/&lt;guest>/img</code>, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command <code>chyves info</code> reports the raw image files and size. To create a sparse raw image run <code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/img/&lt;image-name></code>.</p>
 
 <h2 id="LOGS">LOGS</h2>
 
@@ -657,6 +657,12 @@ subclass   = Fibre Channel
 <li><p><code>rcboot</code>={n}</p>
 
 <p>Any non-zero number tells chyves to start the guest upon host boot when the 'chyves_enable=YES' directive is used in '/etc/rc.conf'. The integer represents the boot priority where the highest numbered guest is started first. Using '0' disables starting on host boot. If multiple guest share the same priority number, then those guests are started alphabetically.</p></li>
+<li><p><code>revert_to_snapshot</code>=@snapshot-name</p>
+
+<p>Describes the snapshot to revert to based on the handling method specified in 'revert_to_snapshot_method'. If this property is blank but a method is specified, then the latest snapshot is used.</p></li>
+<li><p><code>revert_to_snapshot_method</code>={both|off|reboot|start}</p>
+
+<p>Prior to starting and/or rebooting, a guest can be reverted to a previous snapshot state. This is helpful for guests that get modified outside of specification such as frequently compromised web server or VDI instances. Setting to 'start' only reverts the guest when starting the guest, 'reboot' only on reboots, 'both' for both starts and restarts, and 'off' to disable this feature on the guest.</p></li>
 <li><p><code>serial</code>=nmdm{n}</p>
 
 <p>Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation.</p></li>
@@ -754,22 +760,24 @@ subclass   = Fibre Channel
 <p>"-A -H -P" - default for guests running on FreeBSD less than 10.3.</p>
 
 <p>"-A -H -P -S" - default for guests running on FreeBSD 10.3 or later.</p></li>
-<li><p><code>bhyve_net_type</code>="virtio-net"</p></li>
-<li><p><code>bridge</code>="bridge0"</p>
+<li><p><code>bhyve_net_type</code>=virtio-net</p></li>
+<li><p><code>bridge</code>=bridge0</p>
 
 <p>Used to set the bridge to join tap interfaces to for new guests.</p></li>
-<li><p><code>cpu</code>="1"</p></li>
-<li><code>loader</code>="bhyveload"</li>
+<li><p><code>cpu</code>=1</p></li>
+<li><code>loader</code>=bhyveload</li>
 <li><code>os</code>=default</li>
 <li><code>ram</code>=256M</li>
 <li><code>rcboot</code>=0</li>
+<li><code>revert_to_snapshot</code>=""</li>
+<li><code>revert_to_snapshot_method</code>=off</li>
 <li><p><code>size</code>=8G</p>
 
-<p>Used during guest and disk creation when the size property is omitted. No longer a guest property. The ZFS property 'usedbychildren' is used to show the size in 'chyves info -z'.</p></li>
-<li><p><code>template</code>="no"</p></li>
+<p>Used during guest and disk creation when the size property is omitted. No longer a guest property. The ZFS property 'used' is used to show the size in 'chyves info -z'.</p></li>
+<li><p><code>template</code>=no</p></li>
 <li><code>uefi_console_output</code>=serial</li>
 <li><code>uefi_firmware</code>="-"</li>
-<li><code>uefi_vnc_client</code>="print"</li>
+<li><code>uefi_vnc_client</code>=print</li>
 <li><code>uefi_vnc_ip</code>=0.0.0.0</li>
 <li><code>uefi_vnc_mouse_type</code>=ps2</li>
 <li><code>uefi_vnc_pause_until_client_connect</code>=no</li>

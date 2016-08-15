@@ -57,24 +57,32 @@ __dataset_install() {
 		zfs create $_PRIMARY_POOL/chyves/Firmware
 		zfs create $_PRIMARY_POOL/chyves/ISO
 
-		__log 2 "Creating guest defaults dataset and properties..."
-		__write_property_value_to_config_file "defaults" "bhyve_net_type"  "virtio-net"
-		__write_property_value_to_config_file "defaults" "bridge"          "bridge0"
-		__write_property_value_to_config_file "defaults" "cpu"             "1"
-		__write_property_value_to_config_file "defaults" "loader"          "bhyveload"
-		__write_property_value_to_config_file "defaults" "os"              "default"
-		__write_property_value_to_config_file "defaults" "ram"             "256M"
-		__write_property_value_to_config_file "defaults" "rcboot"          "0"
-		__write_property_value_to_config_file "defaults" "size"            "8G"
-		__write_property_value_to_config_file "defaults" "template"        "no"
 		# Hosts on FreeBSD 10.3 or above need to use the "-S" bhyve wire memory flag otherwise fun stuff happens at memory starvation.
-		if [ "$_OS_VERSION_DATE" -lt "1003000" ];
+		if [ "$_OS_VERSION_DATE" -lt "1003000" ]; then
 			local _bhyve_args="-A -H -P"
 		else
 			local _bhyve_args="-A -H -P -S"
 		fi
 
+		__log 2 "Creating guest defaults dataset and properties..."
 		__write_property_value_to_config_file "defaults" "bargs"                                "$_bhyve_args"
+		__write_property_value_to_config_file "defaults" "bhyve_net_type"                       "virtio-net"
+		__write_property_value_to_config_file "defaults" "bridge"                               "bridge0"
+		__write_property_value_to_config_file "defaults" "cpu"                                  "1"
+		__write_property_value_to_config_file "defaults" "disk_volmode"                         "dev"
+		__write_property_value_to_config_file "defaults" "disk_volblocksize"                    "512"
+		__write_property_value_to_config_file "defaults" "disk_dedup"                           "inherit"
+		__write_property_value_to_config_file "defaults" "disk_compression"                     "inherit"
+		__write_property_value_to_config_file "defaults" "disk_primarycache"                    "inherit"
+		__write_property_value_to_config_file "defaults" "disk_secondarycache"                  "inherit"
+		__write_property_value_to_config_file "defaults" "loader"                               "bhyveload"
+		__write_property_value_to_config_file "defaults" "os"                                   "default"
+		__write_property_value_to_config_file "defaults" "ram"                                  "256M"
+		__write_property_value_to_config_file "defaults" "rcboot"                               "0"
+		__write_property_value_to_config_file "defaults" "revert_to_snapshot"                   ""
+		__write_property_value_to_config_file "defaults" "revert_to_snapshot_method"            "off"
+		__write_property_value_to_config_file "defaults" "size"                                 "8G"
+		__write_property_value_to_config_file "defaults" "template"                             "no"
 		__write_property_value_to_config_file "defaults" "uefi_console_output"                  "serial"
 		__write_property_value_to_config_file "defaults" "uefi_firmware"                        "-"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_client"                      "print"
@@ -82,13 +90,6 @@ __dataset_install() {
 		__write_property_value_to_config_file "defaults" "uefi_vnc_mouse_type"                  "ps2"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_pause_until_client_connect"  "no"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_res"                         "800x600"
-
-		__write_property_value_to_config_file "defaults" "disk_volmode"         "dev"
-		__write_property_value_to_config_file "defaults" "disk_volblocksize"    "512"
-		__write_property_value_to_config_file "defaults" "disk_dedup"           "inherit"
-		__write_property_value_to_config_file "defaults" "disk_compression"     "inherit"
-		__write_property_value_to_config_file "defaults" "disk_primarycache"    "inherit"
-		__write_property_value_to_config_file "defaults" "disk_secondarycache"  "inherit"
 
 		__log 2 "Setting up global properties on primary pool..."
 		__write_property_value_to_config_file "global" "auto_load_kernel_mods"                "yes"
@@ -176,11 +177,34 @@ __dataset_upgrade() {
 		__dataset_upgrade_lset_version
 	fi
 
-	# Template for second change.
-	#if [ "$_DATASET_pool_version_int" = "0002" ]; then
-	#	__log 1 "Upgrading dataset to version 0003"
+	# Updated to include new 'revert_to_snapshot' and 'revert_to_snapshot_method' default properties. Also update default 'bargs' to include '-S' flag on FreeBSD 10.3+ hosts.
+	if [ "$_DATASET_pool_version_int" = "0002" ]; then
+		__log 1 "Upgrading dataset to version 0003"
+
+		# Hosts on FreeBSD 10.3 or are recommended to use the "-S" bhyve wire memory flag otherwise fun stuff happens at memory starvation.
+		if [ "$_OS_VERSION_DATE" -ge "1003000" ]; then
+			__load_guest_default_parameters
+
+			# Check if the initial default value is the same, otherwise do not change.
+			if [ "$_GDP_bargs" = "-A -H -P" ] && [ "$_PRIMARY_POOL" = "$_pool" ]; then
+				__log 1 "Updating default 'bargs' value. "
+				__write_property_value_to_config_file "defaults" "bargs" "-A -H -P -S"
+			else
+				__log 1 "It is recommended to include the '-S' bhyve arguement in the 'bargs' property for guests and defaults."
+			fi
+		fi
+
+		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "revert_to_snapshot" ""
+		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "revert_to_snapshot_method" "off"
+		__write_property_value_to_config_file "manual" "dataset_version" "0003" "/chyves/$_pool/.config/pool.cfg"
+		__dataset_upgrade_lset_version
+	fi
+
+	# Template for third change.
+	#if [ "$_DATASET_pool_version_int" = "0003" ]; then
+	#	__log 1 "Upgrading dataset to version 0004"
 	#	<ACTION>
-	#	__write_property_value_to_config_file "manual" "dataset_version" "0003" "/chyves/$_pool/.config/pool.cfg"
+	#	__write_property_value_to_config_file "manual" "dataset_version" "0004" "/chyves/$_pool/.config/pool.cfg"
 	#	__dataset_upgrade_lset_version
 	#fi
 
