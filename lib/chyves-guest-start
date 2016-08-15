@@ -581,13 +581,11 @@ __start() {
 		__generate_bhyve_custom_pci_string
 		__log 2 "done."
 
-		# Print the command to start the UEFI guest when $_DEV_MODE is not "off".
-		if [ "$_DEV_MODE" != "off" ]; then
-			__log 3 "loader command ($_GP_loader):"
-			__log 3 "$_LOADER_cmd"
-			__log 3 "bhyve command:"
-			__log 3 "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_GUEST_name"
-		fi
+		__log 3 "loader command ($_GP_loader):"
+		__log 3 "$_LOADER_cmd"
+		__log 3 "bhyve command:"
+		__log 3 "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest"
+
 
 		# Start this portion in a seperated process
 		(
