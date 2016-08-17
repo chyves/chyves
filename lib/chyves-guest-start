@@ -435,6 +435,10 @@ __start() {
 		__load_guest_parameters "$_guest"
 		__log 2 "done."
 
+		__log 2 "Checking if guest is running... " -n
+		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running, PID: `__return_guest_bhyve_pid`\n"
+		__log 2 "not running."
+
 		# Revert to a previous snapshot state on start
 		if [ "$_GP_revert_to_snapshot_method" = "both" ] || [ "$_GP_revert_to_snapshot_method" = "start" ]; then
 
@@ -445,11 +449,16 @@ __start() {
 				local _rollback_to_snapshot="$_GP_revert_to_snapshot"
 			fi
 
-			__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
+			if [ ! "$_FIRST_snapshot_reload" ]; then
+				__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
 
-			__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken."
+				__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken, including guest properties. (Start reversion)"
 
-			__rollback_guest_snapshot "$_rollback_to_snapshot"
+				__rollback_guest_snapshot "$_rollback_to_snapshot"
+
+				__log 1 "Reloading guest properties as they may have changed."
+				__load_guest_parameters "$_guest"
+			fi
 		fi
 
 		# Do not let template guests start.
@@ -469,10 +478,6 @@ __start() {
 			__log 1 "$_GUEST_name is on a newer chyves guest version ($_GP_chyves_guest_version), not starting guest.\n"
 			continue
 		fi
-
-		__log 2 "Checking if guest is running... " -n
-		[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Guest ($_GUEST_name) already running, PID: `__return_guest_bhyve_pid`\n"
-		__log 2 "not running."
 
 		# Check and stop if loader is already running.
 		__stop_guest_loader
@@ -639,9 +644,25 @@ __start() {
 
 					__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
 
-					__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken."
+					__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken, including guest properties. (Reboot reversion)"
 
 					__rollback_guest_snapshot "$_rollback_to_snapshot"
+
+					# First, this stops the guest completely to allow for a restart of the guest with (potential) new settings.
+					# Second, this will not run a second time because at that point the reversion has happened and the guest properties do not need to be reloaded, only the disks need to reverted.
+					if [ ! "$_FIRST_snapshot_reload" ]; then
+
+						# This prevents a guest from getting reverted again.
+						_FIRST_snapshot_reload=1
+
+						__log 1 "Stopping guest completely to reload settings"
+						bhyvectl --destroy --vm=chy-$_guest
+
+						# This starts the guest in a separate process (effectively) because of the '( while[1] ) &' statement.
+						__log 1 "Restarting the guest."
+						__start $_GUEST_name $2
+						exit
+					fi
 				fi
 
 				__log 1 "Rebooting $_GUEST_name... "
