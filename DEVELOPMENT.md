@@ -12,7 +12,7 @@ Releases under `master` will be submitted to the ports tree under `sysutils/chyv
 If we (as developers) do a exceedingly job, the only difference between the dev and master releases SHOULD be a version increment.
 
 ### Script execution flow
-Functions are tiered in such a way that the first tier deals with argument and input verification from the user and the second tier deals with executing against the host. Part of the reason this is done is so that if one host function needs to call another host function, then execution is much quicker as input verification is not needed. This methodologyb also allows for using the `dev` subcommand for easier debugging.
+Functions are tiered in such a way that the first tier deals with argument and input verification from the user and the second tier deals with executing against the host. Part of the reason this is done is so that if one host function needs to call another host function, then execution is much quicker as input verification is not needed. This methodology also allows for using the `dev` subcommand for easier debugging.
 
 When `chyves` is executed:
 - Stage 1 globally variables are set, these variables do not rely on a primary pool being set; nor do they require `chyves` functions.
@@ -71,7 +71,7 @@ This bit of code can be a bit confusing when first seen:
   if [ ! -x "${_path_to_binary}" ]; then
     echo "Failed to find executable binary: '$_path_to_binary'"
     exit
-fi
+  fi
 ```
 
 ### Commonly used pipe sections
