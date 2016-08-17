@@ -51,7 +51,7 @@ __get() {
 __get_corrected_byte_nomenclature() {
 	local _var="$1"
 
-	[ -n "$( echo "$_var" | grep -v -E '^[0-9]{1,}[kmgtKMGT]{1}[bB]{0,1}$' )" ] && __fault_detected_exit "Unrecognized size: '$_var', must be any integer and optionally a suffix K, M, G, or T. Megabytes are assumed if not specified."
+	[ -n "$( echo "$_var" | grep -v -E '^[0-9]{1,}$|^[0-9]{1,}[kmgtKMGT]{1}[bB]{0,1}$' )" ] && __fault_detected_exit "Unrecognized size: '$_var', must be any integer and optionally a suffix K, M, G, or T. Megabytes are assumed if not specified."
 
 	# Change to upper case
 	local _var=$( echo "$_var" | tr '[:lower:]' '[:upper:]' )
