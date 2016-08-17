@@ -435,6 +435,23 @@ __start() {
 		__load_guest_parameters "$_guest"
 		__log 2 "done."
 
+		# Revert to a previous snapshot state on start
+		if [ "$_GP_revert_to_snapshot_method" = "both" ] || [ "$_GP_revert_to_snapshot_method" = "start" ]; then
+
+			if [ -z "$_GP_revert_to_snapshot" ]; then
+				local _rollback_to_snapshot="$( __return_guest_snapshot_last )"
+				[ -z "$_rollback_to_snapshot" ] && __fault_detected_warning_continue "No snapshots taken for $_GUEST_name\n"
+			else
+				local _rollback_to_snapshot="$_GP_revert_to_snapshot"
+			fi
+
+			__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
+
+			__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken."
+
+			__rollback_guest_snapshot "$_rollback_to_snapshot"
+		fi
+
 		# Do not let template guests start.
 		if [ "$_GP_template" = "yes" ]; then
 			__log 1 "$_GUEST_name is set as a template, not starting guest.\n"
@@ -468,23 +485,6 @@ __start() {
 		if [ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ]; then
 			__return_cpu_section_from_dmesg
 			__fault_detected_warning_continue "Missing CPU feature UG, can only start FreeBSD guests.\n"
-		fi
-
-		# Revert to a previous snapshot state on start
-		if [ "$_GP_revert_to_snapshot_method" = "both" ] || [ "$_GP_revert_to_snapshot_method" = "start" ]; then
-
-			if [ -z "$_GP_revert_to_snapshot" ]; then
-				local _rollback_to_snapshot="$( __return_guest_snapshot_last )"
-				[ -z "$_rollback_to_snapshot" ] && __fault_detected_warning_continue "No snapshots taken for $_GUEST_name\n"
-			else
-				local _rollback_to_snapshot="$_GP_revert_to_snapshot"
-			fi
-
-			__verify_valid_dataset "guests/$_GUEST_name$_rollback_to_snapshot"
-
-			__log 2 "Reverting guest to state when snapshot '$_rollback_to_snapshot' was taken."
-
-			__rollback_guest_snapshot "$_rollback_to_snapshot"
 		fi
 
 		# Set $_GUEST_disk_list in space delimited format for "for" loop below. Also set $_GUEST_disk_list_count.
