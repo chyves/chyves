@@ -598,11 +598,15 @@ __parse_cmd_resources() {
 
 	# List Firmware resources
 	if [ "$_command" = "list" ] && [ "$_resource_type" = "firmware" ]; then
+		__verify_number_of_arguments "2" "$#" "2"
 		__list_firmware
+		exit
 
 	# List ISO resources
 	elif [ "$_command" = "list" ] && [ "$_resource_type" = "iso" ]; then
+		__verify_number_of_arguments "2" "$#" "2"
 		__list_iso
+		exit
 	fi
 
 	case "$_command" in
@@ -617,6 +621,9 @@ __parse_cmd_resources() {
 		rename)   __verify_number_of_arguments "4" "$#" "4"
 		          __resource_rename "$_resource_type" "$_resource" "$4"
 		          exit
+		;;
+		*)        __help
+		          __fault_detected_exit "Unrecognized network command '$*'. See above for correct syntax."
 		;;
 	esac
 }
