@@ -553,7 +553,7 @@ __parse_cmd_network() {
 		;;
 		private)  __verify_number_of_arguments "2" "$#" "2"
 		          __verify_valid_system_iface "$_device" -c
-		          __network_private "$3"
+		          __network_private "$_device"
 		          exit
 		;;
 		attach)   __verify_number_of_arguments "3" "$#" "3"
