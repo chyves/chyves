@@ -551,7 +551,7 @@ __start() {
 			__log 2 "done."
 
 			# Special handling for VNC console
-			if [ "$_GP_uefi_console_output" = "vnc" ]; then
+			if [ "$_GP_uefi_console_output" = "vnc" ] && [ "$_OS_VERSION_DATE" -ge "1100000" ]; then
 
 				__log 2 "Generating bhyve PCI string for VNC console... " -n
 				__generate_bhyve_vnc_string
@@ -569,6 +569,8 @@ __start() {
 				else
 					__log 2 "PS/2 mouse... done."
 				fi
+			elif [ "$_GP_uefi_console_output" = "vnc" ] && [ "$_OS_VERSION_DATE" -lt "1100000" ]; then
+				__log 1 "Only hosts running on FreeBSD version 11 or later are capable of utilize a VNC console output due to new kernel changes."
 			fi
 		fi
 
