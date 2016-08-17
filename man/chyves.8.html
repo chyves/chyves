@@ -667,7 +667,7 @@ subclass   = Fibre Channel
 <p>Prior to starting and/or rebooting, a guest can be reverted to a previous snapshot state. This is helpful for guests that get modified outside of specification such as frequently compromised web server or VDI instances. Setting to 'start' only reverts the guest when starting the guest, 'reboot' only on reboots, 'both' for both starts and restarts, and 'off' to disable this feature on the guest.</p></li>
 <li><p><code>serial</code>=nmdm{n}</p>
 
-<p>Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation.</p></li>
+<p>Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation. Not recommended to be changed and can never be changed while guest is running.</p></li>
 <li><p><code>tap{n}_mac</code>={xx:xx:xx:yy:yy:yy}</p>
 
 <p>Where {n} is the tap interface number to assign the specified MAC address to be attached to the network adapter inside the guest OS. The MAC address is an ASCII string in <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?ethers(5)">ethers<span class="s">(5)</span></a> format.</p>

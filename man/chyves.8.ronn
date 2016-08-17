@@ -572,7 +572,7 @@ Usage:
 
 * `serial`=nmdm{n}
 
-  Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation.
+  Attaches null modem console. {n} must be a unique number and can not be shared between started guests. A unique number is given on creation. Not recommended to be changed and can never be changed while guest is running.
 
 * `tap{n}_mac`={xx:xx:xx:yy:yy:yy}
 

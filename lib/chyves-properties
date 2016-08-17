@@ -410,6 +410,11 @@ __verify_user_input_for_properties() {
 
 # serial
 		elif [ "$_property" = "serial" ]; then
+
+			__log 2 "Checking if guest is running... " -n
+			[ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_warning_continue "Can not change console while '$_GUEST_name' is running."
+			__log 2 "not running."
+
 			if [ -z "$( echo "$_value" | grep -E '^nmdm[0-9]{1,}$' )" ]; then
 				__fault_detected_warning_break 1 "Correct values for 'serial' property is 'nmdm' followed by any unique positive integer."
 			fi
