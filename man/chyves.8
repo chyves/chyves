@@ -9,7 +9,7 @@
 .SH "SYNOPSIS"
 .
 .IP "\(bu" 4
-\fBchyves dataset <pool> {install|offline|online|promote|uninstall|upgrade}\fR
+\fBchyves dataset <pool> {install|upgrade}\fR
 .
 .IP "\(bu" 4
 \fBchyves dev\fR
@@ -1334,42 +1334,6 @@ Prints the current running version of chyves
 .
 .IP
 Creates ZFS datasets and properties on pool\. This is the first step to getting chyves running\.
-.
-.IP "\(bu" 4
-\fBoffline\fR
-.
-.IP
-\fBchyves dataset <pool> offline\fR
-.
-.IP
-Offlines a pool\. This completely removes the dataset, the guests, and properties on a pool from any chyves commands or modifications\. Only the \'online\' command can bring this back to an operable state\. Only secondary pools can be offlined\.
-.
-.IP "\(bu" 4
-\fBonline\fR
-.
-.IP
-\fBchyves dataset <pool> online\fR
-.
-.IP
-Onlines an offline pool\.
-.
-.IP "\(bu" 4
-\fBpromote\fR
-.
-.IP
-\fBchyves dataset <pool> promote\fR
-.
-.IP
-Promotes a secondary pool to the primary role\. Moves ISO and Firmware resources\. Also moves defaults and global properties\.
-.
-.IP "\(bu" 4
-\fBuninstall\fR
-.
-.IP
-\fBchyves dataset <pool> uninstall\fR
-.
-.IP
-Uninstalls the ZFS datasets from pool\. Secondary pools must be uninstalled before the primary pool\.
 .
 .IP "\(bu" 4
 \fBupgrade\fR

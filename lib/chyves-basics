@@ -104,7 +104,7 @@ __version
 cat << 'EOT'
 
 COMMANDS:
-chyves dataset <pool> {install|offline|online|promote|uninstall|upgrade}
+chyves dataset <pool> {install|upgrade}
 chyves dev
 chyves firmware list
 chyves firmware import {http-URL|ftp-URL|local-path}

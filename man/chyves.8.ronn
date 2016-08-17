@@ -3,6 +3,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.13
 
 ## SYNOPSIS
 
+* `chyves dataset <pool> {install|upgrade}`
 * `chyves dev`
 * `chyves firmware list`
 * `chyves firmware import {http-URL|ftp-URL|local-path}`
@@ -803,6 +804,7 @@ Support for VNC client launching is utilized with `chyves <guest> console vnc`. 
   `chyves dataset <pool> install`
 
   Creates ZFS datasets and properties on pool. This is the first step to getting chyves running.
+
 * `upgrade`
 
   `chyves dataset <pool> upgrade`

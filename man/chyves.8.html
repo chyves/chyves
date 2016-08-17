@@ -90,6 +90,7 @@
 <h2 id="SYNOPSIS">SYNOPSIS</h2>
 
 <ul>
+<li><code>chyves dataset &lt;pool> {install|upgrade}</code></li>
 <li><code>chyves dev</code></li>
 <li><code>chyves firmware list</code></li>
 <li><code>chyves firmware import {http-URL|ftp-URL|local-path}</code></li>
@@ -892,26 +893,6 @@ subclass   = Fibre Channel
 <p><code>chyves dataset &lt;pool> install</code></p>
 
 <p>Creates ZFS datasets and properties on pool. This is the first step to getting chyves running.</p></li>
-<li><p><code>offline</code></p>
-
-<p><code>chyves dataset &lt;pool> offline</code></p>
-
-<p>Offlines a pool. This completely removes the dataset, the guests, and properties on a pool from any chyves commands or modifications. Only the 'online' command can bring this back to an operable state. Only secondary pools can be offlined.</p></li>
-<li><p><code>online</code></p>
-
-<p><code>chyves dataset &lt;pool> online</code></p>
-
-<p>Onlines an offline pool.</p></li>
-<li><p><code>promote</code></p>
-
-<p><code>chyves dataset &lt;pool> promote</code></p>
-
-<p>Promotes a secondary pool to the primary role. Moves ISO and Firmware resources. Also moves defaults and global properties.</p></li>
-<li><p><code>uninstall</code></p>
-
-<p><code>chyves dataset &lt;pool> uninstall</code></p>
-
-<p>Uninstalls the ZFS datasets from pool. Secondary pools must be uninstalled before the primary pool.</p></li>
 <li><p><code>upgrade</code></p>
 
 <p><code>chyves dataset &lt;pool> upgrade</code></p>
