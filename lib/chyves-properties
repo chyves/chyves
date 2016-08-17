@@ -84,6 +84,7 @@ __load_global_parameter_single() {
 	local _var="$( echo $_var | tr '[:lower:]' '[:upper:]' )"
 	_var2="_$_var"
 	export $_var2="$_value"
+	__log 4 "Global property: '$_var' value: '$_value'"
 }
 
 # Load single guest parameter from config file to $_GP_($_var)
@@ -92,6 +93,7 @@ __load_guest_default_parameter_single() {
 	local _value="$( cat $_DEFAULT_CONFIG_FILE | grep -m 1 -E "^$_var=" | cut -d'=' -f2- )"
 	_var2="_GDP_$_var"
 	export $_var2="$_value"
+	__log 4 "Guest defaults property: '$_var' value: '$_value'"
 }
 
 # Loads .defaults parameters to global variables
@@ -111,6 +113,7 @@ __load_guest_parameter_single() {
 	local _value="$( cat $_GUEST_config_file | grep -m 1 -E "^$_var=" | cut -d'=' -f2- )"
 	_var2="_GP_$_var"
 	export $_var2="$_value"
+	__log 4 "'$_GUEST_name' property: '$_var' value: '$_value'"
 }
 
 # Load guest parameters to global variables
@@ -218,7 +221,10 @@ __return_property_value_from_config_file() {
 	[ ! -e "$_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
 
 	# Print the value
-	echo "$( grep -m 1 -E "^$_var=" $_config_file | cut -d'=' -f2- )"
+	local _value="$( grep -m 1 -E "^$_var=" $_config_file | cut -d'=' -f2- )"
+	[ "$_type" = "guest" ] && __log 4 "Returning value for a $_type, property: '$_var' value: '$_value' for guest: '$_GUEST_name'"
+	[ ! "$_type" = "guest" ] && __log 4 "Returning value for a $_type, property: '$_var' value: '$_value'"
+	echo $_value
 }
 
 # Frontend interface to set chyves properties
@@ -742,8 +748,8 @@ __verify_user_input_for_properties() {
 
 # stdout_level
 		elif [ "$_property" = "stdout_level" ]; then
-			if [ -z "$( echo "$_value" | grep -E '[0-4]{1}' )" ]; then
-				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are '0', '1', '2', '3', or '4'. See man page for meaning."
+			if [ -z "$( echo "$_value" | grep -E '[0-3]{1}' )" ]; then
+				__fault_detected_warning_break 1 "Invalid value for '$_property', valid values are '0', '1', '2', or '3'. See man page for meaning."
 			fi
 
 # tap_start_offset

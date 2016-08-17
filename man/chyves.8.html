@@ -470,7 +470,9 @@
 
 <p><code>2 - regular</code>    + Each step in the sub command shown</p>
 
-<p><code>3 - verbose</code>    + Outputs bhyve and loader command used.</p></li>
+<p><code>3 - verbose</code>    + Outputs bhyve and loader command used.</p>
+
+<p><code>4</code>              - Never print to screen. Used in __return* functions that would break even with the value set to '0'.</p></li>
 <li><p><code>tap_start_offset</code>={integer}</p>
 
 <p><strong>User managed and settable.</strong></p>
@@ -1593,7 +1595,7 @@ chyves customgst start
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>August 15 2016</li>
+    <li class='tc'>August 16 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

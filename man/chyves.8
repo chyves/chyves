@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "August 15 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "August 16 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.0\.13
@@ -640,6 +640,9 @@ Determines the amount of output to send to the terminal\. The four numeric setti
 .
 .IP
 \fB3 \- verbose\fR + Outputs bhyve and loader command used\.
+.
+.IP
+\fB4\fR \- Never print to screen\. Used in __return* functions that would break even with the value set to \'0\'\.
 .
 .IP "\(bu" 4
 \fBtap_start_offset\fR={integer}

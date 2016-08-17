@@ -368,6 +368,8 @@ Properties:
 
   `3 - verbose`    + Outputs bhyve and loader command used.
 
+  `4`              - Never print to screen. Used in __return* functions that would break even with the value set to '0'.
+
 * `tap_start_offset`={integer}
 
   **User managed and settable.**
