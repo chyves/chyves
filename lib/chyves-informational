@@ -184,13 +184,15 @@ __list_pools() {
 	local _pool_list="$( __return_pools_all )"
 	(
 		echo "Pool:^Role:^Version:"
+	(
 		for _pool in $_pool_list
 		do
 			local _dataset_role=$( __return_property_value_from_config_file "manual" "dataset_role" "/chyves/$_pool/.config/pool.cfg" )
 			local _dataset_version=$( __return_property_value_from_config_file "manual" "dataset_version" "/chyves/$_pool/.config/pool.cfg" )
 			echo "$_pool^$_dataset_role^$_dataset_version"
 		done
-	) | sort -k1 | column -ts^
+	) | sort -k1
+	) | column -ts^
 }
 
 # List processes
