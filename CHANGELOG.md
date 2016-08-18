@@ -1,3 +1,41 @@
+#### Version 0.0.15 (2016 August 17)
+
+- Fixed issue when rolling back a snapshot on a guest with different network config. Incremented chyves guest version. [63885ed](https://github.com/chyves/chyves/commit/63885ede2087295ad53e999d617524885cefc5a3)
+
+- ENH: Added `-no-exit` flag for `__verify_tap_not_in_use` [c1c056e](https://github.com/chyves/chyves/commit/c1c056e11cf7b832bcd3df9a3f5bbe0cebae2e7d)
+
+- FIX: Variable in `__verify_iface_on_guest` missing. [3f784e8](https://github.com/chyves/chyves/commit/3f784e8903bf2cb8532ae6169b1fcef6d67aed1b)
+
+- ENH: Split `__network_remove` into two functions. [4920c13](https://github.com/chyves/chyves/commit/4920c1315600ebc1a49e7096b51d27e523d1c2f7)
+
+- FIX: Various problems with parsing for network add and remove. [3882dbb](https://github.com/chyves/chyves/commit/3882dbbcdab43682741e5c7525a670dbddaa8dd7)
+
+- FIX: Regex too loose for `grep`ping for tap interface in network library.  [c432053](https://github.com/chyves/chyves/commit/c432053c52243410c60146c70d9869c3eaa631c7)
+
+- FIX: Refined `__parse_cmd_resources` [4e0c106](https://github.com/chyves/chyves/commit/4e0c10690fb1ed4d1c26076ef27c6ae1acee5677)
+
+- FIX: Issue when assign bridge to private role. [442fe7c](https://github.com/chyves/chyves/commit/442fe7c58a5ce572911446afb4ff1afdca240c45)
+
+- FIX: Error when setting default bridge. [1b04ed8](https://github.com/chyves/chyves/commit/1b04ed80f81437f56bb3b68889d4de544f91e0fa)
+
+- Fixed issue with headers for `chyves list pools` [76b9c83](https://github.com/chyves/chyves/commit/76b9c8370b7b5a1b8e1eb7675f2da08e69286e06)
+
+- Added check for running host version when using VNC console output. [662e072](https://github.com/chyves/chyves/commit/662e072e14e065c681d5f36b57c2796e509210ac)
+
+- Various changes to doc files to bring to release state.
+
+- Disallow changing `serial` property on running guest. [4ef8a4a](https://github.com/chyves/chyves/commit/4ef8a4a58421e4c0217f94e2d21f4d155d334c9c)
+
+- Properties are not recorded to the log when pulling the value from the configuration file. Also also introduces 'stdout_level' setting '4' which is non-settable and never outputs to stdoutput. [382161a](https://github.com/chyves/chyves/commit/382161a341d558a71e102581c557ce2c031a61c9)
+
+- Fixed issue introduced by [4d60946](https://github.com/chyves/chyves/commit/4d60946507fac60b63b096e38a2359b126002f6f), non-trailing denominations re-allowed. [de875c3](https://github.com/chyves/chyves/commit/de875c3557e0a1939c4a12b3e23dc550bcb75407)
+
+- Fixed edge case where a reverting start or reboot snapshot would not reload guest settings. [8cfb332](https://github.com/chyves/chyves/commit/8cfb332c27616cef007d3e667ee66ccc2d2322a7)
+
+- Moved 'start' snapshot reverting `if` statement so that above commit was apparent what the changes were. [e50eea8](https://github.com/chyves/chyves/commit/e50eea81d8d2b92acb8c441449819bf0cb354423)
+
+- Fixed issue where bhyve and loader command would only be recorded when the `dev_mode` not set to 'off'. [87f24a0](https://github.com/chyves/chyves/commit/87f24a0b8e9449e49f00d4729739a6d94e9a8542)
+
 #### Version 0.0.13 (2016 August 15)
 
 - Guests can now be reverted to a previous snapshot state on start, reboot, both, or not at all (default). The new properties 'revert_to_snapshot' and 'revert_to_snapshot_method' control the snapshot and the method respectively for this process. [0e7f083](https://github.com/chyves/chyves/commit/0e7f083b24d24afd38da3e47bfe4c44620eb4c05)
