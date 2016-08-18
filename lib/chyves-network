@@ -57,7 +57,7 @@ __get_bridge_phy_iface_chyves() {
 
 # Get a list of bridges on chyves
 __get_bridge_list_on_chyves() {
-	local _var1=$( grep -o -E 'bridge[0-9]{1,5}' /chyves/$_PRIMARY_POOL/.config/global.cfg | sort | uniq )
+	local _var1=$( grep -o -E '^bridge[0-9]{1,5}' /chyves/$_PRIMARY_POOL/.config/global.cfg | sort | uniq )
 	_BRIDGE_list_on_chyves="$_var1"
 }
 
@@ -65,7 +65,7 @@ __get_bridge_list_on_chyves() {
 __get_parent_bridge_for_tap_chyves() {
 	local _tap="$1"
 	local _flag="$2"
-	_PARENT_bridge_for_tap_chyves=$( grep -E "bridge[0-9]{1,5}.*$_tap.*" /chyves/$_PRIMARY_POOL/.config/global.cfg | cut -d'_' -f1 )
+	_PARENT_bridge_for_tap_chyves=$( grep -E "bridge[0-9]{1,5}_tap_members=.*$_tap$|bridge[0-9]{1,5}_tap_members=.*$_tap,.*" /chyves/$_PRIMARY_POOL/.config/global.cfg | cut -d'_' -f1 )
 
 	if [ -z "$_PARENT_bridge_for_tap_chyves" ]; then
 		if [ -z "$_flag" ]; then
@@ -95,7 +95,7 @@ __get_parent_guest_for_tap_chyves() {
 	do
 		_GUEST_name="$_guest"
 		__gvset_guest_pool
-		if [ "$( grep -E '^net_ifaces=.*$_tap.*' /chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg )" ]; then
+		if [ -n "$( grep -E "^net_ifaces=.*$_tap$|^net_ifaces=.*$_tap,.*" /chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.cfg )" ]; then
 			if [ -z "$_PARENT_guest_for_tap_chyves" ]; then
 				_PARENT_guest_for_tap_chyves="$_guest"
 			else
@@ -198,7 +198,7 @@ __network_remove() {
 
 	# Set variable for new net configuration
 	# Expand string from comma separated, remove intended device, compress string back to comma separated, remove trailing commas.
-	local _guest_net_config=$( echo "${_guest_net_config}" | tr ',' '\n' | grep -v $_dev2 | tr '\n' ',' | sed -e 's/,$//g' )
+	local _guest_net_config=$( echo "${_guest_net_config}" | tr ',' '\n' | grep -v -E "^$_device_to_remove$" | tr '\n' ',' | sed -e 's/,$//g' )
 
 	# A dash is preferred rather than $null
 	[ -z "$_guest_net_config" ] && local _guest_net_config="-"
