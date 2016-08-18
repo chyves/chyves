@@ -197,6 +197,13 @@ __network_remove() {
 		[ "$_NETWORK_DESIGN_MODE" = "auto" ] && __network_bridge_unjoin "$_bridge" "$_dev2"
 	fi
 
+	__network_remove_guest_property_backend "$_dev2"
+}
+
+# Remove tap/vale interface from guest configuration
+__network_remove_guest_property_backend() {
+	local _device_to_remove="$1"
+
 	# Get config for guest
 	local _guest_net_config=$( __return_property_value_from_config_file "guest" "net_ifaces" )
 
