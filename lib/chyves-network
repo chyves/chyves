@@ -468,12 +468,18 @@ __verify_tap_not_in_use() {
 	__get_pid_locking_tap $1
 	if [ -n "$_PID_locking_tap" ]; then
 		__gvset_guest_name_by_pid $_PID_locking_tap
-		__fault_detected_exit "Tap already in use by $_GUEST_name_by_pid"
+		if [ "$_flag" != "-no-exit" ]; then
+			return 2
+		else
+			__fault_detected_exit "Tap already in use by $_GUEST_name_by_pid"
+		fi
 	fi
 
 	__get_parent_bridge_for_tap_chyves $_tap_in_question -n
 	if [ -n "$_PARENT_bridge_for_tap_chyves" ]; then
-		if [ "$_flag" != "-inverse-exit" ]; then
+		if [ "$_flag" != "-no-exit" ]; then
+			return 2
+		elif [ "$_flag" != "-inverse-exit" ]; then
 			__fault_detected_exit "'$_tap_in_question' already in use by $_PARENT_bridge_for_tap_chyves"
 		fi
 	else
