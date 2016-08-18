@@ -449,11 +449,13 @@ __verify_iface_on_guest() {
 
 	if [ -z "$_GP_net_ifaces" ]; then
 		local _guest_net_config=$( __return_property_value_from_config_file "guest" "net_ifaces" )
-		__log 1 "\$_GP_net_ifaces was not populated. You really should not be seeing this."
+		__log 4 "\$_GP_net_ifaces was not populated. You really should not be seeing this."
+	else
+		local _guest_net_config="$_GP_net_ifaces"
 	fi
 
-	if [ -z "$( echo "$_guest_net_config" | grep "$_iface_in_question" )"]; then
-		__fault_detected_exit "$_iface_in_question not configured on $_GUEST_name."
+	if [ -z "$( echo "$_guest_net_config" | grep "$_iface_in_question" )" ]; then
+		__fault_detected_exit "$_GUEST_name not associated with $_iface_in_question."
 	fi
 }
 
