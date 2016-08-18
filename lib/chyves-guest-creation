@@ -245,7 +245,7 @@ __create() {
 		__log 1 "Creating $_GUEST_name..."
 		__log 2 "Creating dataset on $_GUEST_pool"
 		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name
-		zfs create $_GUEST_pool/chyves/guests/$_GUEST_name/.config
+		zfs create -o snapdir=visible $_GUEST_pool/chyves/guests/$_GUEST_name/.config
 		_GUEST_mountpoint="$( __return_guest_dataset_mountpoint )"
 		_GUEST_config_file="$_GUEST_mountpoint/.config/.cfg"
 		touch $_GUEST_config_file

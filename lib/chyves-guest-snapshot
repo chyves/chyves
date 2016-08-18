@@ -40,7 +40,25 @@ __destroy_guest_snapshot() {
 # Rollback guest snapshot
 __rollback_guest_snapshot() {
 	local _snapshot_name="$1"
+	local _snapshot_name_nice="$( echo $_snapshot_name | sed 's/@//' )"
 	__log 1 "Rolling back to $_snapshot_name on dataset..."
+
+	# Load and log network configuration for current state and state at snapshot
+	local _ifaces_on_current="$( __return_property_value_from_config_file "guest" "net_ifaces"  )"
+	__log 3 "net_ifaces value before rollback to $_snapshot_name: $_ifaces_on_current"
+	local _ifaces_on_snapshot="$( __return_property_value_from_config_file "manual" "net_ifaces" "/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.zfs/snapshot/$_snapshot_name_nice/.cfg" )"
+	__log 3 "net_ifaces value after rollback to $_snapshot_name: $_ifaces_on_snapshot"
+
+	# Remove tap associations that will no longer exist on guest post-rollback state. Exists on current but not on snapshot.
+	for _interface in `echo $_ifaces_on_current | tr ',' ' '`
+	do
+		__verify_valid_iface_format "$_interface"
+		if [ -z "$( echo "$_ifaces_on_snapshot" | tr ',' '\n' | grep -E "^$_interface$" )" ] && [ "$_IFACE_type" = "tap" ]; then
+			__get_parent_bridge_for_tap_chyves "$_interface"
+			__log 2 "Removing associations with $_interface to $_PARENT_bridge_for_tap_chyves. $_interface does not exists on $_GUEST_name in post-rollback state."
+			__network_remove "$_interface"
+		fi
+	done
 
 	# Get each dataset to rollback on. No recursive function for zfs rollback.
 	for _dataset in `zfs list -H -t volume,filesystem -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
@@ -62,6 +80,39 @@ __rollback_guest_snapshot() {
 			fi
 		fi
 	done
+
+	# Create network associations for tap devices that previously did not exist on guest. Exists on snapshot but did not pre-rollback.
+	# Will associate tap interfaces to default bridge. (Not optimal but better than a broken network association state.)
+	# If tap has been reused inbetween the snapshot, the guest is reassigned a new tap interface.
+	for _interface_post in `echo $_ifaces_on_snapshot | tr ',' ' '`
+	do
+		__verify_valid_iface_format "$_interface_post"
+		if [ -z "$( echo "$_ifaces_on_current" | tr ',' '\n' | grep -E "^$_interface_post$" )" ] && [ "$_IFACE_type" = "tap" ]; then
+
+			# Handling for when tap is in use on system.
+			if [ "$( __verify_tap_not_in_use "$_interface_post" -no-exit )" = 2 ]; then
+				__log 1 "$_interface_post already in use on system. Removing $_interface_post from $_GUEST_name."
+				__network_remove_guest_property_backend $_interface_post
+				__log 1 "Creating new tap interface for guest $_GUEST_name and associating with default bridge."
+				__get_next_tap
+				__network_add "$_NEXT_tap"
+				__log 1 "Creating new snapshot to reflect network adjustmnet needed. The only delta will be the network configuration."
+				__snapshot_guest "${_snapshot_name}-network-auto-adjusted-by-chyves"
+
+				# Update 'revert_to_snapshot' if the same as the original snapshot name.
+				if [ "$_GP_revert_to_snapshot" = "$_snapshot_name"]; then
+					__log 1 "Updating 'revert_to_snapshot' to new snapshot."
+					__write_property_value_to_config_file "guest" "revert_to_snapshot" "${_snapshot_name}-network-auto-adjusted-by-chyves"
+				fi
+
+			# If tap interface not in use then create an association with the default bridge.
+			else
+				__log 2 "$_interface_post only exists on guest in post-rollback state. Creating associations with $_interface_post to $( __return_property_value_from_config_file "defaults" "bridge" ), previous bridge association not tracked."
+				__network_add "$_interface_post"
+			fi
+		fi
+	done
+
 	__log 1 "done."
 }
 
