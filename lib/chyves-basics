@@ -524,27 +524,30 @@ __parse_cmd_network() {
 
 	case "$_action" in
 		add)      __verify_number_of_arguments "3" "$#" "4"
+		          local _guest="$_device"
+		          local _bridge_to_attach="$4"
 		          __verify_guests $_device
 		          [ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest is running, please shutdown before changing network configuration."
 		          [ "$_dev2" = "tap" ] && __get_next_tap && local _dev2="$_NEXT_tap" # Populate tap interface variable if the word "tap" is used.
 		          __verify_valid_iface_format "$_dev2"
 		          local _dev2_type="$_IFACE_type" # Verify tap/vale interface
 		          [ "$_dev2_type" = "tap" ] && __verify_tap_not_in_use $_dev2 # Do not allow tap to be join if used elsewhere
-		          [ "$_dev2_type" != "vale" ] && [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network {name} add [tap{n}|vale{n}[:{p}]] [bridge{n}]'." # If $_dev2 is not a vale or tap then exit
-		          [ -n "$4" ] && __verify_valid_iface_format "$4" && [ "$_IFACE_type" != "bridge" ] && __fault_detected_exit "$4 is not a bridge, correct syntax is: 'chyves network <guest> add {tap|tap{n}} bridge{n}'."
-		          __load_one_guest_parameters "$1"
-		          __network_add "$_dev2" "$4"
+		          [ "$_dev2_type" != "vale" ] && [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used ( chyves network $* ). Must use: 'chyves network {name} add [tap{n}|vale{n}[:{p}]] [bridge{n}]'." # If $_dev2 is not a vale or tap then exit
+		          [ -n "$_bridge_to_attach" ] && __verify_valid_iface_format "$4" && [ "$_IFACE_type" != "bridge" ] && __fault_detected_exit "$_bridge_to_attach is not a bridge, correct syntax is: 'chyves network <guest> add {tap|tap{n}} bridge{n}'."
+		          __load_one_guest_parameters "$_guest"
+		          __network_add "$_dev2" "$_bridge_to_attach"
 		          exit
 		;;
-		remove)   __verify_number_of_arguments "3" "$#" "4"
-		          __verify_guests $_device
+		remove)   __verify_number_of_arguments "3" "$#" "3"
+		          local _guest="$_device"
+		          __verify_guests $_guest
 		          [ -n "$( __return_guest_bhyve_pid )" ] && __fault_detected_exit "Guest is running, please shutdown before changing network configuration."
 		          __verify_valid_iface_format "$_dev2"
 		          local _dev2_type="$_IFACE_type"
-		          [ "$_dev2_type" != "vale" ] || [ "$_dev2_type" != "tap" ] && __fault_detected_exit "Incorrect syntax used. Must use: 'chyves network <guest> remove [tap{n}|vale{n}[:{p}]]'." # If $_dev2 is not a vale or tap exit
-		          __load_one_guest_parameters "$2"
-		          __verify_iface_on_guest "$3"
-		          __network_remove "$3"
+		          [ "$_dev2_type" != "tap" ] && [ "$_dev2_type" != "vale" ] && __fault_detected_exit "Incorrect syntax used ( chyves network $* ). Must use: 'chyves network <guest> remove [tap{n}|vale{n}[:{p}]]'." # If $_dev2 is not a vale or tap exit
+		          __load_one_guest_parameters "$_guest"
+		          __verify_iface_on_guest "$_dev2"
+		          __network_remove "$_dev2"
 		          exit
 		;;
 		default)  __verify_number_of_arguments "2" "$#" "2"
