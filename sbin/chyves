@@ -139,6 +139,7 @@
 # __network_attach()                          # Used to associate a bridge with a physical or vlan interface interface
 # __network_add()                             # Part of this function is duplicated in __clone_guest
 # __network_remove()                          # Remove tap/vale interface from guest
+# __network_remove_guest_property_backend()   # Remove tap/vale interface from guest configuration
 # __network_bridge_join()                     # Join a tap device to a bridge membership
 # __network_bridge_migrate()                  # Migrates chyve devices on a bridge to another bridge and sets properties as necessary
 # __network_bridge_unjoin()                   # Unjoin a tap device from a bridge membership
