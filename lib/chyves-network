@@ -105,7 +105,11 @@ __get_parent_guest_for_tap_chyves() {
 	done
 
 	# Exits if no parent is found.
-	__fault_detected_exit "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} add $_tap'"
+	if [ -z "$_PARENT_guest_for_tap_chyves" ]; then
+		__log 1 "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} add $_tap'"
+	fi
+
+	__log 4 "\$_PARENT_guest_for_tap_chyves: $_PARENT_guest_for_tap_chyves"
 }
 
 # Get PID on tap
