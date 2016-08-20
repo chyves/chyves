@@ -22,7 +22,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.15
 * `chyves <guest> get {<property>|all}`
 * `chyves <guest>|MG|all reclaim`
 * `chyves <guest> rename <new-guest-name>`
-* `chyves <guest>|MG|global|defaults|all set [<prop1>=<value>]...`
+* `chyves <guest>|MG|global|defaults|all set <prop1>=<value>...`
 * `chyves <guest> snapshot [<@snapshotname>]`
 * `chyves <guest> snapshot delete <@snapshotname>`
 * `chyves <guest> snapshot rollback [<@snapshotname>]`
