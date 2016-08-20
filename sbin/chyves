@@ -403,7 +403,8 @@ __log() {
 			fi
 		fi
 
-		echo "$_full_timestamp - [$_output_level] - $_message" | tee -a $_host_log_path $_guest_log_path > /dev/null
+		echo "$_full_timestamp - [$_output_level] - $_message" | tee -a $_host_log_path $_guest_log_path > /dev/null 2>&1
+
 	fi
 }
 
