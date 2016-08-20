@@ -159,7 +159,7 @@ __gvset_guest_disk_list() {
 
 	# Formatting statements
 	if [ "$_flags" = "-new-line" ]; then
-		local _final_formated_output="$( echo "$_disks_dataset_list" )"
+		local _final_formated_output="$( echo "$_disks_dataset_list" | grep -v -E '^$' )"
 	elif [ "$_flags" = "-comma" ]; then
 		local _final_formated_output="$( echo "$_disks_dataset_list" | tr '\n' ',' )"
 	elif [ "$_flags" = "-grep" ]; then
