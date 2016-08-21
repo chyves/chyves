@@ -69,6 +69,7 @@ __console_run() {
 	echo "            or: [Enter] ~ [Ctrl]+D"
 	echo "See cu(1) for more information."
 	cu -s 9600 -l /dev/${_GP_serial}B
+	reset # This reinitializes the terminal
 }
 
 # Run console in tmux
