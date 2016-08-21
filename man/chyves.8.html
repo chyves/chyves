@@ -92,10 +92,10 @@
 <ul>
 <li><code>chyves dataset &lt;pool> {install|upgrade}</code></li>
 <li><code>chyves dev</code></li>
-<li><code>chyves firmware list</code></li>
-<li><code>chyves firmware import {http-URL|ftp-URL|local-path}</code></li>
-<li><code>chyves firmware rename &lt;firmware> &lt;new-firmware-name></code></li>
-<li><code>chyves firmware delete &lt;firmware></code></li>
+<li><code>chyves {firmware|iso} list</code></li>
+<li><code>chyves {firmware|iso} import {http-URL|ftp-URL|local-path}</code></li>
+<li><code>chyves {firmware|iso} rename &lt;resource> &lt;new-resource-name></code></li>
+<li><code>chyves {firmware|iso} delete &lt;resource></code></li>
 <li><code>chyves &lt;guest> clone &lt;clonenames>|MG [-ce|-cu|-ie|-iu] [&lt;pool>]</code></li>
 <li><code>chyves &lt;guest> console</code></li>
 <li><code>chyves &lt;guest>|MG|all console {reset|tmux|vnc}</code></li>
@@ -119,10 +119,6 @@
 <li><code>chyves &lt;guest>|MG|all unset &lt;property></code></li>
 <li><code>chyves help</code></li>
 <li><code>chyves info [-zbprvstcdnakl|-h]</code></li>
-<li><code>chyves iso list</code></li>
-<li><code>chyves iso import {http-URL|ftp-URL|local-path}</code></li>
-<li><code>chyves iso rename &lt;iso> &lt;new-iso-name></code></li>
-<li><code>chyves iso delete &lt;iso></code></li>
 <li><code>chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|&lt;property>]</code></li>
 <li><code>chyves list global [&lt;pool>|primary]</code></li>
 <li><code>chyves list {processes|snapshots} [&lt;guest>]</code></li>
@@ -156,8 +152,7 @@
 <li><code>&lt;guest></code>          - chyves guest name</li>
 <li><code>&lt;pool></code>           - ZFS pool. The word "primary" can be used to specify the primary pool.</li>
 <li><code>&lt;size></code>           - Whole number with a size suffix in kilobytes (K), megabytes (M), gigabytes (G), or terabytes (T).</li>
-<li><code>&lt;iso></code>            - ISO resource name</li>
-<li><code>&lt;firmware></code>       - UEFI firmware resource name</li>
+<li><code>&lt;resource></code>       - ISO or UEFI firmware resource name</li>
 <li><code>MG</code>               - Multiple guests can be given using commas. The word "all" can be used to indicate all guests for these commands.</li>
 </ul>
 

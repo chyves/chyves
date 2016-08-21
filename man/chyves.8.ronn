@@ -5,10 +5,10 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.15
 
 * `chyves dataset <pool> {install|upgrade}`
 * `chyves dev`
-* `chyves firmware list`
-* `chyves firmware import {http-URL|ftp-URL|local-path}`
-* `chyves firmware rename <firmware> <new-firmware-name>`
-* `chyves firmware delete <firmware>`
+* `chyves {firmware|iso} list`
+* `chyves {firmware|iso} import {http-URL|ftp-URL|local-path}`
+* `chyves {firmware|iso} rename <resource> <new-resource-name>`
+* `chyves {firmware|iso} delete <resource>`
 * `chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]`
 * `chyves <guest> console`
 * `chyves <guest>|MG|all console {reset|tmux|vnc}`
@@ -32,10 +32,6 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.15
 * `chyves <guest>|MG|all unset <pcidev_{n}>`
 * `chyves help`
 * `chyves info [-zbprvstcdnakl|-h]`
-* `chyves iso list`
-* `chyves iso import {http-URL|ftp-URL|local-path}`
-* `chyves iso rename <iso> <new-iso-name>`
-* `chyves iso delete <iso>`
 * `chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|<property>]`
 * `chyves list global [<pool>|primary]`
 * `chyves list {processes|snapshots} [<guest>]`
@@ -65,8 +61,7 @@ The following syntax nomenclature is used throughout this page:
 * `<guest>`          - chyves guest name
 * `<pool>`           - ZFS pool. The word "primary" can be used to specify the primary pool.
 * `<size>`           - Whole number with a size suffix in kilobytes (K), megabytes (M), gigabytes (G), or terabytes (T).
-* `<iso>`            - ISO resource name
-* `<firmware>`       - UEFI firmware resource name
+* `<resource>`       - ISO or UEFI firmware resource name
 * `MG`               - Multiple guests can be given using commas. The word "all" can be used to indicate all guests for these commands.
 
 ## DESCRIPTION

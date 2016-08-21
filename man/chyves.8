@@ -15,16 +15,16 @@
 \fBchyves dev\fR
 .
 .IP "\(bu" 4
-\fBchyves firmware list\fR
+\fBchyves {firmware|iso} list\fR
 .
 .IP "\(bu" 4
-\fBchyves firmware import {http\-URL|ftp\-URL|local\-path}\fR
+\fBchyves {firmware|iso} import {http\-URL|ftp\-URL|local\-path}\fR
 .
 .IP "\(bu" 4
-\fBchyves firmware rename <firmware> <new\-firmware\-name>\fR
+\fBchyves {firmware|iso} rename <resource> <new\-resource\-name>\fR
 .
 .IP "\(bu" 4
-\fBchyves firmware delete <firmware>\fR
+\fBchyves {firmware|iso} delete <resource>\fR
 .
 .IP "\(bu" 4
 \fBchyves <guest> clone <clonenames>|MG [\-ce|\-cu|\-ie|\-iu] [<pool>]\fR
@@ -94,18 +94,6 @@
 .
 .IP "\(bu" 4
 \fBchyves info [\-zbprvstcdnakl|\-h]\fR
-.
-.IP "\(bu" 4
-\fBchyves iso list\fR
-.
-.IP "\(bu" 4
-\fBchyves iso import {http\-URL|ftp\-URL|local\-path}\fR
-.
-.IP "\(bu" 4
-\fBchyves iso rename <iso> <new\-iso\-name>\fR
-.
-.IP "\(bu" 4
-\fBchyves iso delete <iso>\fR
 .
 .IP "\(bu" 4
 \fBchyves list [bridges|clones|defaults|disks|firmware|iso|pools|\e properties|<property>]\fR
@@ -188,10 +176,7 @@ The following syntax nomenclature is used throughout this page:
 \fB<size>\fR \- Whole number with a size suffix in kilobytes (K), megabytes (M), gigabytes (G), or terabytes (T)\.
 .
 .IP "\(bu" 4
-\fB<iso>\fR \- ISO resource name
-.
-.IP "\(bu" 4
-\fB<firmware>\fR \- UEFI firmware resource name
+\fB<resource>\fR \- ISO or UEFI firmware resource name
 .
 .IP "\(bu" 4
 \fBMG\fR \- Multiple guests can be given using commas\. The word "all" can be used to indicate all guests for these commands\.
