@@ -122,7 +122,7 @@ __destroy_guest_vmm_resouces() {
 
 				# Save the bhyvectl exit code
 				local _bhyvectl_force_poweroff_exit_code="$?"
-				__log 3 "\$bhyvectl_force_poweroff_exit_code: bhyvectl_force_poweroff_exit_code"
+				__log 3 "\$_bhyvectl_force_poweroff_exit_code: $_bhyvectl_force_poweroff_exit_code"
 
 				if [ "$_bhyvectl_force_poweroff_exit_code" -eq 0 ]; then
 					local _force_status=1
