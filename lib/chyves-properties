@@ -158,7 +158,7 @@ __remove_property_in_guest_config_file() {
 
 		[ ! -e "$_GUEST_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
 
-		if [ -z "$( echo "$_property" | grep -E '^pcidev_[0-9]{1,3}$' )" ]; then
+		if [ -z "$( echo "$_property" | grep -E '^eject_iso_on_n_reboot$|^pcidev_[0-9]{1,3}$' )" ]; then
 			__fault_detected_warning_break 1 "Only 'pcidev_{n}' devices can be removed from guests."
 		else
 			__log 2 "Removing $_property property from $_GUEST_name"
@@ -336,6 +336,12 @@ __verify_user_input_for_properties() {
 # chyves_guest_version
 		elif [ "$_property" = "chyves_guest_version" ]; then
 			__fault_detected_warning_break 1 "Not user settable."
+
+# eject_iso_on_n_reboot
+		elif [ "$_property" = "eject_iso_on_n_reboot" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^[0-9]{1,}$' )" ]; then
+				__fault_detected_warning_break 1 "Value must be a whoe number, use '0' to turn off."
+			fi
 
 # loader
 		elif [ "$_property" = "loader" ]; then
@@ -838,7 +844,7 @@ __write_property_value_to_config_file() {
 			# If new property restrition is on, see if a new property name is being supplied.
 			if [ "$_RESTRICT_NEW_PROPERTY_NAMES" = "on" ] && [ "$_NUMBER_OF_ALL_GUESTS" -gt "0" ]; then
 				local _valid_properties=$( __return_property_list -a )
-				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" "^pcidev_[0-9]{1,3}$|^tap[0-9]{1,5}_mac$|^template$|^virtio_block_options_disk[0-9]{1,5}$" )
+				local _string_to_grep=$( __convert_list_to_grep_string "$_valid_properties" "^eject_iso_on_n_reboot$|^pcidev_[0-9]{1,3}$|^tap[0-9]{1,5}_mac$|^template$|^virtio_block_options_disk[0-9]{1,5}$" )
 				if [ -z "$( echo "$_var" | grep -w -E "$_string_to_grep" )" ]; then
 					__fault_detected_exit "$_var is not a defined guest property and creation of new property creation is set to off, see 'restrict_new_property_names'."
 				fi

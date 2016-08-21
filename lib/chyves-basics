@@ -130,7 +130,7 @@ chyves <guest> snapshot rollback [<@snapshotname>]
 chyves <guest>|MG|all start [<iso>]
 chyves <guest>|MG|all stop [force]
 chyves <guest>|MG|all upgrade
-chyves <guest>|MG|all unset <pcidev_{n}>
+chyves <guest>|MG|all unset <property>
 chyves help
 chyves info [-zbprvstcdnakl|-h]
 chyves iso list

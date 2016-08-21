@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "August 19 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "August 21 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.0\.15
@@ -87,7 +87,7 @@
 \fBchyves <guest>|MG|all upgrade\fR
 .
 .IP "\(bu" 4
-\fBchyves <guest>|MG|all unset <pcidev_{n}>\fR
+\fBchyves <guest>|MG|all unset <property>\fR
 .
 .IP "\(bu" 4
 \fBchyves help\fR
@@ -578,11 +578,16 @@ Flag to use when cloning a guest and the clone type flag is omitted\. See clone 
 .IP
 Setting to "on" activates the following developer features:
 .
+.IP "\(bu" 4
+\fBeject_iso_on_n_reboot\fR={n}
+.
 .IP
 Displays the loader and bhyve commands used to start a guest\.
+\fBUser managed and settable\.\fR
 .
 .IP
 Allows for functions to be called direct from the command line using "chyves dev"\. Using the \-xvn flags instead of the word "on" will use Bourne\'s "set" command to turn on special option flags during "chyves dev" execution\. These flags can be used individually (\-x|\-v|\-n) or combined (\-xv)\. See sh(1)\.
+See same property name under the \fIGuest Properties\fR section below for description of functionality\.
 .
 .IP "\(bu" 4
 \fBlog_mode\fR={host|guest|dual}
@@ -738,6 +743,15 @@ Used to ensure the guest contains latest properties when moved between hosts on 
 .
 .IP
 Used to describe guest\. Use double quotes when description contains spaces\.
+.
+.IP "\(bu" 4
+\fBeject_iso_on_n_reboot\fR={n}
+.
+.IP
+This property determines if and when to eject the optical media when installing an OS\. By default this is set to \'1\' because most *nix systems install on the first boot\. Live CD should be turned to \'0\' and Windows systems should be set to \'2\' or greater\.
+.
+.IP
+There is a global property which shares the same name has has the same functionality\. The global proerty is used if not set on the guest\.
 .
 .IP "\(bu" 4
 \fBloader\fR={bhyveload|uefi|grub\-bhyve}
@@ -1474,7 +1488,7 @@ See \fIGUEST SNAPSHOT SUB\-SUB\-COMMANDS\fR section below\.
 \fBchyves <guest>|MG start [<iso>]\fR
 .
 .IP
-Where \fIiso\fR is optionally the name of an ISO resource\. This command starts bhyveload, grub\-bhyve, and UEFI guests\.
+Where \fIiso\fR is optionally the name of an ISO resource, this media is ejected after x amounts of boots as set by global or guest property \'eject_iso_on_n_reboot\'\. This command starts bhyveload, grub\-bhyve, and UEFI guests\.
 .
 .IP
 For grub\-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the \'os\' property\. This means the \fIdevice\.map\fR and the \fIgrub\.cfg\fR files generated reflect booting from the installation CD\. If a non\-booting CD is needed to be attached to a guest using grub\-bhyve, then manually adding a custom PCIDEV device is suggested\. See the \fIpcidev\fR{n}_ property under \fIGuest Properties\fR section for instructions\.
@@ -1501,10 +1515,19 @@ Upgrades a guest to the latest chyves guest version\. This add, removes, and mod
 \fBunset\fR
 .
 .IP
-\fBchyves <guest>|MG|all unset <pcidev_{n}>\fR
+\fBchyves <guest>|MG|all unset <property>\fR
 .
 .IP
-Removes a pcidev_{n} device from a guest\.
+Only the following properties may be removed from guests:
+.
+.IP "\(bu" 4
+\fBeject_iso_on_n_reboot\fR
+.
+.IP "\(bu" 4
+\fBpcidev_{n}\fR
+.
+.IP "\(bu" 4
+\fBvirtio_block_options_disk{n}\fR
 .
 .IP "" 0
 

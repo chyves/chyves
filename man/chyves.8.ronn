@@ -328,8 +328,12 @@ Properties:
   Setting to "on" activates the following developer features:
 
   Displays the loader and bhyve commands used to start a guest.
+* `eject_iso_on_n_reboot`={n}
 
   Allows for functions to be called direct from the command line using "chyves dev". Using the -xvn flags instead of the word "on" will use Bourne's "set" command to turn on special option flags during "chyves dev" execution. These flags can be used individually (-x|-v|-n) or combined (-xv). See sh(1).
+  **User managed and settable.**
+
+  See same property name under the [Guest Properties] section below for description of functionality.
 
 * `log_mode`={host|guest|dual}
 
@@ -433,6 +437,12 @@ Usage:
 * `description`="<INSERT BRIEF DESCRIPTION>"
 
   Used to describe guest. Use double quotes when description contains spaces.
+
+* `eject_iso_on_n_reboot`={n}
+
+  This property determines if and when to eject the optical media when installing an OS. By default this is set to '1' because most *nix systems install on the first boot. Live CD should be turned to '0' and Windows systems should be set to '2' or greater.
+
+  There is a global property which shares the same name has has the same functionality. The global proerty is used if not set on the guest.
 
 * `loader`={bhyveload|uefi|grub-bhyve}
 

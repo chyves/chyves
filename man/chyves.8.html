@@ -116,7 +116,7 @@
 <li><code>chyves &lt;guest>|MG|all start [&lt;iso>]</code></li>
 <li><code>chyves &lt;guest>|MG|all stop [force]</code></li>
 <li><code>chyves &lt;guest>|MG|all upgrade</code></li>
-<li><code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code></li>
+<li><code>chyves &lt;guest>|MG|all unset &lt;property></code></li>
 <li><code>chyves help</code></li>
 <li><code>chyves info [-zbprvstcdnakl|-h]</code></li>
 <li><code>chyves iso list</code></li>
@@ -435,10 +435,13 @@
 <p><strong>User managed and settable, advanced feature.</strong></p>
 
 <p>Setting to "on" activates the following developer features:</p>
+<li><p><code>eject_iso_on_n_reboot</code>={n}</p>
 
 <p>Displays the loader and bhyve commands used to start a guest.</p>
+<p><strong>User managed and settable.</strong></p>
 
 <p>Allows for functions to be called direct from the command line using "chyves dev". Using the -xvn flags instead of the word "on" will use Bourne's "set" command to turn on special option flags during "chyves dev" execution. These flags can be used individually (-x|-v|-n) or combined (-xv). See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?sh(1)">sh<span class="s">(1)</span></a>.</p></li>
+<p>See same property name under the <a href="#Guest-Properties" title="Guest Properties" data-bare-link="true">Guest Properties</a> section below for description of functionality.</p></li>
 <li><p><code>log_mode</code>={host|guest|dual}</p>
 
 <p><strong>User managed and settable.</strong></p>
@@ -533,6 +536,11 @@
 <li><p><code>description</code>="<var>INSERT BRIEF DESCRIPTION</var>"</p>
 
 <p>Used to describe guest. Use double quotes when description contains spaces.</p></li>
+<li><p><code>eject_iso_on_n_reboot</code>={n}</p>
+
+<p>This property determines if and when to eject the optical media when installing an OS. By default this is set to '1' because most *nix systems install on the first boot. Live CD should be turned to '0' and Windows systems should be set to '2' or greater.</p>
+
+<p>There is a global property which shares the same name has has the same functionality. The global proerty is used if not set on the guest.</p></li>
 <li><p><code>loader</code>={bhyveload|uefi|grub-bhyve}</p>
 
 <p>Tells which loader to use to boot guest. <code>bhyveload</code> is for FreeBSD based guests, <code>uefi</code> is used for UEFI based guests, and <code>grub-bhyve</code> is used for all other guests.</p>
@@ -978,7 +986,7 @@ subclass   = Fibre Channel
 
 <p><code>chyves &lt;guest>|MG start [&lt;iso>]</code></p>
 
-<p>Where <var>iso</var> is optionally the name of an ISO resource. This command starts bhyveload, grub-bhyve, and UEFI guests.</p>
+<p>Where <var>iso</var> is optionally the name of an ISO resource, this media is ejected after x amounts of boots as set by global or guest property 'eject_iso_on_n_reboot'. This command starts bhyveload, grub-bhyve, and UEFI guests.</p>
 
 <p>For grub-bhyve guests if a ISO is supplied, it is assumed to be the installation ISO for whichever OS is set by the 'os' property. This means the <em>device.map</em> and the <em>grub.cfg</em> files generated reflect booting from the installation CD. If a non-booting CD is needed to be attached to a guest using grub-bhyve, then manually adding a custom PCIDEV device is suggested. See the <em>pcidev</em>{n}_ property under <a href="#Guest-Properties" title="Guest Properties" data-bare-link="true">Guest Properties</a> section for instructions.</p></li>
 <li><p><code>stop</code></p>
@@ -995,9 +1003,14 @@ subclass   = Fibre Channel
 <ul>
 <li><p><code>unset</code></p>
 
-<p><code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code></p>
+<p><code>chyves &lt;guest>|MG|all unset &lt;property></code></p>
 
-<p>Removes a pcidev_{n} device from a guest.</p></li>
+<p>Only the following properties may be removed from guests:</p>
+
+<ul>
+<li><p><code>eject_iso_on_n_reboot</code></p></li>
+<li><p><code>pcidev_{n}</code></p></li>
+<li><p><code>virtio_block_options_disk{n}</code></p></li>
 </ul>
 </li>
 </ul>

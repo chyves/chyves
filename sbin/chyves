@@ -215,7 +215,7 @@
 _VERSION=0.0.15                        # Example: v11.6.25 - XXX.YY.ZZZ
 _VERSION_LONG="v0.0.15 2016/08/17"     # Example: v11.6.25 2021/12/31
 _VERSION_INT="00000015"                # Example: 01106025 XXXYYZZZ
-_VERSION_DATASET="0003"
+_VERSION_DATASET="0004"
 _VERSION_CHYVES_GUEST="0200"
 _VERSION_BRANCH=master
 _GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"

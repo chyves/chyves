@@ -421,6 +421,9 @@ __start() {
 	local _guest_list="$1"
 	local _media="$2"
 
+	# Used for optical media ejection
+	[ -z "$_REBOOT_count" ] && _REBOOT_count=0
+
 	[ "$_guest_list" = all ] && local _guest_list="$_GUEST_NAMES_ACTIVE"
 
 	# Load kernel modules if set to or just check they are loaded.
@@ -497,6 +500,17 @@ __start() {
 		if [ "$_CPU_MISSING_UG" ] && [ "$_GP_loader" != "bhyveload" ]; then
 			__return_cpu_section_from_dmesg
 			__fault_detected_warning_continue "Missing CPU feature UG, can only start FreeBSD guests.\n"
+		fi
+
+		# Used for optical media ejection, if set as guest property use that value, otherwise use global value.
+		if [ -n "$_GP_eject_iso_on_n_reboot" ]; then
+			local _eject_after_this_count="$_GP_eject_iso_on_n_reboot"
+			local _eject_iso_on_n_reboot_scope="guest"
+		elif [ -n "$_EJECT_ISO_ON_N_REBOOT" ]; then
+			local _eject_after_this_count="$_EJECT_ISO_ON_N_REBOOT"
+			local _eject_iso_on_n_reboot_scope="global"
+		else # Not needed but a fall back.
+			local _eject_after_this_count="0"
 		fi
 
 		# Set $_GUEST_disk_list in space delimited format for "for" loop below. Also set $_GUEST_disk_list_count.
@@ -607,6 +621,25 @@ __start() {
 			# Use while loop to make sure guest will reboot correctly.
 			while [ 1 ]
 			do
+
+				# Eject optical media after reboot
+				if [ "$_REBOOT_count" = "$_eject_after_this_count" ] && [ ! "$_EJECT_media_once" ]; then
+
+					# Keep from continual looping
+					_EJECT_media_once=1
+
+					# Clear out global variable for optical media
+					_BHYVE_optical_media_string=""
+
+					__log 1 "Stopping guest completely to reload without optical media using the $_eject_iso_on_n_reboot_scope property 'eject_iso_on_n_reboot' value '$_eject_after_this_count'."
+					bhyvectl --destroy --vm=chy-$_guest
+
+					# This starts the guest in a separate process (effectively) because of the '( while[1] ) &' statement.
+					__log 1 "Restarting the guest without optical media attached."
+					__start $_GUEST_name
+					exit
+				fi
+
 				# Special handling for non-UEFI guests - UEFI does not need a loader as it uses the firmware to boot.
 				if [ "$_GP_loader" != "uefi" ]; then
 
@@ -640,6 +673,9 @@ __start() {
 					bhyvectl --destroy --vm=chy-$_guest
 					exit $_bhyve_exit_code
 				fi
+
+				# Used to know when to eject disk. Snapshot reversion requires either two entries or setting variable before reversion handling.
+				_REBOOT_count="$( expr $_REBOOT_count + 1 )"
 
 				# Revert to a previous snapshot state on reboot
 				if [ "$_GP_revert_to_snapshot_method" = "both" ] || [ "$_GP_revert_to_snapshot_method" = "reboot" ]; then
@@ -675,6 +711,7 @@ __start() {
 				fi
 
 				__log 1 "Rebooting $_GUEST_name... "
+				__log 3 "This is the $_REBOOT_count reboot."
 				sleep 5
 			done
 		) &
