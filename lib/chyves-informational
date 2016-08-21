@@ -65,9 +65,9 @@ __list_clones() {
 	_CLONE_tiers=0
 
 	# Find all ZFS datasets with clones associated with them
-	local _clone_parents="$( zfs get -H -r -o name,value origin | awk '$2 != "-" {print $2}' | cut -d'/' -f4 | sort | uniq | tr '\n' ' ' )"
+	local _clone_parents="$( zfs get -H -r -o name,value origin | grep /chyves/guests/ | awk '$2 != "-" {print $2}' | cut -d'/' -f4 | sort | uniq | tr '\n' ' ' )"
 
-	[ "$_clone_parents" = " " ] && echo "No clones on host" && exit
+	[ "$_clone_parents" = "" ] && echo "No clones on host" && exit
 
 	echo "Hierarchical overview of clones:"
 
