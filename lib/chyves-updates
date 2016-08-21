@@ -37,7 +37,7 @@ __check_for_chyves_update() {
 		elif [ "$_check_again_date" -ge "$_CHECK_FOR_UPDATES_LAST_CHECK" ]; then
 			__log 1 "Checking for newer version of chyves on the $_VERSION_BRANCH branch from $_CHECK_FOR_UPDATES_URL."
 			local _fetched_version_library=$( fetch --timeout $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS --quiet -o - --user-agent="chyves $_VERSION_LONG ( $_OS $_OS_VERSION_REL $_OS_VERSION_DATE $_OS_VERSION_REV $_OS_VERSION_FREENAS ; ${_CHECK_FOR_UPDATES_UNIQUE_ID}; )" $_CHECK_FOR_UPDATES_URL )
-			local _grepped_version=$( echo "$_fetched_version_library" | grep '$_VERSION_INT' | cut -d'"' -f1 )
+			local _grepped_version=$( echo "$_fetched_version_library" | grep -E '^_VERSION_INT=' | cut -d'"' -f1 )
 
 			if [ -z "$_grepped_version" ]; then
 				__log 1 "Unable to obtain current available version information from $_CHECK_FOR_UPDATES_URL after $_CHECK_FOR_UPDATES_TIMEOUT_SECONDS seconds."
