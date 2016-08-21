@@ -642,8 +642,12 @@ __parse_cmd_snapshot() {
 	__root_credentials_required
 	__load_one_guest_parameters "$_single_guest"
 
+	# List snapshots for guest.
+	if [ "$_arg3" = "list" ]; then
+		__list_snapshots
+
 	# Rollback guest
-	if [ "$_arg3" = "rollback" ]; then
+	elif [ "$_arg3" = "rollback" ]; then
 		local _latest_snapshot="$( __return_guest_snapshot_last )"
 		[ -z "$_rollback_to_snapshot" ] && local _rollback_to_snapshot="$_latest_snapshot"
 		[ -z "$_rollback_to_snapshot" ] && __fault_detected_exit "No snapshots taken for $_GUEST_name"
