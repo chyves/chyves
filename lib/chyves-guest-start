@@ -348,7 +348,10 @@ __generate_grub_bhyve_command() {
 	# Boot from optical media when present.
 	if [ -n "$_media" ]; then
 		__log 2 "Booting grub-bhyve guest from optical media."
-		if [ $_GP_os = "openbsd59" ]; then
+		if [ $_GP_os = "openbsd60" ]; then
+			printf 'kopenbsd -h com0 (cd0)/6.0/amd64/bsd.rd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "openbsd59" ]; then
 			printf 'kopenbsd -h com0 (cd0)/5.9/amd64/bsd.rd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "openbsd58" ]; then
@@ -380,13 +383,7 @@ __generate_grub_bhyve_command() {
 	# Boot from hard drive.
 	else
 		__log 2 "Booting grub-bhyve guest from hard drive."
-		if [ $_GP_os = "openbsd59" ]; then
-			printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "openbsd58" ]; then
-			printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "openbsd57" ]; then
+		if [ $_GP_os = "openbsd57" ] || [ $_GP_os = "openbsd58" ] || [ $_GP_os = "openbsd59" ] || [ $_GP_os = "openbsd60" ]; then
 			printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "netbsd" ]; then
