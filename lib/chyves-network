@@ -69,7 +69,7 @@ __get_parent_bridge_for_tap_chyves() {
 
 	if [ -z "$_PARENT_bridge_for_tap_chyves" ]; then
 		if [ -z "$_flag" ]; then
-			__fault_detected_exit "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} add $_tap'"
+			__fault_detected_exit "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} join $_tap'"
 		fi
 	fi
 }
@@ -106,7 +106,7 @@ __get_parent_guest_for_tap_chyves() {
 
 	# Exits if no parent is found.
 	if [ -z "$_PARENT_guest_for_tap_chyves" ]; then
-		__log 1 "$_tap not found to be configured in chyves for a bridge interface. Please add to a bridge: 'chyves network bridge{n} add $_tap'"
+		__log 1 "$_tap not found to be configured in chyves for a guest."
 	fi
 
 	__log 4 "\$_PARENT_guest_for_tap_chyves: $_PARENT_guest_for_tap_chyves"
