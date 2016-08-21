@@ -43,22 +43,9 @@ __rollback_guest_snapshot() {
 	local _snapshot_name_nice="$( echo $_snapshot_name | sed 's/@//' )"
 	__log 1 "Rolling back to $_snapshot_name on dataset..."
 
-	# Load and log network configuration for current state and state at snapshot
+	# Load and log network configuration for current state
 	local _ifaces_on_current="$( __return_property_value_from_config_file "guest" "net_ifaces"  )"
 	__log 3 "net_ifaces value before rollback to $_snapshot_name: $_ifaces_on_current"
-	local _ifaces_on_snapshot="$( __return_property_value_from_config_file "manual" "net_ifaces" "/chyves/$_GUEST_pool/guests/$_GUEST_name/.config/.zfs/snapshot/$_snapshot_name_nice/.cfg" )"
-	__log 3 "net_ifaces value after rollback to $_snapshot_name: $_ifaces_on_snapshot"
-
-	# Remove tap associations that will no longer exist on guest post-rollback state. Exists on current but not on snapshot.
-	for _interface in `echo $_ifaces_on_current | tr ',' ' '`
-	do
-		__verify_valid_iface_format "$_interface"
-		if [ -z "$( echo "$_ifaces_on_snapshot" | tr ',' '\n' | grep -E "^$_interface$" )" ] && [ "$_IFACE_type" = "tap" ]; then
-			__get_parent_bridge_for_tap_chyves "$_interface"
-			__log 2 "Removing associations with $_interface to $_PARENT_bridge_for_tap_chyves. $_interface does not exists on $_GUEST_name in post-rollback state."
-			__network_remove "$_interface"
-		fi
-	done
 
 	# Get each dataset to rollback on. No recursive function for zfs rollback.
 	for _dataset in `zfs list -H -t volume,filesystem -r -o name $_GUEST_pool/chyves/guests/$_GUEST_name | tr '\n' ' '`
@@ -78,6 +65,21 @@ __rollback_guest_snapshot() {
 			else
 				__log 2 "...done."
 			fi
+		fi
+	done
+
+	# Load and log network configuration for state after snapshot rollback
+	local _ifaces_on_snapshot="$( __return_property_value_from_config_file "guest" "net_ifaces" )"
+	__log 3 "net_ifaces value after rollback to $_snapshot_name: $_ifaces_on_snapshot"
+
+	# Remove tap associations that will no longer exist on guest post-rollback state. Exists on current but not on snapshot.
+	for _interface in `echo $_ifaces_on_current | tr ',' ' '`
+	do
+		__verify_valid_iface_format "$_interface"
+		if [ -z "$( echo "$_ifaces_on_snapshot" | tr ',' '\n' | grep -E "^$_interface$" )" ] && [ "$_IFACE_type" = "tap" ]; then
+			__get_parent_bridge_for_tap_chyves "$_interface"
+			__log 2 "Removing associations with $_interface to $_PARENT_bridge_for_tap_chyves. $_interface does not exists on $_GUEST_name in post-rollback state."
+			__network_remove "$_interface"
 		fi
 	done
 
