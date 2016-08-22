@@ -158,7 +158,7 @@ __remove_property_in_guest_config_file() {
 
 		[ ! -e "$_GUEST_config_file" ] && __fault_detected_exit "Configuration file not found ($_config_file)."
 
-		if [ -z "$( echo "$_property" | grep -E '^eject_iso_on_n_reboot$|^pcidev_[0-9]{1,3}$' )" ]; then
+		if [ -z "$( echo "$_property" | grep -E '^eject_iso_on_n_reboot$|^pcidev_[0-9]{1,3}$|^virtio_block_options_disk[0-9]{1,3}$' )" ]; then
 			__fault_detected_warning_break 1 "Only 'pcidev_{n}' devices can be removed from guests."
 		else
 			__log 2 "Removing $_property property from $_GUEST_name"
