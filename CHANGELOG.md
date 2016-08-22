@@ -1,3 +1,15 @@
+#### Version 0.1.0 (2016 August 21)
+
+Public release
+
+- DOC: Update for chyves global props for Github checker. [53527c2]](https://github.com/chyves/chyves/commit/53527c271d131c9473f9ea160247d4fb495c23cf)
+
+- Various minor tweaks to get the two commands below working.
+
+- Turned on the ability check for new versions of chyves on GitHub based on the global property 'check_for_updates'. [92881c2](https://github.com/chyves/chyves/commit/92881c29c6e9508a73d10f5b3866dbf4fbd362b2)
+
+- New command `chyves upgrade [master|dev|check]` to upgrade or check the latest version for the particular running branch on GitHub. [6055762](https://github.com/chyves/chyves/commit/6055762231344b67ebef0f1d347d9be96bf022ae)
+
 #### Version 0.0.17 (2016 August 21)
 
 - Allow guest property `virtio_block_options_disk{n}` to be `unset`. [5189276](https://github.com/chyves/chyves/commit/51892769e1f4183f0a3e12aefdb9957f70dd7192)
