@@ -131,6 +131,7 @@
 <li><code>chyves network bridge{n} {default|private}</code></li>
 <li><code>chyves network bridge{n} {join|unjoin} tap{n}</code></li>
 <li><code>chyves network bridge{n} migrate bridge{n}</code></li>
+<li><code>chyves upgrade [master|dev|check]</code></li>
 <li><code>chyves version</code></li>
 </ul>
 
@@ -893,9 +894,16 @@ subclass   = Fibre Channel
 <li><p><code>list</code></p>
 
 <p>See <a href="#LIST-SUB-COMMANDS" title="LIST SUB-COMMANDS" data-bare-link="true">LIST SUB-COMMANDS</a> section.</p></li>
+<li><p><code>upgrade</code></p>
+
+<p><code>chyves upgrade [master|dev|check]</code></p>
+
+<p>Downloads and installs the latest version from the current running branch on GitHub. Optionally the branch can be specified to change branches. Changing from <code>dev</code> to <code>master</code> may render an unusable system if the 'chyves_guest_version' or 'dataset_version' has changed in those branches and those changes have not made it to 'master' yet.</p>
+
+<p>To run only a version check, use the keyword 'check'.</p></li>
 <li><p><code>version</code></p>
 
-<p>Prints the current running version of chyves</p></li>
+<p>Prints the current running chyves version, dataset version, guest version, and branch.</p></li>
 </ul>
 
 

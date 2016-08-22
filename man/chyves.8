@@ -132,6 +132,9 @@
 \fBchyves network bridge{n} migrate bridge{n}\fR
 .
 .IP "\(bu" 4
+\fBchyves upgrade [master|dev|check]\fR
+.
+.IP "\(bu" 4
 \fBchyves version\fR
 .
 .IP "" 0
@@ -1382,10 +1385,22 @@ See \fIISO SUB\-COMMANDS\fR section\.
 See \fILIST SUB\-COMMANDS\fR section\.
 .
 .IP "\(bu" 4
+\fBupgrade\fR
+.
+.IP
+\fBchyves upgrade [master|dev|check]\fR
+.
+.IP
+Downloads and installs the latest version from the current running branch on GitHub\. Optionally the branch can be specified to change branches\. Changing from \fBdev\fR to \fBmaster\fR may render an unusable system if the \'chyves_guest_version\' or \'dataset_version\' has changed in those branches and those changes have not made it to \'master\' yet\.
+.
+.IP
+To run only a version check, use the keyword \'check\'\.
+.
+.IP "\(bu" 4
 \fBversion\fR
 .
 .IP
-Prints the current running version of chyves
+Prints the current running chyves version, dataset version, guest version, and branch\.
 .
 .IP "" 0
 .

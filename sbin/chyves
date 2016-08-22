@@ -199,6 +199,7 @@
 #
 ## ../lib/chyves-updates                      ## Function for checking for updates.
 # __check_for_chyves_update()                  # Check for chyves updated
+# __install_from_github()                      # Install latest chyves version from GitHub using specific branch.
 #
 ## ../lib/chyves-verify                       ## Function for verify something on the host
 # __verify_all_kernel_modules()                # Verify all modules in $_KERNEL_MODULES

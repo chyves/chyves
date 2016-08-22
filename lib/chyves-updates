@@ -54,3 +54,117 @@ __check_for_chyves_update() {
 		fi
 	fi
 }
+
+# Install latest chyves version from GitHub using specific branch.
+__install_from_github() {
+	local _branch_override="$1"
+	local _tmp_dir="/tmp/$_UUID_GUEST_USE"
+	_CHECK_FOR_UPDATES=always                 # This forces a check now.
+	_CHECK_FOR_UPDATES_LAST_CHECK_STATUS="0"  # This forces a check now.
+	__check_for_chyves_update
+
+	# Handling for branch to upgrade to. Or if this just a check.
+	if [ -n "$_branch_override" ]; then
+		if [ "$_branch_override" = "check" ]; then
+			exit
+		elif [ "$_branch_override" = "master" ] && [ "$_branch_override" = "dev" ]; then
+			local _upgrade_branch="$_branch_override"
+		else
+			__fault_detected_exit "Unrecognized parameter '$1', valid branches are 'master' or 'dev'."
+		fi
+	else
+		local _upgrade_branch="$_VERSION_BRANCH"
+	fi
+
+	# This will be changed to "1" when an update is avaible.
+	if [ "$_CHECK_FOR_UPDATES_LAST_CHECK_STATUS" = 0 ]; then
+		__log 1 "On the latest version already."
+		exit
+	fi
+
+	__log 1 "Installing latest version of chyves from GitHub, using branch: $_upgrade_branch"
+
+	__log 2 "This install is currently running $_VERSION_BRANCH branch of chyves on version: $_VERSION_LONG"
+
+	__log 2 "Checking network connectivity to github.com... " -n
+	ping -o -q -c 2 github.com > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Unable to ping Github.com, exiting."
+		exit
+	else
+		__log 2 "success."
+	fi
+
+	__log 2 "Creating directory: $_tmp_dir"
+	mkdir $_tmp_dir > /dev/null 2>&1
+	[ "$?" != 0 ] && __fault_detected_exit "Unable to create folder in temporary directory '$_tmp_dir'."
+
+	# Remove temporary working directory.
+	__install_from_github_micro_cleanup() {
+		__log 2 "Removing temporary working folder... " -n
+		cd ~
+		rm -rf $_tmp_dir > /dev/null 2>&1
+		if [ "$?" != 0 ]; then
+			__log 2 "Unable to delete folder '$_tmp_dir', you will need to manually remove it."
+		else
+			__log 2 "done."
+		fi
+		exit
+	}
+
+	__log 2 "Changing to directory '$_tmp_dir'... " -n
+	cd $_tmp_dir > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Unable to change to temporary directory '$_tmp_dir'. Cleaning up and exiting."
+		__install_from_github_micro_cleanup
+	else
+		__log 2 "done."
+	fi
+
+	__log 2 "Fetching latest code from $_upgrade_branch branch... " -n
+	fetch --quiet https://github.com/chyves/chyves/archive/$_upgrade_branch.zip -o $_tmp_dir/ > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Unable to retreive latest chyves code on branch $_upgrade_branch from Github.com"
+		exit
+	else
+		if [ ! -f "$_tmp_dir/$_upgrade_branch.zip" ]; then
+			__log 1 "Missing downloaded zip file from Github."
+			__install_from_github_micro_cleanup
+		else
+			__log 2 "done."
+		fi
+	fi
+
+	__log 2 "Extracting archive file '$_upgrade_branch.zip'... " -n
+	unzip $_tmp_dir/$_upgrade_branch.zip > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Unable to retreive latest chyves code on $_upgrade_branch branch from Github.com"
+		__install_from_github_micro_cleanup
+	else
+		__log 2 "done."
+	fi
+
+	__log 2 "Changing to directory '$_tmp_dir/chyves-$_upgrade_branch'... " -n
+	cd $_tmp_dir/chyves-$_upgrade_branch > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Unable to change to temporary directory '$_tmp_dir/chyves-$_upgrade_branch'. Cleaning up and exiting."
+		__install_from_github_micro_cleanup
+	else
+		__log 2 "done."
+	fi
+
+	__log 2 "Installing new version of chyves... " -n
+	make install > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		__log 1 "Failed to install chyves."
+		__install_from_github_micro_cleanup
+	else
+		__log 2 "done."
+	fi
+
+	__log 1 "The following version of chyves is now installed:"
+	chyves version
+	__log 1 "You may need to update the datasets and/or guests."
+
+	__install_from_github_micro_cleanup
+}

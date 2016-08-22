@@ -146,6 +146,7 @@ chyves network bridge{n} attach {vlan-iface{n}|physical-iface{n}}
 chyves network bridge{n} {default|private}
 chyves network bridge{n} {join|unjoin} tap{n}
 chyves network bridge{n} migrate bridge{n}
+chyves upgrade [master|dev|check]
 chyves version
 
 SYNTAX NOMENCLATURE:
@@ -210,6 +211,10 @@ __parse_cmd_ingress() {
 		;;
 		_network)     shift 1
 		              __parse_cmd_network $@
+		              exit
+		;;
+		_upgrade)     __verify_number_of_arguments "1" "$#" "2"
+		              __install_from_github $2
 		              exit
 		;;
 		_version)     __verify_number_of_arguments "1" "$#"
@@ -731,6 +736,7 @@ __root_credentials_required() {
 # Show version
 __version() {
 	__log 1 "chyves $_VERSION_LONG"
-	__log 1 "chyves dataset version $_VERSION_DATASET"
-	__log 1 "chyves guest version $_VERSION_CHYVES_GUEST"
+	__log 1 "chyves branch: '$_VERSION_BRANCH'"
+	__log 1 "chyves dataset version: $_VERSION_DATASET"
+	__log 1 "chyves guest version: $_VERSION_CHYVES_GUEST"
 }

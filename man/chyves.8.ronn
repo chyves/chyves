@@ -44,6 +44,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.0.17
 * `chyves network bridge{n} {default|private}`
 * `chyves network bridge{n} {join|unjoin} tap{n}`
 * `chyves network bridge{n} migrate bridge{n}`
+* `chyves upgrade [master|dev|check]`
 * `chyves version`
 
 ## SYNTAX NOMENCLATURE:
@@ -803,9 +804,17 @@ Support for VNC client launching is utilized with `chyves <guest> console vnc`. 
 
   See [LIST SUB-COMMANDS][] section.
 
+* `upgrade`
+
+  `chyves upgrade [master|dev|check]`
+
+  Downloads and installs the latest version from the current running branch on GitHub. Optionally the branch can be specified to change branches. Changing from `dev` to `master` may render an unusable system if the 'chyves_guest_version' or 'dataset_version' has changed in those branches and those changes have not made it to 'master' yet.
+
+  To run only a version check, use the keyword 'check'.
+
 * `version`
 
-  Prints the current running version of chyves
+  Prints the current running chyves version, dataset version, guest version, and branch.
 
 ### DATASET SUB-COMMANDS
 
