@@ -236,9 +236,11 @@ Internal development.
 
 - Added version information to `help` output.
 
-- Added `make deinstall` directives to `Makefile` for source installations. This removes all the installed files from the system.
+- Added `make deinstall` directive to `Makefile` for source installations. This removes all the installed files from the system.
 
-- Added `make rcremove` directives to `Makefile` for source installations. This removes the configuration contained in the `/etc/rc.conf` file using the `sysrc` command.
+- Added `make rcremove` directive to `Makefile` for source installations. This removes the configuration contained in the `/etc/rc.conf` file using the `sysrc` command.
+
+- Added `make installrc` directive to `Makefile` for source installations. This enables booting chyves guests which have a possible integer set for the `rcboot` parameter. This adds the '`chyves_enable=YES`' configuration in the `/etc/rc.conf` file using the `sysrc` command.
 
 - Added checks to verify pool name and guest name when supplied from command line.
  - An error message is displayed and exits when an invalid name is used.
@@ -279,10 +281,32 @@ Internal development.
 - Added multi-guest support for some sub-functions. Multi-guest support is the ability to specify multiple guests in one command. This includes `clone`, `get`, `set`
 
 - Deprecated `kmod` and `net` from `setup` command. These have been replaced by an auto loader/checker for kernel modules and there is now the `chyves network` for network related tasks.
- 
+
 - Deprecated `persist` property.
 
-- Guests now reboot properly and all other `bhyve` exit codes destroy the VMM.
+- Guests now reboot properly and all other `bhyve` exit codes reclaims the VMM resources.
+
+- Deprecated `chyves scram`, replaced by `chyves all stop`
+
+- Rewrite of `clone`. New syntax is: `chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]`. Four flags for cloning. True ZFS clone and independent clones with or without new properties.
+
+- Renamed property `con` to `serial`
+
+- Rewrote disk functions now includes
+  - `chyves <guest> disk add [<size>]`
+  - `chyves <guest> disk disk{n} description <description>`
+  - `chyves <guest> disk disk{n} notes <note>`
+  - `chyves <guest> disk delete disk{n}`
+  - `chyves <guest> disk resize disk{n} <new-size>`
+  -  and `chyves <guest> disk list`.
+
+- A rewrite of the `list` and `info` commands.
+
+- No longer hard coded to use `disk0` as the boot device, uses the numerically first device.
+
+- Check ran while starting guest to see if related `grub-bhyve` or `bhyveload` process is running for guest and kills it if so.
+
+- Renamed parameter from `fw` to `uefi_firmware`.
 
 ##### Internal code changes:
 
@@ -293,7 +317,7 @@ Internal development.
 
 - Added function `__generate_generic_device_map` to create device map used in `__load`.
 
-- Added function `__get_path_for_guest_dataset` to get the mount path of a guest.
+- Added function `__return_guest_dataset_mountpoint` to get the mount path of a guest.
 
 
 - Added functions `__get_next_console` and `__get_next_tap` to set the global variables `_NEXT_tap` and `_NEXT_console` with the respective next unused device.
@@ -321,17 +345,17 @@ Internal development.
    - chyves exits if the host does not have `POPCNT` feature which is known as Extended Page Table (EPT) on Intel CPUs or Rapid Virtualization Indexing (RVI) on AMD CPUs.
    - `chyves` will only start guests with the `loader` set as `bhyveload` as further restriction when the CPU lacks `UG`.
 
-- Added function `__get_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
+- Added function `__return_cpu_section_from_dmesg` to print out the CPU section from the `dmesg`. This is used in the `__preflight_check` to determine the CPU features.
 
-- Added variable `_FORBIDDEN_GUEST_NAMES` to prevent guests with these names from being created.
+- Added variable `_GUEST_NAMES_FORBIDDEN_GREP_STRING` to prevent guests with these names from being created.
 
-- Added function `__check_if_freenas` to return nothing or "1" if on FreeNAS system.
+- Added function `__return_one_if_freenas` to return nothing or "1" if on FreeNAS system.
 
-- Added function `__display_rcboot_priority` to display a human friendly "NO" or "YES ($boot-priority-number)" when called.
+- Added function `__return_guest_rcboot_priority` to display a human friendly "NO" or "YES ($boot-priority-number)" when called.
 
-- Added function `__check_bhyve_process_running` to display a human friendly "NO" or "YES ($bhyve-PID)" when called using the `-h` flag. If no flag is used then the bhyve PID is returned.
+- Added function `__return_guest_bhyve_pid` to display a human friendly "NO" or "YES ($bhyve-PID)" when called using the `-h` flag. If no flag is used then the bhyve PID is returned.
 
-- Added function `__check_vmm_alocated` to display a human friendly "NO" or "YES" when called using the `-h` flag. If no flag is used then a "1" is returned.
+- Added function `__return_guest_vmm_allocated` to display a human friendly "NO" or "YES" when called using the `-h` flag. If no flag is used then a "1" is returned.
 
 - Added function `__verify_number_of_arguments` to check the number of parameters and exits if not met or if exceeded.
 
@@ -339,7 +363,7 @@ Internal development.
   - This limits the number of addressable parameters to nine due to the Bourne shell, which does not matter.
   - `chyves set` is the one exception, it is still script indexed.
 
-- Added variable `_PRIMARY_POOL` to global variables instead of polling `__get_primary_pool_name` more than once.
+- Added variable `_PRIMARY_POOL` to global variables instead of polling `__gvset_primary_pool` more than once.
 
 - Deprecated commands `chyves boot` and `chyves load` from users. These functions can still be called from developer mode.
 
@@ -354,7 +378,7 @@ Internal development.
 - Deprecated the of using underscores for storing `bargs`.
 
 - <strike>Added variable `_NUMBER_OF_ACTIVE_POOLS`. Currently used in `__set` when setting properties for `.config`. When only one active pool is on the system, then the multiple `.config` property can be set, otherwise the [pool] field must be used and only property can be set at a time.</strike> Deprecated.
- 
+
 - Added variables `_VERSION_BRANCH`, `_PROJECT_URL`, and `_PROJECT_URL_GIT` to keep track of aspect for use in `__check_for_chyves_update`.
 
 - Added variables `_OS`, `_OS_VERSION_DATE`, `_OS_VERSION_FREENAS`, `_OS_VERSION_REL`, and `_OS_VERSION_REV` to keep track of aspects of the host system OS.
@@ -376,22 +400,22 @@ Internal development.
 - <Out of order> Added `.defaults` property `bridge` and variable `_GDP_bridge` to keep track of the default bridge to assign tap interfaces to.
 
 - <Out of order> Created `.default` properties and variables to contain ZFS specific parameters for new ZFS volumes aka (disks) for guests.
-  - Assume you have some experience with ZFS and assumes you know what you are doing. 
+  - Assume you have some experience with ZFS and assumes you know what you are doing.
   - Properties: `disk_volmode`, `disk_volblocksize`, `disk_dedup`, `disk_compression`, `disk_primarycache`, and `disk_secondarycache`
 
 - Added function `__generate_zvol_disk_options_string` to generate the ZFS string used create ZFS volumes (disks) for guests.
 
-- Added function `__get_guest_name_by_pid` and variable `_GUEST_name_by_pid` to get the name of a guest but the process ID. This is currently used when a `tap` interface is locked by a process and descriptive user output is needed including the guest name that is causing the issue.
+- Added function `__gvset_guest_name_by_pid` and variable `_GUEST_name_by_pid` to get the name of a guest but the process ID. This is currently used when a `tap` interface is locked by a process and descriptive user output is needed including the guest name that is causing the issue.
 
 - Added function `__generate_bhyve_net_string` to dynamically generate bhyve PCI string (Eg. -s 7,virtio-net,tap{n}) for each network device. VALE devices supported (Eg. -s 7,virtio-net,vale{n}).
 
-- Added function `__get_pool_for_guest` to verify and then set "_GUEST_pool" for supplied guest.
+- Added function `__gvset_guest_pool` to verify and then set "_GUEST_pool" for supplied guest.
 
 - Added function `__get_corrected_byte_nomenclature` to verify user input, pull the size denomination, use only the first letter, and captilize that letter. Then if the number is evenly divisible by 1024, it increaeses the size denomination.
 
 - Added function `__get_next_vnc_port` to generate next unused VNC port, then assigns variable `_NEXT_vnc_port`.
 
-- Added guests properties `uefi_console_output`, `uefi_mouse_type`, `uefi_vnc_ip`, `uefi_vnc_port`,  `uefi_vnc_res`, and `uefi_pause_until_vnc_client_connect` for use with UEFI guests using VNC consoles.
+- Added guests properties `uefi_console_output`, `uefi_vnc_mouse_type`, `uefi_vnc_ip`, `uefi_vnc_port`,  `uefi_vnc_res`, and `uefi_vnc_pause_until_client_connect` for use with UEFI guests using VNC consoles.
 
 - Added global property `uefi_vnc_port_start_offset` to indicate when first starting port for VNC. The default is 5900.
 
@@ -424,7 +448,7 @@ Internal development.
 
 - Added function `__generate_bhyve_custom_pci_string` see commit 0beb1dd. This creates PCI devices for bhyve from the `pcidev` properties and then feeds to information to `__generate_bhyve_slot_string`. There is special handling for pass through devices.
 
-- Added function `__generate_bhyve_disk_string` see commit 5acfa78. This creates PCI devices for bhyve for each disk and then feeds to information to `__generate_bhyve_slot_string`. 
+- Added function `__generate_bhyve_disk_string` see commit 5acfa78. This creates PCI devices for bhyve for each disk and then feeds to information to `__generate_bhyve_slot_string`.
 
 - Added function `__generate_bhyve_vnc_string` to generate a PCI string for the frame buffer used for the VNC connection for UEFI guests using VNC console output.
 
@@ -437,6 +461,70 @@ Internal development.
 - Deprecated functions `__boot`, `__install`, and `__uefi` by completely rewritten `__start`.
 
 - Massive expansion of network handling. See `lib/chyves-network` for functions. See initial commit 89d8bba.
+
+- Renamed `destroy` to `reclaim` because while the command for bhyvectl is destroy, it conflicts with the zfs use of the word destroy and causes confusion.
+
+- Renamed `__parse_cmd` to `__parse_cmd_ingress`. Now input is first ingested by __parse_cmd_ingress() and then either user input is verified or passed to another __parse_cmd_*() function for further ingestion.
+ - On top of parameter verification, user input verification is now handled at the __parse_cmd_*() level. This makes calls from other functions a little faster as if a function is calling another function it should have already verified the input from the user.  
+
+- Inverted __readonly_cmd() to __root_credentials_required().
+
+- Moved __verify_*() functions to a library file.
+
+- Renamed `__stop` to `__stop_guest_gracefully` and moved to library file `lib/chyves-guests-stop`
+
+- Renamed `__destroy` to `__destroy_guest_vmm_resouces` and moved to library file `lib/chyves-guests-stop`
+
+- Deprecated `__forcekill` and moved functionality into `__destroy_guest_vmm_resouces`.
+
+- Complete rewrite of `__cloneguest`
+
+- Added function `__parse_cmd_console` to parse user input for console sub-commands and loads nmdm kernel module.
+
+- Added library file `lib/chyves-guest-console` with `__console_reset`, `__console_run`, `__console_tmux`, `__get_guest_console_pid`, and `__verify_console_not_in_use`.
+
+- Added function `__verify_user_input_for_properties` to verify user input for properties. Adjusted values get set to global variable “$_ADJUSTED_value” and then replace original value in the function that called it.
+
+- Added function `__parse_cmd_snapshot` to parse user input for snapshot commands. Real big and nasty.
+
+- Changed to using `grep -c` for counting because it does a better job than `wc -l` by not having leading spaces.
+
+- Added function `__log` which both logs and `echo`s the messages to the screen. There are different output levels including '0' which is effectively off. Everything gets logged on the primary pool and guest related tasks are intended to be written on the guest but this is not always the case depending on the whether the `_GP_mountpoint` variable is loaded. The global parameters `stdout_level`, `log_to_file`, and `log_mode` are used to control the output.
+
+- Added library file `lib/chyves-return` with:
+  - `__return_cpu_section_from_dmesg`
+  - `__return_guest_bhyve_pid`
+  - `__return_guest_bhyveload_pid`
+  - `__return_guest_dataset_mountpoint`
+  - `__return_guest_disk_list`
+  - `__return_guest_grub_bhyve_pid`
+  - `__return_guest_list`
+  - `__return_guest_rcboot_priority`
+  - `__return_guest_snapshot_list_level1`
+  - `__return_guest_snapshot_list_level2`
+  - `__return_guest_snapshot_last`
+  - `__return_guest_vmm_allocated`
+  - `__return_new_line_delimit_as_comma_string`
+  - `__return_new_line_delimit_as_grep_string`
+  - `__return_new_line_delimit_as_space_string`
+  - `__return_one_if_freenas`
+  - `__return_pools_active`
+  - `__return_pools_all`
+  - `__return_pools_offline`
+
+- Renamed `__setup` to `__dataset_install` as this only sets up the dataset.
+
+- Added library file `lib/chyves-resources`
+  - `__guest_delete`
+  - `__guest_delete_backend`
+  - `__resource_delete`
+  - `__guest_rename`
+  - `__resource_import`
+  - `__resource_rename`
+
+- Added function `__fault_detected_warning_continue` to warn and 'continue'.
+
+- Added function `__fault_detected_warning_break` to warn and 'break'.
 
 ##### Developer enhancements:
 
@@ -458,5 +546,4 @@ Internal development.
     - `chyves dev "echo $That_tricksy_hobbit_variable"`
   - Using the [`-xvn`] flag(s) instead of the word "on" use the Bourne shell special operation flags. The `-x` shows each ling before it executes. The `-v` flag shows each line as it executes. The `-n` flag reads and populates the variables but does not execute the commands.
 
-
-< Last commit documented on this page: 778172b - DOC: Moar added, lot of big ticket items completed.>
+< Last commit documented on this page: https://github.com/chyves/chyves/commit/7b3d2a44ada0ceb8786d6b6ddc735c7f3ccf29b7 >
