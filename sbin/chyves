@@ -329,10 +329,10 @@ __load_library_files() {
 
 	for _lib_file in basics guest-console guest-creation guest-disk guest-snapshot guest-start guest-stop informational network properties resources return updates verify
 	do
-		__log 3 "Loading library file: $_lib_file" -n
+		__log 4 "Loading library file: $_lib_file"
 		if [ -e "$_LIBRARY_PATH/chyves-$_lib_file" ]; then
 			. "$_LIBRARY_PATH/chyves-$_lib_file"
-			__log 3 "done."
+			__log 4 "Done loading $_lib_file."
 		else
 			__fault_detected_exit "\n\n\nMissing chyves library file 'chyves-$_lib_file' from '$_LIBRARY_PATH'\n\n\n"
 		fi
