@@ -74,7 +74,7 @@
 
 #### Version 0.0.11 (2016 August 12)
 
-- Fixed issue with bhyve string for VNC frame buffer. [a0d68d7](https://github.com/chyves/chyves/commit/a0d68d77bfe9dde4a90117fd5d41fe9a4725121e)
+- Fixed issue with `bhyve` string for VNC frame buffer. [a0d68d7](https://github.com/chyves/chyves/commit/a0d68d77bfe9dde4a90117fd5d41fe9a4725121e)
 
 - Merged fix for incorrect UEFI firmware path when starting guest. Thanks to [Andrew D.](https://github.com/chyves/chyves/commit/). [bb60b4b](https://github.com/chyves/chyves/commit/bb60b4be309358fedc10eb85bdb9ac3fc2783733)
 
