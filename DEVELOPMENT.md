@@ -3,13 +3,10 @@ This document uses keywords (MUST, MAY, SHOULD, etc.) in compliance with RFC 211
 This project has three primary branches it uses:
 - master (stable)
 - dev (testing but stable)
-- sid (considered unstable and experimental).
 
-The ingress branch for PRs and internal development MUST always be `sid` branch. Large feature changes SHOULD be under `sid.feature-name`. The `sid` branch exists so the code can be pulled in, tested, evaluated, and refined before getting distributed under `dev` and eventually `master` branch. Code that is relatively stable from sid branch will be introduced to dev branch for wider testing. Once the code has been tested on a wider scale then it is integrated into master.
+The ingress branch for PRs and internal development MUST always be `dev` branch. Large feature SHOULD be under a `dev.feature-name` branch. The `dev` branch exists so the code can be pulled in, tested, evaluated, and refined before getting distributed under `master` branch.
 
-Releases under `master` will be submitted to the ports tree under `sysutils/chyves`, `dev` versions released under `sysutils/chyves-dev`, and `sid` will remain on GitHub. Versions ending in odd numbers are released from the `dev` branch and versions ending in even numbers are released from the `master` branch.
-
-If we (as developers) do a exceedingly job, the only difference between the dev and master releases SHOULD be a version increment.
+There is a plan to submitted the master branch to the ports tree under `sysutils/chyves` and `dev` versions will remain on GitHub. Versions ending in odd numbers are released from the `dev` branch and versions ending in even numbers are released from the `master` branch.
 
 ### Script execution flow
 Functions are tiered in such a way that the first tier deals with argument and input verification from the user and the second tier deals with executing against the host. Part of the reason this is done is so that if one host function needs to call another host function, then execution is much quicker as input verification is not needed. This methodology also allows for using the `dev` subcommand for easier debugging.
