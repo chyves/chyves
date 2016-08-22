@@ -408,6 +408,31 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <p><code>chyves network bridge{n} unjoin tap{n}</code></p>
 
 <p><code>chyves network bridge{n} join tap{n}</code></p></li>
+<li><p><code>check_for_updates</code>={daily|weekly|monthly|always}</p>
+
+<p><strong>User managed and settable.</strong></p>
+
+<p>This determines how often to check for updates for chyves on the GitHub repository. The keyword 'always' means to check every time chyves is ran.</p></li>
+<li><p><code>check_for_updates_last_check</code>=YYYYMMDD</p>
+
+<p><strong>Managed internally.</strong></p>
+
+<p>This contain the date of last check.</p></li>
+<li><p><code>check_for_updates_last_check_status</code>={1|0}</p>
+
+<p><strong>Managed internally.</strong></p>
+
+<p>When set to '1' an update is available.</p></li>
+<li><p><code>check_for_updates_timeout_seconds</code>={n}</p>
+
+<p><strong>User managed and settable.</strong></p>
+
+<p>This number is used to set the network timeout for <span class="man-ref">fetch<span class="s">(1)</span></span> before giving up.</p></li>
+<li><p><code>check_for_updates_unique_id</code>=UUID</p>
+
+<p><strong>Managed internally.</strong></p>
+
+<p>This contains a UUID used for identification. It is set when the primary pool was created.</p></li>
 <li><p><code>console_start_offset</code>={integer}</p>
 
 <p><strong>User managed and settable.</strong></p>

@@ -291,6 +291,36 @@ Properties:
 
   `chyves network bridge{n} join tap{n}`
 
+* `check_for_updates`={daily|weekly|monthly|always}
+
+  **User managed and settable.**
+
+  This determines how often to check for updates for chyves on the GitHub repository. The keyword 'always' means to check every time chyves is ran.
+
+* `check_for_updates_last_check`=YYYYMMDD
+
+  **Managed internally.**
+
+  This contain the date of last check.
+
+* `check_for_updates_last_check_status`={1|0}
+
+  **Managed internally.**
+
+  When set to '1' an update is available.
+
+* `check_for_updates_timeout_seconds`={n}
+
+  **User managed and settable.**
+
+  This number is used to set the network timeout for fetch(1) before giving up.
+
+* `check_for_updates_unique_id`=UUID
+
+  **Managed internally.**
+
+  This contains a UUID used for identification. It is set when the primary pool was created.
+
 * `console_start_offset`={integer}
 
   **User managed and settable.**
