@@ -1,3 +1,39 @@
+#### Version 0.0.17 (2016 August 21)
+
+- Allow guest property `virtio_block_options_disk{n}` to be `unset`. [5189276](https://github.com/chyves/chyves/commit/51892769e1f4183f0a3e12aefdb9957f70dd7192)
+
+- Consolidated `firmware` and `iso` on SYNOPSIS section of man page. [75ff9a8](https://github.com/chyves/chyves/commit/75ff9a82f758b3785086ad53bff89feed3f9d2b8)
+
+- Added new property `eject_iso_on_n_reboot`. This is both a global and guest property. The global property is reference when the guest property is not set. This ejects the ISO resource after `{n}` reboots. [9d1bee9](https://github.com/chyves/chyves/commit/9d1bee95b001553085ceee8587fa6fbf1ab39291)
+
+- Fixed error when a guest has no disks. [9682731](https://github.com/chyves/chyves/commit/9682731df698aee2bcc6851cc91051a4de4e10f8)
+
+- Fixed typo for diagnostic logging. [cc92b00](https://github.com/chyves/chyves/commit/cc92b00fe7824d67ccf6f1cf7311c939065ab2b6)
+
+- Added OpenBSD 6.0 support for `grub-bhyve`. [263d53c](https://github.com/chyves/chyves/commit/263d53ccf890dc5c79266d88a9cc7ce1e45d3abe)
+
+- Fixed `grep` argument in `__check_for_chyves_update`. [bd6de40](https://github.com/chyves/chyves/commit/bd6de4097bb8b8f86ff097f57f6c3a4da90ecfad)
+
+- Updated `__check_for_chyves_update` to use `__log` rather than `echo`. [c53e997](https://github.com/chyves/chyves/commit/c53e997ba7edbecedff720f898d61fb975c65943)
+
+- Fixed reference to old network command syntax. [f6a8f0](https://github.com/chyves/chyves/commit/f6a8f064d8722e1146d0fb831c0de9c79828cefc)
+
+- Fixed issue with output when no clones exist. [f6a8f06](https://github.com/chyves/chyves/commit/f6a8f064d8722e1146d0fb831c0de9c79828cefc)
+
+- Partial fixed issue when rolling back a guest snapshot that is more than 88 characters. [faba5ca](https://github.com/chyves/chyves/commit/faba5ca1f8735b36b905eb3e3fdeec74b56c6853)
+
+- Added 'chvyes <guest> snapshot list` command. [3a6a926](https://github.com/chyves/chyves/commit/3a6a92687421a1db095ace210cb0467a7bda7d59)
+
+- Added `reset` to end of `console` command to redraw dimensions. [d04340b](https://github.com/chyves/chyves/commit/d04340b5846939a583b802ce24e6b180b58cc004)
+
+- Various fixes to doc files.
+
+- Fixed error output when attempting to write logs to template guest. [6df1865](https://github.com/chyves/chyves/commit/6df1865dd4bb212caed02ab6b8354243f0620e6a)
+
+- Fixed grep error output when `chyves` not setup on system. [f8c2cb3](https://github.com/chyves/chyves/commit/f8c2cb3bf0c3767d32a004aa876876fc59ac8105)
+
+- Fixed bug when grabbing first disk for `bhyveload`. [5bc7a75](https://github.com/chyves/chyves/commit/5bc7a7525d7d2748a078cfe084f9a3f059c2c7a8)
+
 #### Version 0.0.15 (2016 August 17)
 
 - Fixed issue when rolling back a snapshot on a guest with different network config. Incremented chyves guest version. [63885ed](https://github.com/chyves/chyves/commit/63885ede2087295ad53e999d617524885cefc5a3)
