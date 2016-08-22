@@ -106,15 +106,15 @@ cat << 'EOT'
 COMMANDS:
 chyves dataset <pool> {install|upgrade}
 chyves dev
-chyves firmware list
-chyves firmware import {http-URL|ftp-URL|local-path}
-chyves firmware rename <firmware> <new-firmware-name>
-chyves firmware delete <firmware>
+chyves {firmware|iso} list
+chyves {firmware|iso} import {http-URL|ftp-URL|local-path}
+chyves {firmware|iso} rename <resource> <new-resource-name>
+chyves {firmware|iso} delete <resource>
 chyves <guest> clone <clonenames>|MG [-ce|-cu|-ie|-iu] [<pool>]
 chyves <guest> console
 chyves <guest>|MG|all console {reset|tmux|vnc}
 chyves <guest>|MG create [<size>] [<pool>]
-chyves <guest>|MG|all delete [force]
+chyves <guest>|MG|all delete [force|keepnet]
 chyves <guest> disk add [<size>]
 chyves <guest> disk disk{n} {description|notes} <annotation>
 chyves <guest> disk delete disk{n}
@@ -123,8 +123,9 @@ chyves <guest> disk list
 chyves <guest> get {<property>|all}
 chyves <guest>|MG|all reclaim
 chyves <guest> rename <new-guest-name>
-chyves <guest>|MG|global|defaults set [<prop1>=<value>]...
+chyves <guest>|MG|global|defaults|all set <prop1>=<value>...
 chyves <guest> snapshot [<@snapshotname>]
+chyves <guest> snapshot list
 chyves <guest> snapshot delete <@snapshotname>
 chyves <guest> snapshot rollback [<@snapshotname>]
 chyves <guest>|MG|all start [<iso>]
@@ -133,13 +134,9 @@ chyves <guest>|MG|all upgrade
 chyves <guest>|MG|all unset <property>
 chyves help
 chyves info [-zbprvstcdnakl|-h]
-chyves iso list
-chyves iso import {http-URL|ftp-URL|local-path}
-chyves iso rename <iso> <new-iso-name>
-chyves iso delete <iso>
 chyves list [bridges|clones|defaults|disks|firmware|iso|pools|
              properties|<property>]
-chyves list global [<pool>]
+chyves list global [<pool>|primary]
 chyves list {processes|snapshots} [<guest>]
 chyves list tap active
 chyves network <guest> add {tap|tap{n}|vale{n}}
