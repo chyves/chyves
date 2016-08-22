@@ -1,8 +1,8 @@
 `chyves` has a lot of power, everything from: PCI passthrough devices; to running Windows guests; to using a VNC console with certain UEFI guests; to VALE network support; to rapidly managing 50 guests with a single command; to private networks; to assigning multiple NICs on a guest with separate bridges/vlans; to designing and managing that complex network design; to attaching 208 PCI devices to a guest; and much more.... _but this document does not to go into detail about that_.
 
-This document only provides a quick start guide for setting up `chyves` and then basic guest management. Running `chyves help` will give you a quick overview of the commands and syntax, however the [man page](man/chyves.8.html) is the ultimate source of truth (just after the source, of course). Reading the [man page](man/chyves.8.html) is highly recommended to get maximum utilization out of chyves.
+This document only provides a quick start guide for setting up `chyves` and then basic guest management. Running `chyves help` will give you a quick overview of the commands and syntax, however the [man page](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html) is the ultimate source of truth (just after the source, of course). Reading the [man page](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html) is highly recommended to get maximum utilization out of chyves.
 
-The [chyves.org](http://chyves.org) page has [text based demonstrations](http://chyves.org/demo) of chyves using the text based terminal player, [asciinema](https://asciinema.org).
+The [chyves.org](http://chyves.org) page has [text based demonstrations](http://chyves.org/#demo) of chyves using the text based terminal player, [asciinema](https://asciinema.org).
 
 ### Installing `chyves`
 The recommended way to install `chyves` is from downloading the project zip from GitHub from your preferred branch. This will have the latest stable code from the project. `chyves` is based on the Bourne shell for execution. This means that when running `make install` a complier _is not required_ and simply copies the files to their install locations with the correct permissions. To uninstall `make deinstall` will just as easily remove the same files and folders from the system.
@@ -41,12 +41,12 @@ root@bhost:~ # pkg install chyves
 
 ### Dependencies
 
-See [here for details](man/chyves.8.html#DEPENDENCIES).
+See [here for details](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html#DEPENDENCIES).
 
 ### Setup
 
 #### ZFS pool
-`chyves` does require at least one ZFS pool. See [DEPENDENCIES section in the man page](man/chyves.8.html#DEPENDENCIES) for details.
+`chyves` does require at least one ZFS pool. See [DEPENDENCIES section in the man page](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html#DEPENDENCIES) for details.
 
 To setup '`zroot`' pool run:
 ```
@@ -83,4 +83,4 @@ make installrc
 
 ### Brief crash course:
 
-See [man page EXAMPLES section](man/chyves.8.html#EXAMPLES)
+See [man page EXAMPLES section](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html#EXAMPLES).

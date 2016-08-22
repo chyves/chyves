@@ -2,7 +2,7 @@
 
 Public release
 
-- DOC: Update for chyves global props for Github checker. [53527c2]](https://github.com/chyves/chyves/commit/53527c271d131c9473f9ea160247d4fb495c23cf)
+- DOC: Update for chyves global properties for Github checker. [53527c2](https://github.com/chyves/chyves/commit/53527c271d131c9473f9ea160247d4fb495c23cf)
 
 - Various minor tweaks to get the two commands below working.
 

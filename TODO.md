@@ -1,12 +1,12 @@
 This early in the project, a road map is not defined. However these are ideas and some may happen but the idea is more likely to happen if interest is expressed:
 
-`chyves update`
-- Finish after repo becomes public.
-
 Address issue with 88 character limit.
 - Impacts snapshot rollback
 - Importing ISO and firmware resources
   - Do a character count and then see if you can add a `$var` as the numeric portion of a regex.
+
+Fix issue with `chyves <guest> stop force`
+- VMM is destroyed but `bhyve` process is still running.
 
 Global: `prompt_on_destruction` = `yes|no`
 - Prompt the user to confirm deletion of snapshots, guests, etc.
@@ -29,8 +29,6 @@ Finish dataset commands.
 
 `chyves <guest> reload`
 - Reload a running guest to use new properties.
-
-`chyves <guest> snapshot list`
 
 Create guest groups:
 - This would allow for a group of guests to be addressed easily.
