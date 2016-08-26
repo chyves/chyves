@@ -427,7 +427,7 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 
 <p><strong>User managed and settable.</strong></p>
 
-<p>This number is used to set the network timeout for <span class="man-ref">fetch<span class="s">(1)</span></span> before giving up.</p></li>
+<p>This number is used to set the network timeout for <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?fetch(1)">fetch<span class="s">(1)</span></a> before giving up.</p></li>
 <li><p><code>check_for_updates_unique_id</code>=UUID</p>
 
 <p><strong>Managed internally.</strong></p>
@@ -550,7 +550,7 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <p>For advanced users to pass additional flags directly to <code>bhyve</code>. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.</p></li>
 <li><p><code>bhyve_net_type</code>={virtio-net|e1000}</p>
 
-<p>Sets the method to attach tap interfaces to the guest. Intel e1000 emulation is only available on 12-CURRENT hosts.</p></li>
+<p>Sets the method to attach tap interfaces to the guest. Intel e1000 emulation is available on hosts on 12-CURRENT after commit r302504, 11-STABLE after commit r304424, and on 10-STABLE after commit r304425.</p></li>
 <li><p><code>cpu</code>={n}</p>
 
 <p>Assigns {n} number of CPU cores to a guest, up to 16.</p></li>
@@ -566,7 +566,7 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 
 <p>This property determines if and when to eject the optical media when installing an OS. By default this is set to '1' because most *nix systems install on the first boot. Live CD should be turned to '0' and Windows systems should be set to '2' or greater.</p>
 
-<p>There is a global property which shares the same name has has the same functionality. The global proerty is used if not set on the guest.</p></li>
+<p>There is a global property which shares the same name has has the same functionality. The global property is used if not set on the guest.</p></li>
 <li><p><code>loader</code>={bhyveload|uefi|grub-bhyve}</p>
 
 <p>Tells which loader to use to boot guest. <code>bhyveload</code> is for FreeBSD based guests, <code>uefi</code> is used for UEFI based guests, and <code>grub-bhyve</code> is used for all other guests.</p>
@@ -1650,7 +1650,7 @@ chyves windowsguest start virtio-win-0.1.96.iso
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>August 21 2016</li>
+    <li class='tc'>August 26 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

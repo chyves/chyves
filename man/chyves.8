@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "August 21 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "August 26 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.1\.0
@@ -773,7 +773,7 @@ For advanced users to pass additional flags directly to \fBbhyve\fR\. See bhyve(
 \fBbhyve_net_type\fR={virtio\-net|e1000}
 .
 .IP
-Sets the method to attach tap interfaces to the guest\. Intel e1000 emulation is only available on 12\-CURRENT hosts\.
+Sets the method to attach tap interfaces to the guest\. Intel e1000 emulation is available on hosts on 12\-CURRENT after commit r302504, 11\-STABLE after commit r304424, and on 10\-STABLE after commit r304425\.
 .
 .IP "\(bu" 4
 \fBcpu\fR={n}
@@ -803,7 +803,7 @@ Used to describe guest\. Use double quotes when description contains spaces\.
 This property determines if and when to eject the optical media when installing an OS\. By default this is set to \'1\' because most *nix systems install on the first boot\. Live CD should be turned to \'0\' and Windows systems should be set to \'2\' or greater\.
 .
 .IP
-There is a global property which shares the same name has has the same functionality\. The global proerty is used if not set on the guest\.
+There is a global property which shares the same name has has the same functionality\. The global property is used if not set on the guest\.
 .
 .IP "\(bu" 4
 \fBloader\fR={bhyveload|uefi|grub\-bhyve}
