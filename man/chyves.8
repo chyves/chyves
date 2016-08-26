@@ -2750,6 +2750,36 @@ chyves customgst start
 .
 .IP "" 0
 .
+.P
+Install and run a Windows guest (On a host running FreeBSD 11\.0\-RC2 or later):
+.
+.IP "" 4
+.
+.nf
+
+chyves windowsguest create 32g
+chyves windowsguest set bhyve_net_type=e1000
+chyves windowsguest set loader=uefi
+chyves windowsguest set uefi_firmware=<firmware>
+chyves windowsguest set uefi_console_output=vnc
+chyves windowsguest set uefi_vnc_pause_until_client_connect=yes
+chyves windowsguest set eject_iso_on_n_reboot=3
+chyves windowsguest start <reg_windows_installation\.iso>
+chyves windowsguest get uefi_vnc_ip
+chyves windowsguest get uefi_vnc_port
+<Connect using a VNC client from the above values\.>
+<Install OS and shutdown when completed\.>
+chyves windowsguest set uefi_vnc_pause_until_client_connect=no
+chyves windowsguest unset eject_iso_on_n_reboot
+<Install the virtio\-net drivers for better performance or on old hosts\.>
+chyves iso import https://fedorapeople\.org/groups/virt/virtio\-win/direct\-downloads/archive\-virtio/virtio\-win\-0\.1\.96/virtio\-win\-0\.1\.96\.iso
+chyves windowsguest start virtio\-win\-0\.1\.96\.iso
+<Install virtio\-net drivers\. Reboot\.>
+.
+.fi
+.
+.IP "" 0
+.
 .SH "AUTHOR"
 \fBJustin D Holcomb\fR \-\- justinholcomb\.me
 .
