@@ -772,4 +772,8 @@ __version() {
 	__log 1 "chyves branch: '$_VERSION_BRANCH'"
 	__log 1 "chyves dataset version: $_VERSION_DATASET"
 	__log 1 "chyves guest version: $_VERSION_CHYVES_GUEST"
+	[ -n "$_OS_VERSION_FREENAS" ] && __log 1 "On $_OS_VERSION_FREENAS"
+	__log 1 "On $_OS $_OS_VERSION_REL"
+	__log 1 "$_OS commit: r$_OS_VERSION_COMMIT"
+	__log 1 "$_OS version revision: $_OS_VERSION_DATE"
 }

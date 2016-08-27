@@ -222,6 +222,7 @@ _VERSION_CHYVES_GUEST="0200"
 _VERSION_BRANCH=dev
 _GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"
 _OS=$( sysctl -n kern.ostype )
+_OS_VERSION_COMMIT=$( sysctl kern.version | tr ' ' '\n' | grep -o -E '^r[0-9]{6,}' | sed -e 's/^r//' )
 _OS_VERSION_DATE=$( sysctl -n kern.osreldate )
 _OS_VERSION_FREENAS=$( [ -e "/etc/version" ] && cat /etc/version )
 _OS_VERSION_REL=$( sysctl -n kern.osrelease )
