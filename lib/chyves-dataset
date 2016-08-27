@@ -31,6 +31,7 @@ __dataset_install() {
 	echo "Setting up chyves on $_pool..."
 	zfs create -o mountpoint=/chyves/$_pool $_pool/chyves
 	zfs create $_pool/chyves/.config
+	__freenas_create_symbolic_link   # This will only execute an action if on FreeNAS system.
 	touch /chyves/$_pool/.config/pool.cfg
 	__write_property_value_to_config_file "manual" "creation"        "$_creation_stamp" "/chyves/$_pool/.config/pool.cfg"
 	__write_property_value_to_config_file "manual" "dataset_version" "$_VERSION_DATASET" "/chyves/$_pool/.config/pool.cfg"
@@ -126,32 +127,6 @@ __dataset_install() {
 		fi
 
 		__log 2 "Done setting up primary pool: $_pool"
-	fi
-
-	# If on FreeNAS do a couple of needed changes.
-	if [ "$( __return_one_if_freenas )" ]; then
-		__log 1 "On FreeNAS installation."
-		__log 2 "Checking for symbolic link to /chyves from /mnt/chyves..."
-		if [ -d /mnt/chyves ]; then
-			if [ ! -e /chyves ]; then
-				ln -s /mnt/chyves /chyves
-				if [ -L /chyves ]; then
-					__log 2 "Symbolic link to /chyves from /mnt/chyves successfully created."
-				else
-					__log 1 "Failed to create symbolic link."
-					__log 1 "Please manually do so by running the following as root:"
-					__log 1 "# ln -s /mnt/chyves /chyves"
-				fi
-			elif [ -L /chyves ]; then
-				__log 1 "Symbolic link to /chyves already exists."
-			fi
-		elif [ "$val" = "freenas-boot" ] && [ -d /chyves ]; then
-			__log 1 "Symbolic link not needed. /chyves exists."
-			__log 1 "chyves is installed on the freenas-boot pool."
-			__log 1 "This is not recommended configuration."
-		else
-			__log 1 "chyves does not seem to be setup."
-		fi
 	fi
 }
 

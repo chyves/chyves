@@ -173,7 +173,7 @@ __return_new_line_delimit_as_space_string() {
 # Checks to see if on FreeNAS
 # The web UI references this file to display the version
 __return_one_if_freenas() {
-	if [ -e "$_OS_VERSION_FREENAS" ]; then
+	if [ -n "$_OS_VERSION_FREENAS" ]; then
 		local OS=$( echo "$_OS_VERSION_FREENAS" | cut -d - -f1 )
 		if [ "$OS" = "FreeNAS" ]; then
 			echo 1

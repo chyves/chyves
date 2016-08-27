@@ -36,6 +36,7 @@
 #
 ## ../lib/chyves-basics                      ## Functions that are basic to chyves functionality
 # __convert_list_to_grep_string()             # List can be delimited by a single space for each item or a new line
+# __freenas_create_symbolic_link()            # Creates a symbolic link for non-OS pools on FreeNAS
 # __gvset_guest_name_by_pid()                 # Get guests name by supplied pid and set GV
 # __gvset_guest_pool()                        # Get pool name for guest and set GV
 # __gvset_primary_pool()                      # Get primary pool name and set GV
@@ -214,7 +215,7 @@
 
 # Stage 1 global variables (Not dependent on functions or primary pool)
 _VERSION=0.1.1                        # Example: v11.6.25 - XXX.YY.ZZZ
-_VERSION_LONG="v0.1.1 2016/08/27"     # Example: v11.6.25 2021/12/31
+_VERSION_LONG="v0.1.1-p1 2016/08/27"     # Example: v11.6.25 2021/12/31
 _VERSION_INT="00001001"               # Example: 01106025 XXXYYZZZ
 _VERSION_DATASET="0004"
 _VERSION_CHYVES_GUEST="0200"
@@ -249,6 +250,9 @@ __preflight_check() {
 
 	# Load library files
 	__load_library_files
+
+	# FreeNAS
+	__freenas_create_symbolic_link -exit
 
 	# Check to see if more than one pool has the primary role set.
 	if [ "$( echo "$_GLOBAL_CONFIG_FILE" | grep -c "" )" -gt 1 ]; then

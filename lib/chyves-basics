@@ -42,6 +42,39 @@ __convert_list_to_grep_string() {
 	fi
 }
 
+# Creates a symbolic link for non-OS pools on FreeNAS
+__freenas_create_symbolic_link() {
+	local _flag=$1
+
+	# If on FreeNAS do a couple of needed changes.
+	if [ "$( __return_one_if_freenas )" ]; then
+		__log 2 "On FreeNAS installation."
+		__log 3 "Checking for symbolic link to /chyves from /mnt/chyves..."
+		if [ -d /mnt/chyves ]; then
+			if [ ! -e /chyves ]; then
+				ln -s /mnt/chyves /chyves
+				if [ -L /chyves ]; then
+					__log 3 "Symbolic link to /chyves from /mnt/chyves successfully created."
+					[ "$_flag" = "-exit" ] && __log 1 "Recreating FreeNAS specific symbolic link for chyves. Please retry your command." && exit
+				else
+					__log 1 "Failed to create symbolic link."
+					__log 1 "Please manually do so by running the following as root:"
+					__log 1 "# ln -s /mnt/chyves /chyves"
+					exit
+				fi
+			elif [ -L /chyves ]; then
+				__log 3 "Symbolic link to /chyves already exists."
+			fi
+		elif [ -d /chyves ]; then
+			__log 3 "Symbolic link not needed. /chyves exists."
+			__log 3 "chyves likely is installed on the freenas-boot pool."
+			__log 3 "This is not recommended configuration."
+		else
+			__log 1 "chyves does not seem to be setup on this FreeNAS installation."
+		fi
+	fi
+}
+
 # Get guests name by supplied pid and set GV
 __gvset_guest_name_by_pid() {
 	local _pid="$1"
