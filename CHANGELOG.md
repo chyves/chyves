@@ -1,3 +1,22 @@
+#### Version 0.1.1 (2016 August 21)
+
+Documentation changes.
+
+- DOC: Address VGA/GPU passthrough in man page. [be3ba7c](https://github.com/chyves/chyves/commit/be3ba7c2aa079934f6bc3ac7b6da88e6551ef915)
+  - [See Issue #3 on chyves GitHub page.](https://github.com/chyves/chyves/issues/3).
+
+- DOC: Included RAM parameters for guest examples which require more than 256M of RAM. [0dd18aa](https://github.com/chyves/chyves/commit/0dd18aa7a490ae2bc0b009503a8bdf618cf10084)
+  - As suggested by [/u/sirdond](https://www.reddit.com/user/sirdond).
+
+- DOC: Included a generic Windows guest example in the man page. [485265d](https://github.com/chyves/chyves/commit/485265d41f44a8ab2e5ea82ecad235e7acb30721)
+
+- DOC: Updated Intel e1000 requirements in man page. [ba949ad](https://github.com/chyves/chyves/commit/ba949ad927101496ce4db0f0a04eb4895b3c302a)
+  - Still need to figure the OS integer to check for in the code to make this work.
+
+- DOC: Typo in man/chyves.8.ronn [e1f985b](https://github.com/chyves/chyves/commit/e1f985bfba1d5935f6414b1af2155d7ec8202fee)
+
+- DOC: Fixed typos and links in CHANGELOG.md, TODO.md, USAGE.md.  [c5b9c9d](https://github.com/chyves/chyves/commit/c5b9c9dd777b81880012565c6c624b628fc1ca0e)
+
 #### Version 0.1.0 (2016 August 21)
 
 Public release
