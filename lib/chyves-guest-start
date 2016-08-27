@@ -393,7 +393,7 @@ __generate_grub_bhyve_command() {
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "gentoo" ]; then
 			printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m $_path/device.map -r host -d $_path -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "custom" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		else
