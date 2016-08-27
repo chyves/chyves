@@ -179,6 +179,13 @@ __clone_guest() {
 			__log 2 "Assigning next available unused console interface... $_NEXT_serial"
 			__write_property_value_to_config_file "manual" "serial" "$_NEXT_serial" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 
+			# Set next available UEFI VNC Port number if source guest has it set.
+			if [ -n "$_GP_uefi_vnc_port" ]; then
+				__get_next_vnc_port
+				__log 2 "Assigning next available unused 'uefi_vnc_port'... $_NEXT_vnc_port"
+				__write_property_value_to_config_file "manual" "uefi_vnc_port" "$_NEXT_vnc_port" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
+			fi
+
 			__log 2 "Generating new UUID... " -n
 			__generate_new_uuid_guest_use
 			__log 2 "$_UUID_GUEST_USE"
