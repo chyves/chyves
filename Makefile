@@ -17,6 +17,7 @@ LIB_DIR=lib/$(PROJECT_NAME)
 RC_DIR=etc/rc.d
 MAN_DIR=man/man8
 MAN_FILE=$(SCRIPT_NAME).8
+COMPILER_TYPE="clang"        # Kind of arbitrary as a compiler is not used but is needed on FreeNAS 9.10.1 to run 'make install'
 
 # Commands
 MKDIR=mkdir
