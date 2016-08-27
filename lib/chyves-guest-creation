@@ -175,8 +175,8 @@ __clone_guest() {
 			done
 			__log 2 "Done recreating nework design for $_cname from $_GUEST_name's design."
 
-			__log 2 "Assigning next available unused console interface... $_NEXT_serial"
 			__get_next_serial
+			__log 2 "Assigning next available unused console interface... $_NEXT_serial"
 			__write_property_value_to_config_file "manual" "serial" "$_NEXT_serial" "/chyves/$_dst_pool/guests/$_cname/.config/.cfg"
 
 			__log 2 "Generating new UUID... " -n
