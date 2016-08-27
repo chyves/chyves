@@ -62,13 +62,12 @@ __install_from_github() {
 	local _tmp_dir="/tmp/$_UUID_GUEST_USE"
 	_CHECK_FOR_UPDATES=always                 # This forces a check now.
 	_CHECK_FOR_UPDATES_LAST_CHECK_STATUS="0"  # This forces a check now.
-	__check_for_chyves_update
 
 	# Handling for branch to upgrade to. Or if this just a check.
 	if [ -n "$_branch_override" ]; then
 		if [ "$_branch_override" = "check" ]; then
 			exit
-		elif [ "$_branch_override" = "master" ] && [ "$_branch_override" = "dev" ]; then
+		elif [ "$_branch_override" = "master" ] || [ "$_branch_override" = "dev" ]; then
 			local _upgrade_branch="$_branch_override"
 		else
 			__fault_detected_exit "Unrecognized parameter '$1', valid branches are 'master' or 'dev'."
@@ -76,6 +75,10 @@ __install_from_github() {
 	else
 		local _upgrade_branch="$_VERSION_BRANCH"
 	fi
+
+	# Needed for switching between branches.
+	_CHECK_FOR_UPDATES_URL="$_PROJECT_URL_GIT/raw/${_upgrade_branch}/sbin/chyves"
+	__check_for_chyves_update
 
 	# This will be changed to "1" when an update is avaible.
 	if [ "$_CHECK_FOR_UPDATES_LAST_CHECK_STATUS" = 0 ]; then
