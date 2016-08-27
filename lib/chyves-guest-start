@@ -148,7 +148,17 @@ __generate_bhyve_disk_string() {
 __generate_bhyve_net_string() {
 
 	# Error message when system is incompataible with Intel e1000 emulation.
-	[ "$_GP_bhyve_net_type" = "e1000" ] && [ "$_OS_VERSION_DATE" -lt "1200000" ] && __log 1 "FreeBSD version incompataible with Intel e1000 emulation, falling back to 'virtio-net' attachment."
+	if [ "$_GP_bhyve_net_type" = "e1000" ]; then
+		if [ "$_OS_VERSION_DATE" -gt "1200000" ]; then
+			[ "$_OS_VERSION_COMMIT" -lt "302504" ] && __log 1 "The current FreeBSD version 12 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r302504, falling back to 'virtio-net' attachment."
+		elif [ "$_OS_VERSION_DATE" -gt "1100000" ]; then
+			[ "$_OS_VERSION_COMMIT" -lt "304424" ] && __log 1 "The current FreeBSD version 11 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304424, falling back to 'virtio-net' attachment."
+		elif [ "$_OS_VERSION_DATE" -gt "1000000" ]; then
+			[ "$_OS_VERSION_COMMIT" -lt "304425" ] && __log 1 "The current FreeBSD version 10 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304425, falling back to 'virtio-net' attachment."
+		else
+			__log 1 "This FreeBSD version is not able to emulate an Intel e1000 NIC, falling back to 'virtio-net' attachment."
+		fi
+	fi
 
 	# Setup interfaces if any are configured.
 	for _iface in `echo "$_GP_net_ifaces" | tr ',' '\n'`
