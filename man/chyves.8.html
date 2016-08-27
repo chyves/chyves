@@ -678,7 +678,7 @@ class      = serial bus
 subclass   = Fibre Channel
 </code></pre>
 
-<p> Normally the device in the example above would use the <code>isp(4)</code> drivers. However, the devices need to be using the <code>ppt</code> drivers. In this context, the <code>ppt</code> drivers tell the host to ignore the device as it will be pass-through to a virtualized guest. To get a PCI device to load the <code>ppt</code> drivers instead of it's normal drivers, edit the <code>/boot/loader.conf</code> file to contain the PCI triplet of each device in the <code>pptdevs</code> directive. The following is consistent with our examples above:</p>
+<p>Normally the device in the example above would use the <code>isp(4)</code> drivers. However, the devices need to be using the <code>ppt</code> drivers. In this context, the <code>ppt</code> drivers tell the host to ignore the device as it will be pass-through to a virtualized guest. To get a PCI device to load the <code>ppt</code> drivers instead of it's normal drivers, edit the <code>/boot/loader.conf</code> file to contain the PCI triplet of each device in the <code>pptdevs</code> directive. The following is consistent with our examples above:</p>
 
 <pre><code>pptdevs="9/0/0 9/0/1"
 </code></pre>
@@ -687,7 +687,9 @@ subclass   = Fibre Channel
 
 <p>The '<code>-S</code>' flag <em>must</em> be appended to the current '<code>bargs</code>' guest property to wire the guest memory for PCI pass-through to work.</p>
 
-<p>To remove a <code>pcidev_{n}</code> from a guest run: <code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code>.</p></li>
+<p>To remove a <code>pcidev_{n}</code> from a guest run: <code>chyves &lt;guest>|MG|all unset &lt;pcidev_{n}></code>.</p>
+
+<p>VGA/GPU Passthrough has not been reported to work. chyves issue #3 on GitHub was opened to document success and failures of bhyve passthrough of VGA/GPU devices. Check there for the latest status.</p></li>
 <li><p><code>ram</code>={n}[S]</p>
 
 <p>{n} is the number of bytes and [S] is the size denomination in "K" kilobytes, "M" megabytes,  "G" gigabytes, or "T" terabytes. Megabytes are assumed if no suffix is given.</p></li>

@@ -583,7 +583,7 @@ Usage:
       class      = serial bus
       subclass   = Fibre Channel
 
-   Normally the device in the example above would use the `isp(4)` drivers. However, the devices need to be using the `ppt` drivers. In this context, the `ppt` drivers tell the host to ignore the device as it will be pass-through to a virtualized guest. To get a PCI device to load the `ppt` drivers instead of it's normal drivers, edit the `/boot/loader.conf` file to contain the PCI triplet of each device in the `pptdevs` directive. The following is consistent with our examples above:
+  Normally the device in the example above would use the `isp(4)` drivers. However, the devices need to be using the `ppt` drivers. In this context, the `ppt` drivers tell the host to ignore the device as it will be pass-through to a virtualized guest. To get a PCI device to load the `ppt` drivers instead of it's normal drivers, edit the `/boot/loader.conf` file to contain the PCI triplet of each device in the `pptdevs` directive. The following is consistent with our examples above:
 
       pptdevs="9/0/0 9/0/1"
 
@@ -592,6 +592,8 @@ Usage:
   The '`-S`' flag _must_ be appended to the current '`bargs`' guest property to wire the guest memory for PCI pass-through to work.
 
   To remove a `pcidev_{n}` from a guest run: `chyves <guest>|MG|all unset <pcidev_{n}>`.
+
+  VGA/GPU Passthrough has not been reported to work. chyves issue #3 on GitHub was opened to document success and failures of bhyve passthrough of VGA/GPU devices. Check there for the latest status.
 
 * `ram`={n}[S]
 
