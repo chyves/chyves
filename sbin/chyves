@@ -416,6 +416,6 @@ __log() {
 __preflight_check "$1" "$2"
 
 # Check GitHub for updates
-__check_for_chyves_update
+[ -n "$_PRIMARY_POOL" ] && __check_for_chyves_update
 
 __parse_cmd_ingress "$@"
