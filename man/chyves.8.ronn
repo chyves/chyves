@@ -1467,7 +1467,7 @@ Install and run a Arch Linux guest :
 Install and run a CentOS or RHEL guest, _(note version 6 would use os=centos6)_:
 
     chyves centosguest create
-    chyves centosguest set loader=grub-bhyve os=centos7
+    chyves centosguest set loader=grub-bhyve os=centos7 ram=392M
     chyves centosguest start CentOS-7-x86_64-Everything-1511.iso
     chyves centosguest consol
     <Installation completed>
@@ -1499,6 +1499,7 @@ Install and run an unlisted custom grub-bhyve guest, see `os` property for detai
 Install and run a Windows guest (On a host running FreeBSD 11.0-RC2 or later):
 
     chyves windowsguest create 32g
+    chyves windowsguest set ram=2G
     chyves windowsguest set bhyve_net_type=e1000
     chyves windowsguest set loader=uefi
     chyves windowsguest set uefi_firmware=<firmware>

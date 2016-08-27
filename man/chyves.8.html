@@ -1585,7 +1585,7 @@ chyves archguest start
 <p>Install and run a CentOS or RHEL guest, <em>(note version 6 would use os=centos6)</em>:</p>
 
 <pre><code>chyves centosguest create
-chyves centosguest set loader=grub-bhyve os=centos7
+chyves centosguest set loader=grub-bhyve os=centos7 ram=392M
 chyves centosguest start CentOS-7-x86_64-Everything-1511.iso
 chyves centosguest consol
 &lt;Installation completed>
@@ -1620,6 +1620,7 @@ chyves customgst start
 <p>Install and run a Windows guest (On a host running FreeBSD 11.0-RC2 or later):</p>
 
 <pre><code>chyves windowsguest create 32g
+chyves windowsguest set ram=2G
 chyves windowsguest set bhyve_net_type=e1000
 chyves windowsguest set loader=uefi
 chyves windowsguest set uefi_firmware=&lt;firmware>
@@ -1650,7 +1651,7 @@ chyves windowsguest start virtio-win-0.1.96.iso
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>August 26 2016</li>
+    <li class='tc'>August 27 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 
