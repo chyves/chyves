@@ -1,3 +1,9 @@
+#### Version 0.1.2-dev (2016 August 21)
+
+FreeNAS fix.
+
+- FIX: FreeNAS handling of root directory via symbolic links. [77cf6f8]](https://github.com/chyves/chyves/commit/77cf6f82c6a9b5c7117721b87d826eef3a891623)
+
 #### Version 0.1.1 (2016 August 21)
 
 Documentation changes.
