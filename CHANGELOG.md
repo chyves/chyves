@@ -1,4 +1,4 @@
-#### Version 0.1.3-dev (2016 August 21)
+#### Version 0.1.3-dev (2016 August 27)
 
 Fixes various issues. Minor enhancements.
 
@@ -20,13 +20,13 @@ Fixes various issues. Minor enhancements.
 
 - FIX: Issue when specifying a branch in 'chyves upgrade'. [15cd40f](https://github.com/chyves/chyves/commit/15cd40fdd0a9643540c85bcccd796eb80a0bb878)
 
-#### Version 0.1.2-dev (2016 August 21)
+#### Version 0.1.2-dev (2016 August 27)
 
 FreeNAS hot fix.
 
 - FIX: FreeNAS handling of root directory via symbolic links. [77cf6f8](https://github.com/chyves/chyves/commit/77cf6f82c6a9b5c7117721b87d826eef3a891623)
 
-#### Version 0.1.1 (2016 August 21)
+#### Version 0.1.1 (2016 August 27)
 
 Documentation changes.
 
