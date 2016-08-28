@@ -27,7 +27,7 @@ __chyves_start()
 	sleep 8 # Sleeping for network to come up.
 	local _previous_stdout_level="$( /usr/local/sbin/chyves list global | grep stdout_level | awk '{ print $2 }' )"
 	/usr/local/sbin/chyves global set stdout_level=0
-	local _guestlist="$( grep -E '^rcboot=' /chyves/*/guests/*/.config/.cfg | awk 'BEGIN { FS = "=" } ; $2 > "0" { print $1" "$2 }' | sort -Vrk2 | cut -d'/' -f5 | tr '\n' ',' | sed 's/,$//g' )"
+	local _guestlist="$( grep -H -E '^rcboot=' /chyves/*/guests/*/.config/.cfg | awk 'BEGIN { FS = "=" } ; $2 > "0" { print $1" "$2 }' | sort -Vrk2 | cut -d'/' -f5 | tr '\n' ',' | sed 's/,$//g' )"
 	echo "Starting chyves guests ($_guestlist)..."
 	/usr/local/sbin/chyves $_guestlist start
 	echo "Guests starting, resuming host boot."
