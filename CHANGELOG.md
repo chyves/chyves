@@ -1,3 +1,9 @@
+#### Version 0.1.4-dev (2016 August 28)
+
+Thanks to @3add3287 for rcboot fix.
+
+- Fixes an issue with rcboot when only one guest exists on system. [6a7c8a2](https://github.com/chyves/chyves/commit/6a7c8a2c5522076d1b481161ff0ccb7c2a547561)
+
 #### Version 0.1.3-dev (2016 August 27)
 
 Fixes various issues. Minor enhancements.
