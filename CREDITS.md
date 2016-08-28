@@ -6,6 +6,8 @@ Matt C. @churchers
 
 Andrew D. @croquagei
 
+@3add3287
+
 
 #### These individuals contributed to iohyve before the fork:
 
