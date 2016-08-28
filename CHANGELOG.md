@@ -1,3 +1,25 @@
+#### Version 0.1.3-dev (2016 August 21)
+
+Fixes various issues. Minor enhancements.
+
+- FIX: Typos in previous CHANGELOG.md entry. [a6807ac](https://github.com/chyves/chyves/commit/a6807acdf19627bd463a5d3afdedf7adb213cc70)
+
+- ENH: Give host version information for `chyves version`. [96c6c08](https://github.com/chyves/chyves/commit/96c6c08aa98861a592d6f0c7a9e264660db094f9)
+
+- FIX: Do not run check for new chyves version when not installed yet. [87c081f](https://github.com/chyves/chyves/commit/87c081f4f1ad3bc8ba7670d95916a71b609937c6)
+
+- FIX: Create new 'uefi_vnc_port' when cloning guest with unique properties. [94e21f0](https://github.com/chyves/chyves/commit/94e21f03ba9be0ea36bbfadea24d6f190cf8ade7)
+
+- FIX: Error when displaying `$_NEXT_serial` in `__clone_guest`. [1b4e619](https://github.com/chyves/chyves/commit/1b4e619805fe38f9fe18c333c71afe92bd8d5dbf)
+
+- FIX: Reference to old variable names in `__generate_grub_bhyve_command`. [3ffa905](https://github.com/chyves/chyves/commit/3ffa905d343ef8c0d61bc74b48fdde43534af2d3)
+
+- ENH: Allow Intel e1000 emulation on non-12-CURRENT hosts due to recent MFCs. [b8260e2](https://github.com/chyves/chyves/commit/b8260e2453821d9124576e55ecc0bcf1a934aa85)
+
+- FIX: Setting COMPILER_TYPE on FreeNAS required for `make install` in `Makefile`. [a3701ad](https://github.com/chyves/chyves/commit/a3701ad26fd981f349dc47d7a5f9ac64ce192de5)
+
+- FIX: Issue when specifying a branch in 'chyves upgrade'. [15cd40f](https://github.com/chyves/chyves/commit/15cd40fdd0a9643540c85bcccd796eb80a0bb878)
+
 #### Version 0.1.2-dev (2016 August 21)
 
 FreeNAS hot fix.
