@@ -147,19 +147,6 @@ __generate_bhyve_disk_string() {
 # Generate bhyve slot string for network devices.
 __generate_bhyve_net_string() {
 
-	# Error message when system is incompataible with Intel e1000 emulation.
-	if [ "$_GP_bhyve_net_type" = "e1000" ]; then
-		if [ "$_OS_VERSION_DATE" -gt "1200000" ]; then
-			[ "$_OS_VERSION_COMMIT" -lt "302504" ] && __log 1 "The current FreeBSD version 12 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r302504, falling back to 'virtio-net' attachment."
-		elif [ "$_OS_VERSION_DATE" -gt "1100000" ]; then
-			[ "$_OS_VERSION_COMMIT" -lt "304424" ] && __log 1 "The current FreeBSD version 11 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304424, falling back to 'virtio-net' attachment."
-		elif [ "$_OS_VERSION_DATE" -gt "1000000" ]; then
-			[ "$_OS_VERSION_COMMIT" -lt "304425" ] && __log 1 "The current FreeBSD version 10 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304425, falling back to 'virtio-net' attachment."
-		else
-			__log 1 "This FreeBSD version is not able to emulate an Intel e1000 NIC, falling back to 'virtio-net' attachment."
-		fi
-	fi
-
 	# Setup interfaces if any are configured.
 	for _iface in `echo "$_GP_net_ifaces" | tr ',' '\n'`
 	do
@@ -187,20 +174,36 @@ __generate_bhyve_net_string() {
 				[ ! -e "/dev/$_iface" ] && __log 1 "Network design mode set to 'system' however tap interface not detected on system." && break 2
 			fi
 
-			# Handling for Intel e1000 emulation
-			if [ "$_GP_bhyve_net_type" = "e1000" ] && [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
-				__log 2 "Attaching $_iface interface via Intel e1000 emulation."
-				[ -z "$_mac" ] && local _string="$_string e1000,$_iface"
-				[ -n "$_mac" ] && local _string="$_string e1000,$_iface,mac=${_mac}"
-				continue
+			# Error message when guest does not meet requirement for Intel e1000 emulation.
+			if [ "$_GP_bhyve_net_type" = "e1000" ]; then
+				if [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+					if [ "$_OS_VERSION_COMMIT" -lt "302504" ]; then
+						__log 1 "The current FreeBSD version 12 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r302504, falling back to 'virtio-net' attachment."
+						_GP_bhyve_net_type=virtio-net
+					fi
+				elif [ "$_OS_VERSION_DATE" -ge "1100000" ]; then
+					if [ "$_OS_VERSION_COMMIT" -lt "304424" ]; then
+						__log 1 "The current FreeBSD version 11 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304424, falling back to 'virtio-net' attachment."
+						_GP_bhyve_net_type=virtio-net
+					fi
+				elif [ "$_OS_VERSION_DATE" -ge "1000000" ]; then
+					if [ "$_OS_VERSION_COMMIT" -lt "304425" ]; then
+						__log 1 "The current FreeBSD version 10 ($_OS_VERSION_DATE r$_OS_VERSION_COMMIT) is incompataible with Intel e1000 emulation as it is prior to commit r304425, falling back to 'virtio-net' attachment."
+						_GP_bhyve_net_type=virtio-net
+					fi
+				else
+					__log 1 "This FreeBSD version is not able to emulate an Intel e1000 NIC, falling back to 'virtio-net' attachment."
+					_GP_bhyve_net_type=virtio-net
+				fi
 			fi
 		else
 			__fault_detected_exit "Only tap and VALE network interfaces can be attached to bhyve guests. $_iface was detected as a $_IFACE_type interface."
 		fi
 
-		# Add a virtio-net pci device for the network interface
-		[ -z "$_mac" ] && local _string="$_string virtio-net,$_iface"
-		[ -n "$_mac" ] && local _string="$_string virtio-net,$_iface,mac=${_mac}"
+		# Add a PCI device for the network interface
+		__log 2 "Attaching $_iface interface using $net_attach_type."
+		[ -z "$_mac" ] && local _string="$_string ${_GP_bhyve_net_type},$_iface"
+		[ -n "$_mac" ] && local _string="$_string ${_GP_bhyve_net_type},$_iface,mac=${_mac}"
 	done
 
 	__generate_bhyve_slot_string "$_string"
