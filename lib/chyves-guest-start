@@ -389,10 +389,10 @@ __generate_grub_bhyve_command() {
 			printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "arch" ]; then
-			printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > $_path/grub.cfg
+			printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "gentoo" ]; then
-			printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > $_path/grub.cfg
+			printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "coreos" ]; then
 			printf 'linux (cd0)/coreos/vmlinuz coreos.autologin \ninitrd (cd0)/coreos/cpio.gz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
