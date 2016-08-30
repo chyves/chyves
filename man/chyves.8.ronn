@@ -1454,9 +1454,6 @@ Install and run a Debian guest _(note LVM installs require "os" be set to "d8lvm
     chyves debianvm set loader=grub-bhyve os=debian
     chyves debianvm start debian-8.2.0-amd64-i386-netinst.iso
     chyves debianvm console
-    <Installation completed>
-    chyves debianvm stop        # This is done to boot from hard drive
-    chyves debianvm start
 
 Install and run a Arch Linux guest :
 
@@ -1464,19 +1461,13 @@ Install and run a Arch Linux guest :
     chyves archguest set loader=grub-bhyve os=arch
     chyves archguest start archguest archlinux-2015.10.01-dual.iso
     chyves archguest console
-    <Installation completed>
-    chyves archguest stop        # This is done to boot from hard drive
-    chyves archguest start
 
 Install and run a CentOS or RHEL guest, _(note version 6 would use os=centos6)_:
 
     chyves centosguest create
     chyves centosguest set loader=grub-bhyve os=centos7 ram=392M
     chyves centosguest start CentOS-7-x86_64-Everything-1511.iso
-    chyves centosguest consol
-    <Installation completed>
-    chyves centosguest stop      # This is done to boot from hard drive
-    chyves centosguest start
+    chyves centosguest console
 
 Install and run a Gentoo guest:
 
@@ -1484,9 +1475,6 @@ Install and run a Gentoo guest:
     chyves gentooguest set loader=grub-bhyve os=gentoo
     chyves gentooguest start install-amd64-minimal-20160414.iso
     chyves gentooguest console
-    <Installation completed>
-    chyves gentooguest stop      # This is done to boot from hard drive
-    chyves gentooguest start
 
 Install and run an unlisted custom grub-bhyve guest, see `os` property for details:
 
@@ -1496,7 +1484,7 @@ Install and run an unlisted custom grub-bhyve guest, see `os` property for detai
     chyves customgst start install.iso
     chyves customgst console
     <Installation completed>
-    chyves customgst stop             # This is done to boot from hard drive
+    chyves customgst stop             # This is done to edit grub.cfg
     <Edit grub.cfg and device.map>
     chyves customgst start
 

@@ -1570,9 +1570,6 @@ chyves bguest set pcidev_0=ahci-hd,/chyves/dozer/guests/bguest/01.img
 chyves debianvm set loader=grub-bhyve os=debian
 chyves debianvm start debian-8.2.0-amd64-i386-netinst.iso
 chyves debianvm console
-&lt;Installation completed>
-chyves debianvm stop        # This is done to boot from hard drive
-chyves debianvm start
 </code></pre>
 
 <p>Install and run a Arch Linux guest :</p>
@@ -1581,9 +1578,6 @@ chyves debianvm start
 chyves archguest set loader=grub-bhyve os=arch
 chyves archguest start archguest archlinux-2015.10.01-dual.iso
 chyves archguest console
-&lt;Installation completed>
-chyves archguest stop        # This is done to boot from hard drive
-chyves archguest start
 </code></pre>
 
 <p>Install and run a CentOS or RHEL guest, <em>(note version 6 would use os=centos6)</em>:</p>
@@ -1591,10 +1585,7 @@ chyves archguest start
 <pre><code>chyves centosguest create
 chyves centosguest set loader=grub-bhyve os=centos7 ram=392M
 chyves centosguest start CentOS-7-x86_64-Everything-1511.iso
-chyves centosguest consol
-&lt;Installation completed>
-chyves centosguest stop      # This is done to boot from hard drive
-chyves centosguest start
+chyves centosguest console
 </code></pre>
 
 <p>Install and run a Gentoo guest:</p>
@@ -1603,9 +1594,6 @@ chyves centosguest start
 chyves gentooguest set loader=grub-bhyve os=gentoo
 chyves gentooguest start install-amd64-minimal-20160414.iso
 chyves gentooguest console
-&lt;Installation completed>
-chyves gentooguest stop      # This is done to boot from hard drive
-chyves gentooguest start
 </code></pre>
 
 <p>Install and run an unlisted custom grub-bhyve guest, see <code>os</code> property for details:</p>
@@ -1616,7 +1604,7 @@ chyves customgst set loader=grub-bhyve os=custom
 chyves customgst start install.iso
 chyves customgst console
 &lt;Installation completed>
-chyves customgst stop             # This is done to boot from hard drive
+chyves customgst stop             # This is done to edit grub.cfg
 &lt;Edit grub.cfg and device.map&gt;
 chyves customgst start
 </code></pre>
