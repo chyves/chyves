@@ -164,6 +164,7 @@ __install_from_github() {
 		__install_from_github_micro_cleanup
 	else
 		__log 2 "done."
+		__write_property_value_to_config_file "global" "check_for_updates_last_check_status" "0"
 	fi
 
 	__log 1 "The following version of chyves is now installed:"
