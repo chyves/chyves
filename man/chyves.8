@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "August 28 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "August 29 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.1\.4
@@ -854,7 +854,10 @@ Used to further describe guests\. Use double quotes when description contains sp
 Used to determine the properties to use for the \fBgrub\.cfg\fR and \fBdevice\.map\fR files when the \fBloader\fR property is set to \fBgrub\-bhyve\fR\.
 .
 .IP
-Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom\. Any other values are invalid\. \fBdefault\fR is the generic catch\-all value\.
+Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, coreos, coreossecure, default, or custom\. Any other values are invalid\. \fBdefault\fR is the generic catch\-all value\.
+.
+.IP
+When \'coreos\' is used, the flag \'coreos\.autologin\' is used to bypass authentication for the console\. When \'coreossecure\' is used, the console requires a username and password\.
 .
 .IP
 Using \fBcustom\fR relies on the user to manually create the \fBgrub\.cfg\fR and \fBdevice\.map\fR files in the guest directory \fB/chyves/<pool>/guests/<guest>\fR\.
@@ -2779,6 +2782,24 @@ chyves windowsguest unset eject_iso_on_n_reboot
 chyves iso import https://fedorapeople\.org/groups/virt/virtio\-win/direct\-downloads/archive\-virtio/virtio\-win\-0\.1\.96/virtio\-win\-0\.1\.96\.iso
 chyves windowsguest start virtio\-win\-0\.1\.96\.iso
 <Install virtio\-net drivers\. Reboot\.>
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Install and run a CoreOS guest:
+.
+.IP "" 4
+.
+.nf
+
+chyves coreos create 32g
+chyves coreos set ram=1G loader=grub\-bhyve os=coreos
+chyves coreos start coreos_production_iso_image\.iso
+chyves coreos console
+<After installation, set a user name and password\.>
+chyves coreos set os=coreossecure
 .
 .fi
 .

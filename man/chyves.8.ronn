@@ -504,7 +504,9 @@ Usage:
 
   Used to determine the properties to use for the `grub.cfg` and `device.map` files when the `loader` property is set to `grub-bhyve`.
 
-  Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, default, or custom. Any other values are invalid. `default` is the generic catch-all value.
+  Supported values are openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, coreos, coreossecure, default, or custom. Any other values are invalid. `default` is the generic catch-all value.
+
+  When 'coreos' is used, the flag 'coreos.autologin' is used to bypass authentication for the console. When 'coreossecure' is used, the console requires a username and password.
 
   Using `custom` relies on the user to manually create the `grub.cfg` and `device.map` files in the guest directory `/chyves/<pool>/guests/<guest>`.
 
@@ -1519,6 +1521,15 @@ Install and run a Windows guest (On a host running FreeBSD 11.0-RC2 or later):
     chyves iso import https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.96/virtio-win-0.1.96.iso
     chyves windowsguest start virtio-win-0.1.96.iso
     <Install virtio-net drivers. Reboot.>
+
+Install and run a CoreOS guest:
+
+    chyves coreos create 32g
+    chyves coreos set ram=1G loader=grub-bhyve os=coreos
+    chyves coreos start coreos_production_iso_image.iso
+    chyves coreos console
+    <After installation, set a user name and password.>
+    chyves coreos set os=coreossecure
 
 ## AUTHOR
 **Justin D Holcomb** -- justinholcomb.me

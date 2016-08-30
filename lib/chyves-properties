@@ -374,7 +374,7 @@ __verify_user_input_for_properties() {
 
 # os
 		elif [ "$_property" = "os" ]; then
-			if [ -z "$( echo "$_value" | grep -E '^openbsd60$|^openbsd59$|^openbsd58$|^openbsd57$|^netbsd$|^debian$|^d8lvm$|^centos6$|^centos7$|^arch$|^gentoo$|^custom$|^default$' )" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^openbsd60$|^openbsd59$|^openbsd58$|^openbsd57$|^netbsd$|^debian$|^d8lvm$|^centos6$|^centos7$|^arch$|^gentoo$|^coreos$|^coreossecure$|^custom$|^default$' )" ]; then
 				__log 1 "Unrecognized os type. Valid values are required for grub-bhyve guests to boot properly. See man page for valid values."
 			fi
 
