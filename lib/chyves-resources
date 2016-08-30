@@ -129,7 +129,7 @@ __guest_upgrade_chyves_guest_version() {
 			__write_property_value_to_config_file "guest" "revert_to_snapshot" "$_GDP_revert_to_snapshot"
 			__write_property_value_to_config_file "guest" "revert_to_snapshot_method" "$_GDP_revert_to_snapshot_method"
 
-			# Hosts on FreeBSD 10.3 or are recommended to use the "-S" bhyve wire memory flag otherwise fun stuff happens at memory starvation.
+			# Hosts on FreeBSD 10.3 or later are recommended to use the "-S" bhyve wire memory flag otherwise fun stuff happens at memory starvation.
 			if [ "$_GP_bargs" = "-A -H -P" ]; then
 				__log 1 "Updating 'bargs' value to new use new default."
 				__write_property_value_to_config_file "guest" "bargs" "$_GDP_bargs"
