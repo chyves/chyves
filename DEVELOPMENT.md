@@ -1,15 +1,15 @@
 This document uses keywords (MUST, MAY, SHOULD, etc.) in compliance with RFC 2119.
 
-This project has three primary branches it uses:
+This project has two branches:
 - master (stable)
 - dev (testing but stable)
 
-The ingress branch for PRs and internal development MUST always be `dev` branch. Large feature SHOULD be under a `dev.feature-name` branch. The `dev` branch exists so the code can be pulled in, tested, evaluated, and refined before getting distributed under `master` branch.
+The ingress branch for PRs and internal development MUST always be `dev` branch. Large feature additions SHOULD be under a `dev.feature-name` branch. The `dev` branch exists so the code can be pulled in, tested, evaluated, and refined before getting distributed under `master` branch.
 
-There is a plan to submitted the master branch to the ports tree under `sysutils/chyves` and `dev` versions will remain on GitHub. Versions ending in odd numbers are released from the `dev` branch and versions ending in even numbers are released from the `master` branch.
+There is a plan to submitted the master branch to the ports tree under `sysutils/chyves` and `dev` versions will remain on GitHub.
 
 ### Script execution flow
-Functions are tiered in such a way that the first tier deals with argument and input verification from the user and the second tier deals with executing against the host. Part of the reason this is done is so that if one host function needs to call another host function, then execution is much quicker as input verification is not needed. This methodology also allows for using the `dev` subcommand for easier debugging.
+Functions are tiered in such a way that the first tier deals with argument and input verification from the user and the second tier deals with executing against the host. Part of the reason this is done is so that if one host function needs to call another host function, then execution is much quicker as input verification is not needed. This methodology also allows for using the `chyves dev` subcommand for easier debugging.
 
 When `chyves` is executed:
 - Stage 1 globally variables are set, these variables do not rely on a primary pool being set; nor do they require `chyves` functions.
