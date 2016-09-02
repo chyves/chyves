@@ -8,6 +8,7 @@ The goal of this project is to provide a bhyve front end tool that is easy to us
 
 `chyves` utilizes FreeBSD’s `bhyve` hypervisor to start and manage type 2 virtualized guests and their resources. `bhyve`'s primary interface to guests is through a serial interface. However with the release of FreeBSD version 11 came UEFI GOP support. This allows for a VNC console to be used to manage UEFI guests.
 
+This project has two branches it uses: `master` and `dev`. The ingress branch for all PRs and development is the `dev` branch. After a chunk of code has been tested in `dev`, it gets merge back into `master`. See [DEVELOPMENT.md](DEVELOPMENT.md) for details.
 
 `chyves` is primary developed on FreeBSD 12-CURRENT and further tested on 11.0-STABLE. Most features should work on 10.3-STABLE as `chyves` was initially developed on 10.3 but some features are not available such as UEFI GOP.
 
