@@ -145,6 +145,12 @@ __guest_upgrade_chyves_guest_version() {
 			__chyves_guest_version_gvreload_and_set "0200"
 		fi
 
+		# Changed for new grub-bhyve guests 'openbsd60' and 'coreos'.
+		if [ "$_GP_chyves_guest_version" -eq "200" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0201."
+			__chyves_guest_version_gvreload_and_set "0201"
+		fi
+
 		# Template
 		#if [ "$_GP_chyves_guest_version" -lt "9900" ]; then
 		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."
