@@ -1,1 +1,7 @@
-In the future this document will indicated changes that need to be made in order to upgrade from one version to the next. This document is a matter of reference as the process of upgrading has been automated with `chyves-upgrade` contained in the chyves-utils sub-project. While we try to mitigate the need for such a document through planning but this can not always be the case. This can be especially true with new features.
+This document tracks changes that are made in order to ensure dataset and guests contain the latest structure and syntax. This document is a matter of reference as the process of upgrading has been automated with `chyves dataset <pool> upgrade` and `chyves <guest> upgrade`. While we try to mitigate the need for such a document through planning, this can not always be the case. This can be especially true with new features.
+
+20160821
+ - Public released versions:
+  - chyves version: 0.1.0
+  - Dataset version: 0004
+  - chyves guest version: 0200
