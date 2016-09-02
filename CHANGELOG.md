@@ -1,3 +1,25 @@
+#### Version 0.1.5-dev (2016 September 2)
+
+- Increment CGV to 0201. [e9e4d0a](https://github.com/chyves/chyves/commit/e9e4d0a93737d11ce33a816d889732dac1fda07d)
+  - Incremented so v0.1.1 and earlier do not try to start guests, specifically ones that have the '`os`' property set to 'coreos' or 'openbsd60'.
+
+- Minor changes to documents. [1464736](https://github.com/chyves/chyves/commit/146473651c34c28546ab79ea6ae4a20b4068d868), [1a3b287](https://github.com/chyves/chyves/commit/1a3b28795eda834ea213667ebfa301c23ce5b1a2), [7d3043a](https://github.com/chyves/chyves/commit/7d3043ab518dfb89d6ecc9ea49694a516ea7c88b), [3aad0d6](https://github.com/chyves/chyves/commit/3aad0d64caf5e246b672d12a141727d5da21c979), and [756cd7a](https://github.com/chyves/chyves/commit/756cd7a89707ca43c87b0bc9d23b036a87dcfb0a).
+
+- Added check in guest rename to see if guest is running. The dataset needs to be renamed and the zvol can not be in use. [b32d92e](https://github.com/chyves/chyves/commit/b32d92e7facb6582b0965f1c5e923858992fee22)
+
+- Fixed issue with `chyves upgrade` where it would perpetually claim it was out of date. [aa317d2](https://github.com/chyves/chyves/commit/aa317d2453c81c245f6659b352ef82893b113fc5)
+
+- Completed Intel e1000 NIC emulation attachment. [d356178](https://github.com/chyves/chyves/commit/d356178a64fc0c364634d12ab160f156c294879a)
+
+- Changed version nomenclature to 9 major versions rather than 999. [116b1b5](https://github.com/chyves/chyves/commit/116b1b55a0ef677296af693dedbd606748253600)
+
+- Fixed reference to old variable name in `__generate_grub_bhyve_command`. [082b570](https://github.com/chyves/chyves/commit/082b570ade713c49a43182794b724f4ca184ab1a)
+
+- Removed references to stop and start VM to remove optical media from VM in man page examples. [0b3691f](https://github.com/chyves/chyves/commit/0b3691f132f0c064d783fdc2da489707ee1fa997)
+
+- Add CoreOS as a `grub-bhyve` preconfigured OS. [562f9c5](https://github.com/chyves/chyves/commit/562f9c5e8b887824dc51510f3e426c44709091de)
+  - Thanks to @olgeni for [his PR to vm-bhyve](https://github.com/churchers/vm-bhyve/pull/112).
+
 #### Version 0.1.4-dev (2016 August 28)
 
 Thanks to @3add3287 for rcboot fix.
