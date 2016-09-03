@@ -292,6 +292,8 @@ does:
   -s    [status] Display status of VMM , bhyve instance, and the rcboot value.
   -t    [template] Displays if guest is a template.
   -c    [clone] Displays clone relationship, if any.
+  -u    [uefi] Print UEFI console output type, firmware, VNC IP and port, mouse
+        type, pause boot until VNC connect, and VNC resolution.
   -d    [description] Displays description property.
   -n    [notes] Dispays notes property.
   -a    [all] Display all fields above.
@@ -339,6 +341,9 @@ EOT
 
 	# Print headers for -c flag
 	[ -n "$( echo "$flags" | grep -E 'c|a' )" ] && printf "^%s" "Clone"
+
+	# Print headers for -u flag
+	[ -n "$( echo "$flags" | grep -E 'u|a' )" ] && printf "^%s^%s^%s^%s^%s^%s" "UEFI Console" "UEFI Firmware" "UEFI IP:Port" "UEFI Mouse" "UEFI Pause" "UEFI Resolution"
 
 	# Print headers for -d flag
 	[ -n "$( echo "$flags" | grep -E 'd|a' )" ] && printf "^%s" "Description"
@@ -413,6 +418,16 @@ EOT
 				printf "^%s" "$_DISK_clone_origin_for_info_func"
 			fi
 
+			# Print UEFI variables if flag set
+			if [ -n "$( echo "$flags" | grep -E 'u|a' )" ]; then
+				if [ -n "$_GP_uefi_vnc_ip" ] && [ -n "$_GP_uefi_vnc_ip" ]; then
+					local _uefi_ip_and_port="$_GP_uefi_vnc_ip:$_GP_uefi_vnc_port"
+				else
+					local _uefi_ip_and_port="" # Required due to multiple guests.
+				fi
+				printf "^%s ^%s ^%s ^%s ^%s ^%s " "$_GP_uefi_console_output" "$_GP_uefi_firmware" "$_uefi_ip_and_port" "$_GP_uefi_vnc_mouse_type" "$_GP_uefi_vnc_pause_until_client_connect" "$_GP_uefi_vnc_res"
+			fi
+
 			# Print description if flag set
 			[ -n "$( echo "$flags" | grep -E 'd|a' )" ] && printf "^%s" "$_GP_description"
 
@@ -477,6 +492,9 @@ EOT
 							_DISK_clone_origin_for_info_func=
 							#printf "^%s" "$_disk"
 						fi
+
+						# Print "-" for UEFI properties.
+						[ -n "$( echo "$flags" | grep -E 'u|a' )" ] && printf "^-^-^-^-^-^-"
 
 						# Print Description (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'd|a' )" ]; then

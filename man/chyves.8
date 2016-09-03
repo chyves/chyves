@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "August 29 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "September 03 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.1\.5
@@ -96,7 +96,7 @@
 \fBchyves help\fR
 .
 .IP "\(bu" 4
-\fBchyves info [\-zbprvstcdnakl|\-h]\fR
+\fBchyves info [\-zbprvstcudnakl|\-h]\fR
 .
 .IP "\(bu" 4
 \fBchyves list [bridges|clones|defaults|disks|firmware|iso|pools|\e properties|<property>]\fR
@@ -1861,6 +1861,9 @@ Displays active guests and their disks on the system when no flags are used\. Th
 .
 .IP "\(bu" 4
 \fB\-c\fR [\fBc\fRlone] Displays clone relationship, if any\.
+.
+.IP "\(bu" 4
+\fB\-u\fR [\fBu\fRefi] Print UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution\.`
 .
 .IP "\(bu" 4
 \fB\-d\fR [\fBd\fRescription] Displays description property\.

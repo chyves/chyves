@@ -119,7 +119,7 @@
 <li><code>chyves &lt;guest>|MG|all upgrade</code></li>
 <li><code>chyves &lt;guest>|MG|all unset &lt;property></code></li>
 <li><code>chyves help</code></li>
-<li><code>chyves info [-zbprvstcdnakl|-h]</code></li>
+<li><code>chyves info [-zbprvstcudnakl|-h]</code></li>
 <li><code>chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|&lt;property>]</code></li>
 <li><code>chyves list global [&lt;pool>|primary]</code></li>
 <li><code>chyves list {processes|snapshots} [&lt;guest>]</code></li>
@@ -1197,6 +1197,7 @@ subclass   = Fibre Channel
 <li><code>-s</code>    [<strong>s</strong>tatus] Display status of VMM , bhyve instance, and the rcboot value.</li>
 <li><code>-t</code>    [<strong>t</strong>emplate] Displays if guest is a template.</li>
 <li><code>-c</code>    [<strong>c</strong>lone] Displays clone relationship, if any.</li>
+<li><code>-u</code>    [<strong>u</strong>efi] Print UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution.`</li>
 <li><code>-d</code>    [<strong>d</strong>escription] Displays description property.</li>
 <li><code>-n</code>    [<strong>n</strong>otes] Dispays notes property.</li>
 <li><code>-a</code>    [<strong>a</strong>ll] Display all fields above.</li>
@@ -1653,7 +1654,7 @@ chyves coreos set os=coreossecure
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>September 02 2016</li>
+    <li class='tc'>September 03 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

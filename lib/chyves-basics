@@ -166,7 +166,7 @@ chyves <guest>|MG|all stop [force]
 chyves <guest>|MG|all upgrade
 chyves <guest>|MG|all unset <property>
 chyves help
-chyves info [-zbprvstcdnakl|-h]
+chyves info [-zbprvstcudnakl|-h]
 chyves list [bridges|clones|defaults|disks|firmware|iso|pools|
              properties|<property>]
 chyves list global [<pool>|primary]

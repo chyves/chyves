@@ -32,7 +32,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.1.5
 * `chyves <guest>|MG|all upgrade`
 * `chyves <guest>|MG|all unset <property>`
 * `chyves help`
-* `chyves info [-zbprvstcdnakl|-h]`
+* `chyves info [-zbprvstcudnakl|-h]`
 * `chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|<property>]`
 * `chyves list global [<pool>|primary]`
 * `chyves list {processes|snapshots} [<guest>]`
@@ -1110,6 +1110,7 @@ Displays active guests and their disks on the system when no flags are used. The
 * `-s`    [**s**tatus] Display status of VMM , bhyve instance, and the rcboot value.
 * `-t`    [**t**emplate] Displays if guest is a template.
 * `-c`    [**c**lone] Displays clone relationship, if any.
+* `-u`    [**u**efi] Print UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution.`
 * `-d`    [**d**escription] Displays description property.
 * `-n`    [**n**otes] Dispays notes property.
 * `-a`    [**a**ll] Display all fields above.
