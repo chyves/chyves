@@ -736,7 +736,7 @@ __start() {
 				fi
 
 				__log 1 "Rebooting $_GUEST_name... "
-				__log 3 "This is the $_REBOOT_count reboot."
+				__log 3 "Number of reboots: $_REBOOT_count"
 				sleep 5
 			done
 		) &
