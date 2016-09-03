@@ -264,6 +264,17 @@ __parse_cmd_ingress() {
 		[ -n "$4" ] && __verify_valid_pool "$4" "-c"
 		__create "$1" "$3" "$4"
 		exit
+
+	# Parameter $1 is likely a guest name - Stage 1 - clone command
+	elif [ "$2" = "clone" ]; then
+		__root_credentials_required
+		__verify_number_of_arguments "3" "$#" "5"
+		__verify_correct_guest_name_format "$3"
+		__verify_guests $1
+		__load_one_guest_parameters "$1"
+		[ -n "$5" ] && __verify_valid_pool "$5" "-c"
+		__clone_guest "$3" "$4" "$5"
+		exit
 	fi
 
 	# Guest ($1) should already exists for the commands below
@@ -271,14 +282,6 @@ __parse_cmd_ingress() {
 
 	# Parameter $1 is likely a guest name - Stage 2 - Guest exists
 	case "$2" in
-		clone)    __root_credentials_required                                      # Mostly verified
-		          __verify_number_of_arguments "3" "$#" "5"
-		          __verify_correct_guest_name_format "$3"
-		          __load_one_guest_parameters "$1"
-		          [ -n "$5" ] && __verify_valid_pool "$5" "-c"
-		          __clone_guest "$3" "$4" "$5"
-		          exit
-		;;
 		console)  __parse_cmd_console "$@"                                          # Completely verified
 		          exit
 		;;
