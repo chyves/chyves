@@ -365,8 +365,8 @@ EOT
 			__load_guest_parameters $_guest
 			local _size="$( zfs get -H -o value used $_GUEST_pool/chyves/guests/$_GUEST_name )"
 
-			# Print common section (guest, size, cpu, raml)
-			printf "%s^%s^%s^%s^%s" "$_GUEST_name"
+			# Print guest name
+			printf "%s" "$_GUEST_name"
 
 			# Print size
 			[ -n "$( echo "$flags" | grep -E 'z|a' )" ] && printf "^%s" "$_size"
@@ -422,7 +422,7 @@ EOT
 			# Print new line for next guest/disk.
 			printf "\n"
 
-			# Print Disks when the -k flag is not used
+			# Do not print disks when the -k flag is used
 			if [ -z "$( echo "$flags" | grep 'k' )" ]; then
 
 				# Set $_GUEST_disk_list in space delimited format for "for" loop below.
@@ -432,22 +432,18 @@ EOT
 				for _disk in `echo $_GUEST_disk_list`
 				do
 
-					# Save the cycles if not showing size
-					if [ -n "$( echo "$flags" | grep -E 'z|a' )" ]; then
+					# Handling for raw images files - images named 'disk{n}' will cause issues.
+					if [ -z "$( echo "$_disk" | grep -E 'disk[0-9]{1,}$' )" ]; then
+						[ -n "$( echo "$flags" | grep -E 'z|a' )" ] && local _size="$( ls -hal $_disk | awk '{ print $5 }' )"
+						local _disk_name="$( echo $_disk | cut -d'/' -f7- )"
 
-						# Handling for raw images files
-						if [ -z "$( echo "$_disk" | grep -E 'disk[0-9]{1,}$' )" ]; then
-							local _size="$( ls -hal $_disk | awk '{ print $5 }' )"
-							local _disk_name="$( echo $_disk | cut -d'/' -f7- )"
-
-						# Handling for traditional ZFS volume backed disks
-						else
-							local _disk_name="$( echo $_disk | cut -d'/' -f8- )"
-							local _size="$( zfs get -H -t volume -o value volsize $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk_name )"
-						fi
+					# Handling for traditional ZFS volume backed disks
+					else
+						local _disk_name="$( echo $_disk | cut -d'/' -f8- )"
+						[ -n "$( echo "$flags" | grep -E 'z|a' )" ] && local _size="$( zfs get -H -t volume -o value volsize $_GUEST_pool/chyves/guests/$_GUEST_name/$_disk_name )"
 					fi
 
-					# Print common header (Disk name)
+					# Print disk name
 					printf "  %s" "$_disk_name"
 
 					# Print qualites (Size, CPU, RAM)
@@ -484,14 +480,14 @@ EOT
 
 						# Print Description (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'd|a' )" ]; then
-							local _disk_desc="$( __return_property_value_from_config_file "guest" "${_disk_name}_description" )"
+							local _disk_desc="$( __return_property_value_from_config_file "guest" "${_disk_name}_description" )"  # Indirect variable references not supported by /bin/sh otherwise this could be pulled from the already loaded _GP_ variable.
 							[ -z "$_disk_desc" ] && local _disk_desc=-
 							printf "^%s" "$_disk_desc"
 						fi
 
 						# Print Notes (does not inherit from guest)
 						if [ -n "$( echo "$flags" | grep -E 'n|a' )" ]; then
-							local _disk_notes="$( __return_property_value_from_config_file "guest" "${_disk_name}_notes" )"
+							local _disk_notes="$( __return_property_value_from_config_file "guest" "${_disk_name}_notes" )"  # Indirect variable references not supported by /bin/sh otherwise this could be pulled from the already loaded _GP_ variable.
 							[ -z "$_disk_notes" ] && local _disk_notes=-
 							printf "^%s" "$_disk_notes"
 						fi
