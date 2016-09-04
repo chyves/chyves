@@ -32,7 +32,7 @@ chyves(8) -- bhyve(8) front end manager -- version 0.1.5
 * `chyves <guest>|MG|all upgrade`
 * `chyves <guest>|MG|all unset <property>`
 * `chyves help`
-* `chyves info [-zbprvstcudnakl|-h]`
+* `chyves info [-zbprvstcudnakwl|-h]`
 * `chyves list [bridges|clones|defaults|disks|firmware|iso|pools|\ properties|<property>]`
 * `chyves list global [<pool>|primary]`
 * `chyves list {processes|snapshots} [<guest>]`
@@ -1118,6 +1118,7 @@ Displays active guests and their disks on the system when no flags are used. The
 * `-a`    [**a**ll] Display all fields above.
 * `-k`    [no-dis**k**s] Do not display guests' disks.
 * `-h`    [**h**elp] Display this message.
+* `-w`    [truncate-to-**w**idth] Truncate output to the width of the terminal
 * `-l`    [**l**ess] Pipes the output to less.
 
 ### ISO SUB-COMMANDS

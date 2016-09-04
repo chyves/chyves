@@ -299,6 +299,7 @@ does:
   -a    [all] Display all fields above.
   -k    [no-disks] Do not display guests' disks.
   -h    [help] Display this message.
+  -w    [truncate-to-width] Truncate output to the width of the terminal
   -l    [less] Pipes the output to less.
 
 EOT
@@ -522,6 +523,15 @@ EOT
 		if [ -n "$( echo "$flags" | grep 'l' )" ]
 		then
 			less
+		else
+			cat
+		fi
+	) | \
+	(
+		if [ -n "$( echo "$flags" | grep 'w' )" ]
+		then
+			local _term_width="$( tput cols )"
+			cut -c -$_term_width
 		else
 			cat
 		fi
