@@ -818,7 +818,10 @@ When setting a guest to use the \fBuefi\fR loader, some \fBuefi_*\fR properties 
 \fBnet_ifaces\fR=tap{n}|vale{n}[:{p}]
 .
 .IP
-\fBManaged through \'chyves network\' commands\.\fR
+\fBManaged through \'chyves network\' commands when \'network_design_mode\' is set to \'auto\'\.\fR
+.
+.IP
+\fBUser settable when \'network_design_mode\' is set to \'system\'\.\fR
 .
 .IP
 Stores which tap and VALE interfaces are assigned to a guest\. Where {n} is a unique interface number\. Taps are process locked and can not be shared simultaneously by multiple guests\. Multiple devices are stored using commas as delimiters\.

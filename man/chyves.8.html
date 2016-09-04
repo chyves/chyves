@@ -574,7 +574,9 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <p>When setting a guest to use the <code>uefi</code> loader, some <code>uefi_*</code> properties are populated. One of these properties is <code>uefi_firmware</code> which is required for guests to start.</p></li>
 <li><p><code>net_ifaces</code>=tap{n}|vale{n}[:{p}]</p>
 
-<p><strong>Managed through 'chyves network' commands.</strong></p>
+<p><strong>Managed through 'chyves network' commands when 'network_design_mode' is set to 'auto'.</strong></p>
+
+<p><strong>User settable when 'network_design_mode' is set to 'system'.</strong></p>
 
 <p>Stores which tap and VALE interfaces are assigned to a guest. Where {n} is a unique interface number. Taps are process locked and can not be shared simultaneously by multiple guests. Multiple devices are stored using commas as delimiters.</p>
 

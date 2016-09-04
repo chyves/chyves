@@ -480,7 +480,9 @@ Usage:
 
 * `net_ifaces`=tap{n}|vale{n}[:{p}]
 
-  **Managed through 'chyves network' commands.**
+  **Managed through 'chyves network' commands when 'network_design_mode' is set to 'auto'.**
+
+  **User settable when 'network_design_mode' is set to 'system'.**
 
   Stores which tap and VALE interfaces are assigned to a guest. Where {n} is a unique interface number. Taps are process locked and can not be shared simultaneously by multiple guests. Multiple devices are stored using commas as delimiters.
 

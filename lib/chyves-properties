@@ -370,7 +370,19 @@ __verify_user_input_for_properties() {
 
 # net_ifaces
 		elif [ "$_property" = "net_ifaces" ]; then
-			__fault_detected_warning_break 1 "Not user settable."
+			if [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
+				__fault_detected_warning_break 1 "Not user settable while network design mode is set to auto."
+			elif [ "$_NETWORK_DESIGN_MODE" = "system" ]; then
+
+				# This verifies the correct interface format.
+				__log 1 "Checking valid values for 'net_ifaces' due to network design mode set as system."
+				for _iface in `echo $_value | tr ',' ' '`
+				do
+					if [ -z "$( echo "$_iface" | grep -E '^tap[0-9]{1,5}$|^vale[0-9a-zA-Z]{1,9}(:[a-zA-Z]{1}|:[0-9]{1,4}){0,1}$' )" ]; then
+						__fault_detected_exit "Incorrect interface format: $_iface"
+					fi
+				done
+			fi
 
 # os
 		elif [ "$_property" = "os" ]; then
