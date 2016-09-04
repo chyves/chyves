@@ -33,6 +33,7 @@ __list_active_taps() {
 # List bridges
 __list_bridges() {
 	__get_bridge_list_on_chyves
+	local _GDP_bridge=$( __return_property_value_from_config_file "defaults" "bridge" )
 
 	for b in `echo "$_BRIDGE_list_on_chyves" | tr '\n' ' '`
 	do
@@ -42,6 +43,7 @@ __list_bridges() {
 		local _phy=$( __return_property_value_from_config_file "global" "${b}_phy_attach" )
 		[ "$_phy" = "" ] && __fault_detected_exit "Bridge not associated with physical or vlan interface, or set to \"private\". \nPlease run: chyves network $b attach {iface} \n        Or: chyves network $b private"
 		__verify_valid_iface_format $_phy
+		[ "$b" = "$_GDP_bridge" ] && echo "       Default bridge for new guests."
 		if [ "$_IFACE_type" = "private" ]; then
 			echo "       Private network, no outside connectivity."
 		else
