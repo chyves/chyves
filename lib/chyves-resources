@@ -73,7 +73,7 @@ __guest_delete_backend() {
 	[ "$?" != 0 ] && __fault_detected_exit "$_GUEST_name has dependent clones, see 'chyves list clones' or use 'chyves <guest> delete force'."
 
 	# Remove network associations in chyves
-	if [ "$_force" != "keepnet" ]; then
+	if [ "$_force" != "keepnet" ] && [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
 		__log 2 "Removing tap interfaces from $_GUEST_name"
 		if [ -n "$_GP_net_ifaces" ]; then
 			for _iface in `echo $_GP_net_ifaces | tr ',' '\n' | grep tap | tr '\n' ' '`
