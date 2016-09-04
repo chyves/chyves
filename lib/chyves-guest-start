@@ -648,7 +648,7 @@ __start() {
 			do
 
 				# Eject optical media after reboot
-				if [ "$_REBOOT_count" = "$_eject_after_this_count" ] && [ ! "$_EJECT_media_once" ]; then
+				if [ "$_REBOOT_count" = "$_eject_after_this_count" ] && [ ! "$_EJECT_media_once" ] && [ "$_eject_after_this_count" != 0 ]; then
 
 					# Keep from continual looping
 					_EJECT_media_once=1
