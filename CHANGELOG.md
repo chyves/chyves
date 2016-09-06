@@ -1,3 +1,27 @@
+#### Version 0.1.6-dev (2016 September 5)
+
+- FIX: Issue when rebooting guest's using `revert_to_snapshot` or `eject_iso_on_n_reboot`. [2e11c22](https://github.com/chyves/chyves/commit/2e11c22f420a10accf9736eec13a0e8723179d4b)
+
+- ENH: Indicate default bridge for `chyves list bridges`. [4b67678](https://github.com/chyves/chyves/commit/4b67678dee68155c3b6eff22c2b05f02c685fc2d)
+
+- FIX: Issue where `eject_iso_on_n_reboot`=0 would eject before first start. [d5ba410](https://github.com/chyves/chyves/commit/d5ba4106d9884f2e9c11191f8a63ea26a46ee043)
+
+- FIX: Issue when deleting guest when `network_design_mode` is set to 'system'.[6a546c9](https://github.com/chyves/chyves/commit/6a546c95eea5419f557b3988d7371b83a6734676)
+
+- FIX: Add ability to change `net_ifaces` when network design mode is set to 'system'. [8c709e4](https://github.com/chyves/chyves/commit/8c709e45aaa2136828071e5faef7828a29186b22)
+
+- DOC: Changed log comments for number of reboots. [db6a6ba](https://github.com/chyves/chyves/commit/db6a6ba8763f754eb7a527344c513420f7f950db)
+
+- Moved clone handling in `__parse_cmd_ingress` [29d1fd1](https://github.com/chyves/chyves/commit/29d1fd15d50b4004f16634c5adf4b2892ee8c1a5)
+  - In the future, clone a guest will be able to be specified and this is the first step by removing it from the `case` switch.
+
+- Enhancements and fixes for `chyves info`.
+  - Added '`-w`' flag to truncate output to terminal width. [e4f651d](https://github.com/chyves/chyves/commit/e4f651d7e1179c03ef5b569d4a3fee36f040247e)
+  - Added '`-u`' flag to display UEFI properties. The UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution are displayed. [a4a24ce](https://github.com/chyves/chyves/commit/a4a24ce986ebc48bd254056db673b7762e1ede25)
+  - Updated code comments and minor fixes. [095c8cb](https://github.com/chyves/chyves/commit/095c8cb24eb479a9906cf2d44adb371c79dee58f)
+
+- Fixed issues with `chyves <guest> console vnc` not working due to inverse matches. [7924a5e](https://github.com/chyves/chyves/commit/7924a5e39834e1be14e0774242af4a55ee296ff8)
+
 #### Version 0.1.5-dev (2016 September 2)
 
 - Increment CGV to 0201. [e9e4d0a](https://github.com/chyves/chyves/commit/e9e4d0a93737d11ce33a816d889732dac1fda07d)
