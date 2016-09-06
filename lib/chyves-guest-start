@@ -646,6 +646,7 @@ __start() {
 			# Use while loop to make sure guest will reboot correctly.
 			while [ 1 ]
 			do
+				_PCI_slot="$_PCI_SLOT_START"      # Reset $_PCI_slot value for next multi-guest.
 
 				# Eject optical media after reboot
 				if [ "$_REBOOT_count" = "$_eject_after_this_count" ] && [ ! "$_EJECT_media_once" ] && [ "$_eject_after_this_count" != 0 ]; then
@@ -742,7 +743,6 @@ __start() {
 		) &
 
 		echo ""                           # Create visual space for next multi-guest.
-		_PCI_slot="$_PCI_SLOT_START"      # Reset $_PCI_slot value for next multi-guest.
 		_BHYVE_console_string=""          # Reset $_BHYVE_console_string value for next multi-guest.
 	done
 }
