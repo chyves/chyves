@@ -201,7 +201,7 @@ __generate_bhyve_net_string() {
 		fi
 
 		# Add a PCI device for the network interface
-		__log 2 "Attaching $_iface interface using $net_attach_type."
+		__log 2 "Attaching $_iface interface using $_GP_bhyve_net_type."
 		[ -z "$_mac" ] && local _string="$_string ${_GP_bhyve_net_type},$_iface"
 		[ -n "$_mac" ] && local _string="$_string ${_GP_bhyve_net_type},$_iface,mac=${_mac}"
 	done
