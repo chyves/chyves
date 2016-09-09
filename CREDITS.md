@@ -8,6 +8,8 @@ Andrew D. @croquagei
 
 @3add3287
 
+@invisnet
+
 
 #### These individuals contributed to iohyve before the fork:
 
