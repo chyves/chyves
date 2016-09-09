@@ -1,3 +1,11 @@
+#### Version 0.1.8-dev (2016 September 9)
+
+Hot fixes
+
+- FIX: Typo from commit b8d6ed0 - FIX: Add parameter number check for 'chyves dev'. [05e9d30](https://github.com/chyves/chyves/commit/05e9d30d24c4f46e366938c2cc98a97bc6b7fe91)
+
+- Missed commit - Version increment to v0.1.7-dev for recent changes. [00ec843](https://github.com/chyves/chyves/commit/00ec8435db5ae05ffc53c2dd63bacd2b17080066)
+
 #### Version 0.1.7-dev (2016 September 8)
 
 Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion to correctly handle MTU on bridges.
