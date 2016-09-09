@@ -1,3 +1,15 @@
+#### Version 0.1.7-dev (2016 September 8)
+
+Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion to correctly handle MTU on bridges.
+
+- Merged in fix from @invisnet to add `lagg` to physical interfaces. [28f05f3](https://github.com/chyves/chyves/commit/28f05f318bbb6795bc0f4896ef3197649b75c240)
+
+- FIX: Add parameter number check for `chyves dev`. [b8d6ed0](https://github.com/chyves/chyves/commit/b8d6ed06666ae9d7bd8f6a8675e04ac7c0c8a32b)
+
+- FIX: Added handling of MTU for network bridges. [536dd8b](https://github.com/chyves/chyves/commit/536dd8b9a017942798d9d2f045c720dddf0371ac)
+
+- FIX: Update reference to old variable name in `__generate_bhyve_net_string`.  [10648b6](https://github.com/chyves/chyves/commit/10648b626f2b842d153b91e914ee57e4be482008)
+
 #### Version 0.1.6-dev (2016 September 5)
 
 - FIX: Issue when rebooting guest's using `revert_to_snapshot` or `eject_iso_on_n_reboot`. [2e11c22](https://github.com/chyves/chyves/commit/2e11c22f420a10accf9736eec13a0e8723179d4b)
