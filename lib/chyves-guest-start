@@ -168,8 +168,8 @@ __generate_bhyve_net_string() {
 			# _NETWORK_DESIGN_MODE handling
 			if [ "$_NETWORK_DESIGN_MODE" = "auto" ]; then
 				__get_parent_bridge_for_tap_chyves $_iface
-				__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
 				__network_add_phy_to_bridge $_PARENT_bridge_for_tap_chyves
+				__network_add_dev_to_bridge $_PARENT_bridge_for_tap_chyves $_iface
 			elif [ "$_NETWORK_DESIGN_MODE" = "system" ]; then
 				[ ! -e "/dev/$_iface" ] && __log 1 "Network design mode set to 'system' however tap interface not detected on system." && break 2
 			fi

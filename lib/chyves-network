@@ -348,6 +348,14 @@ __network_add_dev_to_bridge() {
 
 	if [ -z "$( echo "$_bridge_conf" | grep -w "$_dev" )" ]; then
 		__log 1 "Adding '$_dev' as a member of '$_bridge'..." -n
+
+		# Handling when MTU on bridge is not 1500
+		_bridge_mtu="$( ifconfig $_bridge | grep -o -E 'mtu [0-9]{1,}' | grep -o -E '[0-9]{1,}$' )"
+		if [ "$_bridge_mtu" != 1500 ]; then
+			__log 1 "Setting MTU on $_dev to $_bridge_mtu"
+			ifconfig "$_dev" mtu "$_bridge_mtu"
+		fi
+
 		ifconfig "$_bridge" addm "$_dev"
 		if [ "$?" != 0 ]; then
 			__fault_detected_exit "'$_dev' can not be added to '$_bridge' membership."
