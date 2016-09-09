@@ -220,7 +220,7 @@ __parse_cmd_ingress() {
 		              exit
 		;;
 		_dev)         [ "$_DEV_MODE" == "off" ] && __fault_detected_exit "Developer mode is set to "off", if desired turn on by running 'chyves global set dev_mode=on'"
-		              __verify_number_of_arguments "2" "$#" "9
+		              __verify_number_of_arguments "2" "$#" "9"
 		              [ "$_DEV_MODE" != "on" ] && set "$_DEV_MODE"
 		              $2 "$3" "$4" "$5" "$6" "$7" "$8" "$9"           # Used for developer to test a function directly
 		              [ "$_DEV_MODE" != "on" ] && set "$( echo $_DEV_MODE | sed 's/-/+/g' )"
