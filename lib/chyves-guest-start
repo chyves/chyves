@@ -56,10 +56,28 @@ __generate_bhyve_custom_pci_string() {
 
 # Generates a bhyve slot string for disks
 __generate_bhyve_disk_string() {
-	local _counter_ver12=0
+	local _counter_32dev=0
 	local _num_of_disks_counter=1
 
 	[ "$_GUEST_disk_list_count" = 0 ] && echo "Guest has no disks." && return 0
+
+	# Use 32 device attachment on supported guests.
+	if [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+		if [ "$_OS_VERSION_COMMIT" -ge "302459" ]; then
+			local _32dev_support=1
+		fi
+	elif [ "$_OS_VERSION_DATE" -ge "1100000" ]; then
+		if [ "$_OS_VERSION_COMMIT" -ge "304422" ]; then
+			local _32dev_support=1
+		fi
+	elif [ "$_OS_VERSION_DATE" -ge "1000000" ]; then
+		if [ "$_OS_VERSION_COMMIT" -ge "304420" ]; then
+			local _32dev_support=1
+		fi
+	fi
+
+	# Use individual attachment if not consolidating bhyve PCI devices
+	[ "$_CONSOLIDATE_BHYVE_PCI_DEVICES" = "no" ] && local _32dev_support=
 
 	# Create device list for bhyve
 	for _disk_dataset in `echo $_GUEST_disk_list`
@@ -71,8 +89,8 @@ __generate_bhyve_disk_string() {
 		# See man page Advanced Properties section for more info.
 		local _virtio_block_options=$( __return_property_value_from_config_file "guest" "virtio_block_options_$_disk_name" )
 
-		# FreeBSD version before 12-CURRENT host - Attach up to 8 disk through PCI functions per bhyve PCI slot.
-		if [ "$_OS_VERSION_DATE" -lt "1200000" ]; then
+		# Attach up to 8 disk through PCI functions per bhyve PCI slot.
+		if [ ! "$_32dev_support" ]; then
 
 			# Typical handling
 			if [ -z "$_virtio_block_options" ]; then
@@ -90,8 +108,8 @@ __generate_bhyve_disk_string() {
 				local _virtio_block_options=""
 			fi
 
-		# FreeBSD 12-CURRENT or later host - Attach up to 32 disks to one ahci controller, new syntax makes this complicated.
-		elif [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+		# Attach up to 32 disks to one AHCI controller / PCI slot, new syntax makes this complicated.
+		elif [ "$_32dev_support" ]; then
 
 			# Only disk handling
 			if [ "$_GUEST_disk_list_count" = 1 ]; then
@@ -100,32 +118,32 @@ __generate_bhyve_disk_string() {
 				local _bhyve_disk_string_stage2="$_BHYVE_slot_string"
 
 			# First disk of multiple
-			elif [ "$_counter_ver12" = 0 ]; then
+			elif [ "$_counter_32dev" = 0 ]; then
 				local _string="ahci,hd:$_disk_dataset"
-				local _counter_ver12="$( expr 1 + $_counter_ver12 )"
+				local _counter_32dev="$( expr 1 + $_counter_32dev )"
 
 			# Last disk of multiple
-			elif [ "$_counter_ver12" = 31 ] || [ "$_GUEST_disk_list_count" = "$_num_of_disks_counter" ]; then
+			elif [ "$_counter_32dev" = 31 ] || [ "$_GUEST_disk_list_count" = "$_num_of_disks_counter" ]; then
 
 				local _string="${_string},hd:$_disk_dataset"
 
 				__generate_bhyve_slot_string $_string 1
 				local _bhyve_disk_string_stage2="$_bhyve_disk_string_stage2 $_BHYVE_slot_string"
 				local _string=""
-				local _counter_ver12=0
+				local _counter_32dev=0
 
 			# Not first or last of multiple disks
 			else
 				local _string="${_string},hd:$_disk_dataset"
-				local _counter_ver12="$( expr 1 + $_counter_ver12 )"
+				local _counter_32dev="$( expr 1 + $_counter_32dev )"
 			fi
 
 			local _num_of_disks_counter="$( expr 1 + $_num_of_disks_counter )"
 		fi
 	done
 
-	# FreeBSD version before 12-CURRENT need to generate the bhyve PCI string.
-	if [ "$_OS_VERSION_DATE" -lt "1200000" ]; then
+	# Guests supporting only 8 devices need to generate the bhyve PCI string.
+	if [ ! "$_32dev_support" ]; then
 
 		# UEFI can only use PCI slots 3-7 for ACHI devices, PCI slot 3 is used for optical, 3 slots remaining for disks.
 		if [ "$_GP_loader" = "uefi" ] && [ "$_GUEST_disk_list_count" -gt 3 ]; then
@@ -138,8 +156,8 @@ __generate_bhyve_disk_string() {
 
 		_BHYVE_disk_string="$_BHYVE_slot_string"
 
-	# FreeBSD 12-CURRENT or later hosts already have generated the bhyve PCI string.
-	elif [ "$_OS_VERSION_DATE" -ge "1200000" ]; then
+	# Hosts with 32 device support have already generated the bhyve string.
+	elif [ "$_32dev_support" ]; then
 		_BHYVE_disk_string="$_bhyve_disk_string_stage2"
 	fi
 }

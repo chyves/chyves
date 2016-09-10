@@ -174,7 +174,7 @@ Example of a single pool dataset hierarchy:
                    /Firmware                                    # Datasets
 
 ### GUEST STORAGE
-By default, chyves uses ZFS volumes as guest storage backing. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller.
+By default, chyves uses ZFS volumes as guest storage backing. Each volume is named disk{n} and is attached to the guest via an emulated AHCI controller. On all hosts, 8 ahci-hd devices are supported per PCI slot. On certain hosts, up to 32 ahci devices can be attached per PCI slot. See global property 'consolidate_bhyve_pci_devices' for details.
 
 There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. **All files** in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under `<pool>/chyves/guests/<guest>/img`, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command `chyves info` reports the raw image files and size. To create a sparse raw image run:
 
@@ -331,7 +331,9 @@ Properties:
 
   **User managed and settable.**
 
-  The default is set to 'no' as it may have performance implications, however this may be necessary if more than 26 PCI devices are connect to a guest. This property signals the bhyve string generators to use all PCI functions for similar devices. In ideal conditions up to 208 PCI devices can be attached when set to 'yes' on 11.0-RELEASE and earlier. On 12-CURRENT or later up to 832 device could be connected in ideal conditions.
+  The default is set to 'no' as it may have performance implications, however this may be necessary if more than 26 PCI devices are connect to a guest. This property signals the bhyve string generators to use all PCI functions for similar devices.
+
+  On all hosts, 8 PCI functions can be used per PCI slot. However, up to 32 ahci-hd devices can be attached to a single PCI slot for hosts running 12-CURRENT after commit r302459, 11-STABLE after commit r304422, or hosts running 10-STABLE after commit r304420. Meaning in ideal conditions up to 208 PCI devices can be attached on any host or up to 832 devices on supported hosts.
 
 * `default_clone_flag`
 
