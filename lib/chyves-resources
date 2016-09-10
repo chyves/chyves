@@ -151,6 +151,14 @@ __guest_upgrade_chyves_guest_version() {
 			__chyves_guest_version_gvreload_and_set "0201"
 		fi
 
+		# Add bhyveload_flags guest property.
+		if [ "$_GP_chyves_guest_version" -eq "201" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0202."
+			__load_guest_default_parameters
+			__write_property_value_to_config_file "guest" "bhyveload_flags" "$_GDP_bhyveload_flags"
+			__chyves_guest_version_gvreload_and_set "0202"
+		fi
+
 		# Template
 		#if [ "$_GP_chyves_guest_version" -lt "9900" ]; then
 		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."

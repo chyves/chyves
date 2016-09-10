@@ -773,6 +773,12 @@ Usage:
 For advanced users to pass additional flags directly to \fBbhyve\fR\. See bhyve(8) for complete list of flag options\. To find out which flags are used when starting a specific guest, turn on global configuration \'stdout_level\' to \'3\' or check the global log file\.
 .
 .IP "\(bu" 4
+\fBbhyveload_flags\fR
+.
+.IP
+For advanced users to pass additional flags directly to \fBbhyveload\fR\. This is primarily intended to pass \'\-e\' flags for environment variables\. See bhyveload(8) for a complete list of flag options\. To find out which flags are used when starting a specific guest, turn on global configuration \'stdout_level\' to \'3\' or check the global log file\.
+.
+.IP "\(bu" 4
 \fBbhyve_net_type\fR={virtio\-net|e1000}
 .
 .IP

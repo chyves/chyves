@@ -550,6 +550,9 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <li><p><code>bargs</code></p>
 
 <p>For advanced users to pass additional flags directly to <code>bhyve</code>. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.</p></li>
+<li><p><code>bhyveload_flags</code></p>
+
+<p>For advanced users to pass additional flags directly to <code>bhyveload</code>. This is primarily intended to pass '-e' flags for environment variables. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyveload(8)">bhyveload<span class="s">(8)</span></a> for a complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.</p></li>
 <li><p><code>bhyve_net_type</code>={virtio-net|e1000}</p>
 
 <p>Sets the method to attach tap interfaces to the guest. Intel e1000 emulation is available on hosts on 12-CURRENT after commit r302504, 11-STABLE after commit r304424, and on 10-STABLE after commit r304425.</p></li>

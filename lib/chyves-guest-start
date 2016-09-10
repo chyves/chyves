@@ -577,7 +577,7 @@ __start() {
 				__log 2 "using $_FIRST_disk as boot device... " -n
 				local _media_string_bhyveload="$_FIRST_disk"
 			fi
-			_LOADER_cmd="bhyveload $_GUEST_wire_memory -m $_GP_ram -d $_media_string_bhyveload -c /dev/${_GP_serial}A chy-$_guest"
+			_LOADER_cmd="bhyveload $_GP_bhyveload_flags $_GUEST_wire_memory -m $_GP_ram -d $_media_string_bhyveload -c /dev/${_GP_serial}A chy-$_guest"
 			__log 2 "done."
 
 			__log 2 "Generating bhyve PCI string for $_GUEST_disk_list_count disks... " -n
