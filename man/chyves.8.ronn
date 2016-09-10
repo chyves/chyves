@@ -69,7 +69,7 @@ The following syntax nomenclature is used throughout this page:
 ## DESCRIPTION
 chyves(8) relies on the FreeBSD hypervisor bhyve(8), zfs(8), nmdm(4), Bourne shell sh(1), and cu(1) to start and manage type 2 virtualized guests. Optionally grub2-bhyve and tmux(1) can be used to expand the capabilities of chyves. chyves uses configuration files, ZFS filesystem datasets and volumes to store guest, chyves settings, and chyves resources in an organized hierarchy. bhyve uses virtio drivers built into the GENERIC kernel for network virtualization. The virtio drivers are used to paravirtualize I/O for disk and network access.
 
-For networking, a guest is presented a PCI Ethernet device through the use of virtio(4). On FreeBSD guests this means the vtnet(4) driver is used. On 12-CURRENT, Intel e1000 emulation was added as an alternative to virtio-net. In either case, the host communicates with this device through a tap(3) or vale(4) interface.
+For networking, a guest is presented a PCI Ethernet device through the use of virtio(4). On FreeBSD guests this means the vtnet(4) driver is used. After a certain commit, Intel e1000 emulation was added as an alternative to virtio-net. See guest property 'bhyve_net_type' for details. In either case, host network communication is through a tap(3) or vale(4) interface to the guest.
 
 For storage, guests are provided block storage device(s) via ZFS volumes from the host by default. ZFS datasets are used to organize these block devices and other resources in a hierarchical structure. See [ZFS][] section for more information.
 
@@ -192,7 +192,7 @@ The network mode is set by the global setting '`network_design_mode`' and determ
 
 VALE support is experimentally provided as a proof of concept. VALE support is not widely implemented and is feature limited at it's current development stage. To use VALE requires that 'device netmap' be compiled into the kernel and that 'vale-ctl' be compiled from '/usr/src/tools/tools/netmap' and moved to $PATH directory. VALE natively support em(4), igb(4), ixgbe(4), and re(4). Other NICs must use emulation which may reduce performance. See netmap(4) for more information. VALE interfaces are added to a guest the same way a tap interface is added using: '`chyves network add vale{n}[:{p}]`' where {n} is the vale switch you want to use and optionally :{p} specifies the port on that switch. Specifying a port is not recommended. VALE interfaces are clever in that the interface is commonly shared between other guests connecting to that 'virtual' VALE switch. Two guests using 'vale0' will be connected to the same virtual switch.
 
-In 12-CURRENT r302504, guest Intel e1000 emulation was added as an alternative to using virtio-net. This can be utilized by setting 'bhyve_net_type' to 'e1000' from a 12-CURRENT host on a per guest basis.
+Hosts after a certain commit support Intel e1000 emulation as an alternative to using virtio-net. This can be utilized by setting 'bhyve_net_type' to 'e1000', see guest property for details.
 
 ### AUTO DESIGN NETWORK MODE
 By default, chyves is configured to manage the complete network design layout. chyves keeps track of which physical, tap, and vlan interfaces are associated with which bridges, and which tap and VALE interfaces are associated with which guests. Upon starting a guest these designs are checked, verified, and then created if not existing. To manage the network design using this method, use the 'chyves network' commands to create the associations and 'chyves list bridges' for an overview.
