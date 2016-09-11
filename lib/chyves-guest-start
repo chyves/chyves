@@ -79,6 +79,9 @@ __generate_bhyve_disk_string() {
 	# Use individual attachment if not consolidating bhyve PCI devices
 	[ "$_CONSOLIDATE_BHYVE_PCI_DEVICES" = "no" ] && local _32dev_support=
 
+	# virtio-blk must use PCI functions for attachment
+	[ "$_GP_bhyve_disk_type" = "virtio-blk" ] && local _32dev_support=
+
 	# Create device list for bhyve
 	for _disk_dataset in `echo $_GUEST_disk_list`
 	do
@@ -97,14 +100,14 @@ __generate_bhyve_disk_string() {
 
 				# Pull the blocksize on the ZFS volume to optimize performance.
 				#local _disk_blocksize="$( zfs get -H -p -o value volblocksize "$_disk_dataset" )"
-				#local _string="$_string ahci-hd,$_disk_dataset,sectorsize=$_disk_blocksize"
+				#local _string="$_string ${_GP_bhyve_disk_type},$_disk_dataset,sectorsize=$_disk_blocksize"
 
 				# Temporary as only 512 byte size works.
-				local _string="$_string ahci-hd,$_disk_dataset"
+				local _string="$_string ${_GP_bhyve_disk_type},$_disk_dataset"
 
 			# Handling if the expert property (virtio_block_options) is set. See man page Advanced Properties section for more info.
 			else
-				local _string="$_string ahci-hd,$_disk_dataset,$_virtio_block_options"
+				local _string="$_string ${_GP_bhyve_disk_type},$_disk_dataset,$_virtio_block_options"
 				local _virtio_block_options=""
 			fi
 

@@ -454,6 +454,10 @@ Usage:
 
   For advanced users to pass additional flags directly to `bhyveload`. This is primarily intended to pass '-e' flags for environment variables. See bhyveload(8) for a complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.
 
+* `bhyve_disk_type`={virtio-blk|ahci-hd}
+
+  Sets the method to attach ZFS volumes and disk images to the guest. Most guests do not support Virt-IO block devices without installing drivers at installation.
+
 * `bhyve_net_type`={virtio-net|e1000}
 
   Sets the method to attach tap interfaces to the guest. Intel e1000 emulation is available on hosts on 12-CURRENT after commit r302504, 11-STABLE after commit r304424, and on 10-STABLE after commit r304425.

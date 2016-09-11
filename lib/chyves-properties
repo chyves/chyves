@@ -316,8 +316,14 @@ __verify_user_input_for_properties() {
 	# Guest and Defaults share many common properties. Last elif handles properties unique to defaults.
 	elif [ "$_resource" = "guest" ] || [ "$_resource" = "defaults" ]; then
 
+# bhyve_disk_type
+		if [ "$_property" = "bhyve_disk_type" ]; then
+			if [ -z "$( echo "$_value" | grep -E '^virtio-blk$|^ahci-hd$' )" ]; then
+				__fault_detected_warning_break 1 "Unrecognized 'bhyve_disk_type' type. Recognized values are 'virtio-blk' or 'ahci-hd'."
+			fi
+
 # bhyve_net_type
-		if [ "$_property" = "bhyve_net_type" ]; then
+		elif [ "$_property" = "bhyve_net_type" ]; then
 			if [ -z "$( echo "$_value" | grep -E '^virtio-net$|^e1000$' )" ]; then
 				__fault_detected_warning_break 1 "Unrecognized 'bhyve_net_type' type. Recognized values are 'virtio-net' or 'e1000'."
 			fi

@@ -68,6 +68,7 @@ __dataset_install() {
 		__log 2 "Creating guest defaults dataset and properties..."
 		__write_property_value_to_config_file "defaults" "bargs"                                "$_bhyve_args"
 		__write_property_value_to_config_file "defaults" "bhyveload_flags"                      ""
+		__write_property_value_to_config_file "defaults" "bhyve_disk_type"                      "ahci-hd"
 		__write_property_value_to_config_file "defaults" "bhyve_net_type"                       "virtio-net"
 		__write_property_value_to_config_file "defaults" "bridge"                               "bridge0"
 		__write_property_value_to_config_file "defaults" "cpu"                                  "1"
@@ -189,6 +190,7 @@ __dataset_upgrade() {
 	if [ "$_DATASET_pool_version_int" = "0004" ]; then
 		__log 1 "Upgrading dataset to version 0005"
 		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "bhyveload_flags" ""
+		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "bhyve_disk_type" "ahci-hd"
 		__write_property_value_to_config_file "manual" "dataset_version" "0005" "/chyves/$_pool/.config/pool.cfg"
 		__dataset_upgrade_lset_version
 	fi

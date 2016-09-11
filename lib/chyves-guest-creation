@@ -266,6 +266,7 @@ __create() {
 		__log 2 "Setting guest properties:"
 		__write_property_value_to_config_file "guest" "bargs"                      "$_GDP_bargs"
 		__write_property_value_to_config_file "guest" "bhyveload_flags"            "$_GDP_bhyveload_flags"
+		__write_property_value_to_config_file "guest" "bhyve_disk_type"            "$_GDP_bhyve_disk_type"
 		__write_property_value_to_config_file "guest" "bhyve_net_type"             "$_GDP_bhyve_net_type"
 		__write_property_value_to_config_file "guest" "chyves_guest_version"       "$_VERSION_CHYVES_GUEST"
 		__write_property_value_to_config_file "guest" "cpu"                        "$_GDP_cpu"
