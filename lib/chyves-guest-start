@@ -681,7 +681,7 @@ __start() {
 					__log 1 "Stopping guest completely to reload without optical media using the $_eject_iso_on_n_reboot_scope property 'eject_iso_on_n_reboot' value '$_eject_after_this_count'."
 					bhyvectl --destroy --vm=chy-$_guest
 
-					# This starts the guest in a separate process (effectively) because of the '( while[1] ) &' statement.
+					# A complete reload is needed to repopulate _LOADER_cmd.
 					__log 1 "Restarting the guest without optical media attached."
 					__start $_GUEST_name
 					exit
