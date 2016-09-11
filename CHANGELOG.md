@@ -1,3 +1,29 @@
+#### Version 0.1.9-dev (2016 September 10)
+
+Minor features added.
+
+- DOC: Minor changes to README.md [855a208](https://github.com/chyves/chyves/commit/855a2081b603c3b3c8e9cef0e3b411b6287afd8b)
+
+- DOC: Minor change to code comments in `__start`. [fd9b0c1](https://github.com/chyves/chyves/commit/fd9b0c1ae43b90f9f0d4a391d9dac5b2e88f0712)
+
+- ENH: Add property 'bhyve_disk_type' to control disk attachment method between `virtio-blk` and `ahci-hd`. [e7266ea](https://github.com/chyves/chyves/commit/e7266eae6fa5200893031b7428fd16ad9206cfa1)
+  - Increments `chyves_guest_version` to 0300.
+  - Merged with `dataset_version` to 0005 changes.
+
+- ENH: Ability to include additional `bhyveload` flags when starting FreeBSD guests. [587eaae](https://github.com/chyves/chyves/commit/587eaae3b0ee6dc3186ceab8ced0fd1bfac719fa)
+  - This was added after reading [an article](http://callfortesting.org/bhyve-boot-environments/) by @michaeldexter.
+  - Increments `chyves_guest_version` to 0202.
+  - Increments `dataset_version` to 0005.
+
+- FIX: Reworked `_FREEBSD_NET_DRIVERS_GREP_STRING` string again to remove wireless devices and add a few missing drivers. [c582b59](https://github.com/chyves/chyves/commit/c582b59252ae35a7707aa88b0cb225e0a4f8a2e3)
+
+- DOC: Fixed language for Intel e1000 emulation in man page as it was still referencing 12-CURRENT as being required. [7886c65](https://github.com/chyves/chyves/commit/7886c65c1195c416e909437b6876495b996c9507)
+
+- ENH: Added ability to attach 32 disks to a single AHCI controller per PCI slot on FreeBSD 10 and 11 due to MFCs. [](https://github.com/chyves/chyves/commit/6f607f2921afd24059f69286f7ec0fd0a748de9a)
+  - Originally committed to 12-CURRENT at [r302459](https://secure.freshbsd.org/commit/freebsd/r302459)
+  - MFCed to 11-STABLE at [r304422](https://secure.freshbsd.org/commit/freebsd/r304422)
+  - MFCed to 10-STABLE at [r304420](https://secure.freshbsd.org/commit/freebsd/r304420)
+
 #### Version 0.1.8-dev (2016 September 9)
 
 Hot fixes
