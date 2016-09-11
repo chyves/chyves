@@ -2,9 +2,9 @@
 
 <img src="https://github.com/chyves/chyves-media/raw/master/chyves-logo-v1-medium.png" alt="chyves logo version 1" width="449" height="439" align="right">
 
-chyves is a `bhyve` front end manager. chyves is a direct code descendent of `iohyve` and a complete code rewrite was started in April 2016.
+chyves is a `bhyve` command line front end manager, making it simple to manage guest resources and properties.
 
-The goal of this project is to provide a bhyve front end tool that is easy to use, develop for, and debug. `chyves` is developed for an out of the box experience suited for the most basic of users. However power users will find just as much utility with features such as true ZFS clones, PCI passthrough, rapid deployment, disk images, and snapshot reverted states on boot/reboot. Many features are targeted for large VM fleets where multiple or all guests can be specified, such as `chyves gst1,gst2,gst3 start`, `chyves all stop`, and `chyves GoldMasterVM clone devel,production01,production02`.
+The goal of this project is to provide a `bhyve` front end tool that is easy to use, develop for, and debug. `chyves` is developed for an out of the box experience suited for the freshest of bhyve users. However bhyve veterans will find just as much utility with features such as true ZFS clones, PCI passthrough, rapid deployment, disk images, and snapshot reverted states on boot/reboot. Many features are targeted for large VM fleets where multiple or all guests can be specified, such as `chyves gst1,gst2,gst3 start`, `chyves all stop`, and `chyves GoldMasterVM clone devel,production01,production02`.
 
 `chyves` utilizes FreeBSD’s `bhyve` hypervisor to start and manage type 2 virtualized guests and their resources. `bhyve`'s primary interface to guests is through a serial interface. However with the release of FreeBSD version 11 came UEFI GOP support. This allows for a VNC console to be used to manage UEFI guests.
 
@@ -14,13 +14,13 @@ This project has two branches it uses: `master` and `dev`. The ingress branch fo
 
 For the 'show-me' types, watch terminal play back of most features on [chyves.org](http://chyves.org/) under the [demo section](http://chyves.org/#demo).
 
-See the following documents for their respective purpose:
+See the following documents for more information:
 - [BUG-REPORTS.md](BUG-REPORTS.md) - How to report issues and get them resolved.
 - [CHANGELOG.md](CHANGELOG.md) - See a summarized list of changes to this project.
 - [CREDITS.md](CREDITS.md) - See who has contributed to this project.
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Coding practices for chyves.
 - [LICENSE](LICENSE) - BSD 2-Clause License notice.
-- [Makefile](Makefile) - Used to install chyves from GitHub clone.
+- [Makefile](Makefile) - Used to install chyves from GitHub source.
 - [MAN PAGE](http://htmlpreview.github.com/?https://raw.githubusercontent.com/chyves/chyves/master/man/chyves.8.html) - man page in html format.
 - [README.md](README.md) - This document.
 - [TODO.md](TODO.md) - Project goals.
