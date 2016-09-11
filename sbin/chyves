@@ -214,12 +214,12 @@
 #
 
 # Stage 1 global variables (Not dependent on functions or primary pool)
-_VERSION=0.1.9                         # Example: v1.6.25 - X.YYYY.ZZZ
-_VERSION_LONG="v0.1.9-dev 2016/09/09"  # Example: v1.6.25 2021/12/31
-_VERSION_INT="00001009"                # Example: 10006025 XYYYYZZZ
+_VERSION=0.2.0                         # Example: v1.6.25 - X.YYYY.ZZZ
+_VERSION_LONG="v0.2.0 2016/09/11"      # Example: v1.6.25 2021/12/31
+_VERSION_INT="00002000"                # Example: 10006025 XYYYYZZZ
 _VERSION_DATASET="0005"
 _VERSION_CHYVES_GUEST="0300"
-_VERSION_BRANCH=dev
+_VERSION_BRANCH=master
 _GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"
 _OS=$( sysctl -n kern.ostype )
 _OS_VERSION_COMMIT=$( sysctl kern.version | tr ' ' '\n' | grep -o -E '^r[0-9]{6,}' | sed -e 's/^r//' )

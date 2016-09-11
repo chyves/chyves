@@ -1,4 +1,4 @@
-# chyves v0.1.9-dev:
+# chyves v0.2.0:
 
 <img src="https://github.com/chyves/chyves-media/raw/master/chyves-logo-v1-medium.png" alt="chyves logo version 1" width="449" height="439" align="right">
 

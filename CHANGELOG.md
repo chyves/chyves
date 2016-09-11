@@ -1,10 +1,12 @@
-#### Version 0.1.9-dev (2016 September 10)
+#### Version 0.2.0 (2016 September 11)
 
-Minor features added.
+Merged in changes from [dev](https://github.com/chyves/chyves/tree/dev), versions v0.1.2-dev through v0.1.9-dev.
 
-- DOC: Minor changes to README.md [855a208](https://github.com/chyves/chyves/commit/855a2081b603c3b3c8e9cef0e3b411b6287afd8b)
+Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion to correctly handle MTU on bridges.
 
-- DOC: Minor change to code comments in `__start`. [fd9b0c1](https://github.com/chyves/chyves/commit/fd9b0c1ae43b90f9f0d4a391d9dac5b2e88f0712)
+Thanks to @3add3287 for `rcboot` fix.
+
+##### Enhancements
 
 - ENH: Add property 'bhyve_disk_type' to control disk attachment method between `virtio-blk` and `ahci-hd`. [e7266ea](https://github.com/chyves/chyves/commit/e7266eae6fa5200893031b7428fd16ad9206cfa1)
   - Increments `chyves_guest_version` to 0300.
@@ -15,40 +17,50 @@ Minor features added.
   - Increments `chyves_guest_version` to 0202.
   - Increments `dataset_version` to 0005.
 
-- FIX: Reworked `_FREEBSD_NET_DRIVERS_GREP_STRING` string again to remove wireless devices and add a few missing drivers. [c582b59](https://github.com/chyves/chyves/commit/c582b59252ae35a7707aa88b0cb225e0a4f8a2e3)
-
-- DOC: Fixed language for Intel e1000 emulation in man page as it was still referencing 12-CURRENT as being required. [7886c65](https://github.com/chyves/chyves/commit/7886c65c1195c416e909437b6876495b996c9507)
-
 - ENH: Added ability to attach 32 disks to a single AHCI controller per PCI slot on FreeBSD 10 and 11 due to MFCs. [](https://github.com/chyves/chyves/commit/6f607f2921afd24059f69286f7ec0fd0a748de9a)
   - Originally committed to 12-CURRENT at [r302459](https://secure.freshbsd.org/commit/freebsd/r302459)
   - MFCed to 11-STABLE at [r304422](https://secure.freshbsd.org/commit/freebsd/r304422)
   - MFCed to 10-STABLE at [r304420](https://secure.freshbsd.org/commit/freebsd/r304420)
 
-#### Version 0.1.8-dev (2016 September 9)
+- ENH: Indicate default bridge for `chyves list bridges`. [4b67678](https://github.com/chyves/chyves/commit/4b67678dee68155c3b6eff22c2b05f02c685fc2d)
 
-Hot fixes
+- Moved clone handling in `__parse_cmd_ingress` [29d1fd1](https://github.com/chyves/chyves/commit/29d1fd15d50b4004f16634c5adf4b2892ee8c1a5)
+  - In the future, when cloning a guest, a snapshot will be able to be specified. This is the first step by removing it from the `case` switch.
 
-- FIX: Typo from commit b8d6ed0 - FIX: Add parameter number check for 'chyves dev'. [05e9d30](https://github.com/chyves/chyves/commit/05e9d30d24c4f46e366938c2cc98a97bc6b7fe91)
+- Enhancements and fixes for `chyves info`.
+  - Added '`-w`' flag to truncate output to terminal width. [e4f651d](https://github.com/chyves/chyves/commit/e4f651d7e1179c03ef5b569d4a3fee36f040247e)
+  - Added '`-u`' flag to display UEFI properties. The UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution are displayed. [a4a24ce](https://github.com/chyves/chyves/commit/a4a24ce986ebc48bd254056db673b7762e1ede25)
+  - Updated code comments and minor fixes. [095c8cb](https://github.com/chyves/chyves/commit/095c8cb24eb479a9906cf2d44adb371c79dee58f)
 
-- Missed commit - Version increment to v0.1.7-dev for recent changes. [00ec843](https://github.com/chyves/chyves/commit/00ec8435db5ae05ffc53c2dd63bacd2b17080066)
+- Changed version nomenclature to 9 major versions rather than 999. [116b1b5](https://github.com/chyves/chyves/commit/116b1b55a0ef677296af693dedbd606748253600)
 
-#### Version 0.1.7-dev (2016 September 8)
+- Add CoreOS as a `grub-bhyve` preconfigured OS. [562f9c5](https://github.com/chyves/chyves/commit/562f9c5e8b887824dc51510f3e426c44709091de)
+  - Thanks to @olgeni for [his PR to vm-bhyve](https://github.com/churchers/vm-bhyve/pull/112).
 
-Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion to correctly handle MTU on bridges.
+- ENH: Give host version information for `chyves version`. [96c6c08](https://github.com/chyves/chyves/commit/96c6c08aa98861a592d6f0c7a9e264660db094f9)
 
-- Merged in fix from @invisnet to add `lagg` to physical interfaces. [28f05f3](https://github.com/chyves/chyves/commit/28f05f318bbb6795bc0f4896ef3197649b75c240)
+- ENH: Allow Intel e1000 emulation on FreeBSD 10 and 11 due to MFCs. [b8260e2](https://github.com/chyves/chyves/commit/b8260e2453821d9124576e55ecc0bcf1a934aa85), [d356178](https://github.com/chyves/chyves/commit/d356178a64fc0c364634d12ab160f156c294879a), [7886c65](https://github.com/chyves/chyves/commit/7886c65c1195c416e909437b6876495b996c9507)
+  - Originally committed on 12-CURRENT at [r302504](https://secure.freshbsd.org/commit/freebsd/r302504)
+  - MFCed to 11-STABLE at [r304424](https://secure.freshbsd.org/commit/freebsd/r304424)
+  - MFCed to 10-STABLE at [r304425](https://secure.freshbsd.org/commit/freebsd/r304425)
+
+##### Fixes
+
+- DOC: Minor changes to README.md [855a208](https://github.com/chyves/chyves/commit/855a2081b603c3b3c8e9cef0e3b411b6287afd8b)
+
+- DOC: Minor change to code comments in `__start`. [fd9b0c1](https://github.com/chyves/chyves/commit/fd9b0c1ae43b90f9f0d4a391d9dac5b2e88f0712)
+
+- FIX: Reworked `_FREEBSD_NET_DRIVERS_GREP_STRING` string again to remove wireless devices and add a few missing drivers. [c582b59](https://github.com/chyves/chyves/commit/c582b59252ae35a7707aa88b0cb225e0a4f8a2e3)
 
 - FIX: Add parameter number check for `chyves dev`. [b8d6ed0](https://github.com/chyves/chyves/commit/b8d6ed06666ae9d7bd8f6a8675e04ac7c0c8a32b)
 
 - FIX: Added handling of MTU for network bridges. [536dd8b](https://github.com/chyves/chyves/commit/536dd8b9a017942798d9d2f045c720dddf0371ac)
 
+- Merged in fix from @invisnet to add `lagg` to physical interfaces. [28f05f3](https://github.com/chyves/chyves/commit/28f05f318bbb6795bc0f4896ef3197649b75c240)
+
 - FIX: Update reference to old variable name in `__generate_bhyve_net_string`.  [10648b6](https://github.com/chyves/chyves/commit/10648b626f2b842d153b91e914ee57e4be482008)
 
-#### Version 0.1.6-dev (2016 September 5)
-
 - FIX: Issue when rebooting guest's using `revert_to_snapshot` or `eject_iso_on_n_reboot`. [2e11c22](https://github.com/chyves/chyves/commit/2e11c22f420a10accf9736eec13a0e8723179d4b)
-
-- ENH: Indicate default bridge for `chyves list bridges`. [4b67678](https://github.com/chyves/chyves/commit/4b67678dee68155c3b6eff22c2b05f02c685fc2d)
 
 - FIX: Issue where `eject_iso_on_n_reboot`=0 would eject before first start. [d5ba410](https://github.com/chyves/chyves/commit/d5ba4106d9884f2e9c11191f8a63ea26a46ee043)
 
@@ -58,20 +70,7 @@ Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion 
 
 - DOC: Changed log comments for number of reboots. [db6a6ba](https://github.com/chyves/chyves/commit/db6a6ba8763f754eb7a527344c513420f7f950db)
 
-- Moved clone handling in `__parse_cmd_ingress` [29d1fd1](https://github.com/chyves/chyves/commit/29d1fd15d50b4004f16634c5adf4b2892ee8c1a5)
-  - In the future, clone a guest will be able to be specified and this is the first step by removing it from the `case` switch.
-
-- Enhancements and fixes for `chyves info`.
-  - Added '`-w`' flag to truncate output to terminal width. [e4f651d](https://github.com/chyves/chyves/commit/e4f651d7e1179c03ef5b569d4a3fee36f040247e)
-  - Added '`-u`' flag to display UEFI properties. The UEFI console output type, firmware, VNC IP and port, mouse type, pause boot until VNC connect, and VNC resolution are displayed. [a4a24ce](https://github.com/chyves/chyves/commit/a4a24ce986ebc48bd254056db673b7762e1ede25)
-  - Updated code comments and minor fixes. [095c8cb](https://github.com/chyves/chyves/commit/095c8cb24eb479a9906cf2d44adb371c79dee58f)
-
 - Fixed issues with `chyves <guest> console vnc` not working due to inverse matches. [7924a5e](https://github.com/chyves/chyves/commit/7924a5e39834e1be14e0774242af4a55ee296ff8)
-
-#### Version 0.1.5-dev (2016 September 2)
-
-- Increment CGV to 0201. [e9e4d0a](https://github.com/chyves/chyves/commit/e9e4d0a93737d11ce33a816d889732dac1fda07d)
-  - Incremented so v0.1.1 and earlier do not try to start guests, specifically ones that have the '`os`' property set to 'coreos' or 'openbsd60'.
 
 - Minor changes to documents. [1464736](https://github.com/chyves/chyves/commit/146473651c34c28546ab79ea6ae4a20b4068d868), [1a3b287](https://github.com/chyves/chyves/commit/1a3b28795eda834ea213667ebfa301c23ce5b1a2), [7d3043a](https://github.com/chyves/chyves/commit/7d3043ab518dfb89d6ecc9ea49694a516ea7c88b), [3aad0d6](https://github.com/chyves/chyves/commit/3aad0d64caf5e246b672d12a141727d5da21c979), and [756cd7a](https://github.com/chyves/chyves/commit/756cd7a89707ca43c87b0bc9d23b036a87dcfb0a).
 
@@ -79,30 +78,13 @@ Thanks to @invisnet for adding `lagg` to physical interfaces and the suggestion 
 
 - Fixed issue with `chyves upgrade` where it would perpetually claim it was out of date. [aa317d2](https://github.com/chyves/chyves/commit/aa317d2453c81c245f6659b352ef82893b113fc5)
 
-- Completed Intel e1000 NIC emulation attachment. [d356178](https://github.com/chyves/chyves/commit/d356178a64fc0c364634d12ab160f156c294879a)
-
-- Changed version nomenclature to 9 major versions rather than 999. [116b1b5](https://github.com/chyves/chyves/commit/116b1b55a0ef677296af693dedbd606748253600)
-
 - Fixed reference to old variable name in `__generate_grub_bhyve_command`. [082b570](https://github.com/chyves/chyves/commit/082b570ade713c49a43182794b724f4ca184ab1a)
 
 - Removed references to stop and start VM to remove optical media from VM in man page examples. [0b3691f](https://github.com/chyves/chyves/commit/0b3691f132f0c064d783fdc2da489707ee1fa997)
 
-- Add CoreOS as a `grub-bhyve` preconfigured OS. [562f9c5](https://github.com/chyves/chyves/commit/562f9c5e8b887824dc51510f3e426c44709091de)
-  - Thanks to @olgeni for [his PR to vm-bhyve](https://github.com/churchers/vm-bhyve/pull/112).
-
-#### Version 0.1.4-dev (2016 August 28)
-
-Thanks to @3add3287 for rcboot fix.
-
-- Fixes an issue with rcboot when only one guest exists on system. [6a7c8a2](https://github.com/chyves/chyves/commit/6a7c8a2c5522076d1b481161ff0ccb7c2a547561)
-
-#### Version 0.1.3-dev (2016 August 27)
-
-Fixes various issues. Minor enhancements.
+- Merged in fix for '`rcboot`' from @3add3287 when only one guest exists on system. [6a7c8a2](https://github.com/chyves/chyves/commit/6a7c8a2c5522076d1b481161ff0ccb7c2a547561)
 
 - FIX: Typos in previous CHANGELOG.md entry. [a6807ac](https://github.com/chyves/chyves/commit/a6807acdf19627bd463a5d3afdedf7adb213cc70)
-
-- ENH: Give host version information for `chyves version`. [96c6c08](https://github.com/chyves/chyves/commit/96c6c08aa98861a592d6f0c7a9e264660db094f9)
 
 - FIX: Do not run check for new chyves version when not installed yet. [87c081f](https://github.com/chyves/chyves/commit/87c081f4f1ad3bc8ba7670d95916a71b609937c6)
 
@@ -112,15 +94,9 @@ Fixes various issues. Minor enhancements.
 
 - FIX: Reference to old variable names in `__generate_grub_bhyve_command`. [3ffa905](https://github.com/chyves/chyves/commit/3ffa905d343ef8c0d61bc74b48fdde43534af2d3)
 
-- ENH: Allow Intel e1000 emulation on non-12-CURRENT hosts due to recent MFCs. [b8260e2](https://github.com/chyves/chyves/commit/b8260e2453821d9124576e55ecc0bcf1a934aa85)
-
 - FIX: Setting COMPILER_TYPE on FreeNAS required for `make install` in `Makefile`. [a3701ad](https://github.com/chyves/chyves/commit/a3701ad26fd981f349dc47d7a5f9ac64ce192de5)
 
 - FIX: Issue when specifying a branch in 'chyves upgrade'. [15cd40f](https://github.com/chyves/chyves/commit/15cd40fdd0a9643540c85bcccd796eb80a0bb878)
-
-#### Version 0.1.2-dev (2016 August 27)
-
-FreeNAS hot fix.
 
 - FIX: FreeNAS handling of root directory via symbolic links. [77cf6f8](https://github.com/chyves/chyves/commit/77cf6f82c6a9b5c7117721b87d826eef3a891623)
 
