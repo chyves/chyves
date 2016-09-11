@@ -24,6 +24,35 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Generate bhyve slot string for audio device.
+__generate_bhyve_audio_string() {
+	_BHYVE_audio_string=""
+
+	# See if properties are set.
+	if [ -n "$_GP_audio_play" ] || [ -n "$_GP_audio_rec" ]; then
+		local _string="hda"
+		__log 1 "[WARNING] there is no host support verification for this feature, see man page for details... " -n
+		__log 2 "attaching audio device(s)... " -n
+
+		# Attach recording device if supplied
+		if [ -n "$_GP_audio_rec" ]; then
+			__log 2 "recorder using '$_GP_audio_rec'... " -n
+			local _string="${_string},rec=$_GP_audio_rec"
+		fi
+
+		# Attach playback device if supplied
+		if [ -n "$_GP_audio_play" ]; then
+			__log 2 "player using '$_GP_audio_play'... " -n
+			local _string="${_string},play=$_GP_audio_play"
+		fi
+	else
+		__log 2 "no audio devices configured... " -n
+	fi
+
+	__generate_bhyve_slot_string "$_string"
+	_BHYVE_audio_string="$_BHYVE_slot_string"
+}
+
 # Generates a bhyve slot string for custom PCI devices
 __generate_bhyve_custom_pci_string() {
 	local _custom_pci_devs="$( grep -E "^pcidev_" $_GUEST_config_file | cut -d'=' -f2- | sort -V )"
@@ -651,6 +680,10 @@ __start() {
 		__generate_bhyve_net_string $_GUEST_name
 		__log 2 "   ...done."
 
+		__log 2 "Generating bhyve string for audio device... " -n
+		__generate_bhyve_audio_string
+		__log 2 "   ...done."
+
 		__log 2 "Generating bhyve string for custom PCI devices (if any)... " -n
 		__generate_bhyve_custom_pci_string
 		__log 2 "done."
@@ -658,7 +691,7 @@ __start() {
 		__log 3 "loader command ($_GP_loader):"
 		__log 3 "$_LOADER_cmd"
 		__log 3 "bhyve command:"
-		__log 3 "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest"
+		__log 3 "bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_audio_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest"
 
 
 		# Start this portion in a seperated process
@@ -706,7 +739,7 @@ __start() {
 				fi
 
 				# Execute bhyve - Blank variables just create additional whitespace which is ignored.
-				bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest
+				bhyve $_GP_bargs -c $_GP_cpu -U $_GP_uuid -m $_GP_ram -s 0,hostbridge $_BHYVE_optical_media_string $_BHYVE_disk_string $_BHYVE_net_string $_BHYVE_audio_string $_BHYVE_custom_pci_string $_BHYVE_console_string $_BHYVE_uefi_usb3_string $_BHYVE_uefi_firmware_string -s 31,lpc chy-$_guest
 				# Is it not the least bit amusing this tool exists because of the <insert-judgemental-adjective> of not want to enter the command above by hand.
 
 				# Save bhyve's exit code

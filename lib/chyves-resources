@@ -167,6 +167,15 @@ __guest_upgrade_chyves_guest_version() {
 			__chyves_guest_version_gvreload_and_set "0300"
 		fi
 
+		# Add bhyve_disk_type guest property.
+		if [ "$_GP_chyves_guest_version" -eq "0300" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0301."
+			__load_guest_default_parameters
+			__write_property_value_to_config_file "guest" "audio_play" "$_GDP_bhyve_disk_type"
+			__write_property_value_to_config_file "guest" "audio_rec" "$_GDP_bhyve_disk_type"
+			__chyves_guest_version_gvreload_and_set "0301"
+		fi
+
 		# Template
 		#if [ "$_GP_chyves_guest_version" -lt "9900" ]; then
 		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."

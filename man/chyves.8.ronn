@@ -446,6 +446,18 @@ Usage:
 
 `chyves <guest>|MG|all set <property1>=<value> [<property2>=<value>] [<property3>=<value>] [<guest2> [<property1>=<value>] [<property2>=<value>]]`
 
+* `audio_play`=<audio-playing-dev>
+
+  This requires a patched bhyve binary from the GSoC 2016 project HDAudioEmulationForBhyve.
+
+  This property describes an audio playback devices on the host used for audio output from a guest. Eg. /dev/dsp0
+
+* `audio_rec`=<audio-recording-dev>
+
+  This requires a patched bhyve binary from the GSoC 2016 project HDAudioEmulationForBhyve.
+
+  This property describes an audio recording devices on the host used for recording audio from a guest. Eg. /dev/dsp0
+
 * `bargs`
 
   For advanced users to pass additional flags directly to `bhyve`. See bhyve(8) for complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.

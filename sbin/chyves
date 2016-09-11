@@ -96,6 +96,7 @@
 # __snapshot_guest()                          # Create a snapshot for guest
 #
 ## ../lib/chyves-guest-start                 ## Functions for starting guests
+# __generate_bhyve_audio_string()             # Generate bhyve slot string for audio device.
 # __generate_bhyve_custom_pci_string()        # Generates a bhyve slot string for custom PCI devices
 # __generate_bhyve_disk_string()              # Generates a bhyve slot string for disks
 # __generate_bhyve_net_string()               # Generate bhyve slot string for network devices.
@@ -217,8 +218,8 @@
 _VERSION=0.1.9                         # Example: v1.6.25 - X.YYYY.ZZZ
 _VERSION_LONG="v0.1.9-dev 2016/09/09"  # Example: v1.6.25 2021/12/31
 _VERSION_INT="00001009"                # Example: 10006025 XYYYYZZZ
-_VERSION_DATASET="0005"
-_VERSION_CHYVES_GUEST="0300"
+_VERSION_DATASET="0006"
+_VERSION_CHYVES_GUEST="0301"
 _VERSION_BRANCH=dev
 _GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"
 _OS=$( sysctl -n kern.ostype )

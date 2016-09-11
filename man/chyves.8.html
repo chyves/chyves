@@ -547,6 +547,16 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <p><code>chyves &lt;guest>|MG|all set &lt;property1>=&lt;value> [&lt;property2>=&lt;value>] [&lt;property3>=&lt;value>] [&lt;guest2> [&lt;property1>=&lt;value>] [&lt;property2>=&lt;value>]]</code></p>
 
 <ul>
+<li><p><code>audio_play</code>=<var>audio-playing-dev</var></p>
+
+<p>This requires a patched bhyve binary from the GSoC 2016 project HDAudioEmulationForBhyve.</p>
+
+<p>This property describes an audio playback devices on the host used for audio output from a guest. Eg. /dev/dsp0</p></li>
+<li><p><code>audio_rec</code>=<var>audio-recording-dev</var></p>
+
+<p>This requires a patched bhyve binary from the GSoC 2016 project HDAudioEmulationForBhyve.</p>
+
+<p>This property describes an audio recording devices on the host used for recording audio from a guest. Eg. /dev/dsp0</p></li>
 <li><p><code>bargs</code></p>
 
 <p>For advanced users to pass additional flags directly to <code>bhyve</code>. See <a class="man-ref" href="https://www.freebsd.org/cgi/man.cgi?bhyve(8)">bhyve<span class="s">(8)</span></a> for complete list of flag options. To find out which flags are used when starting a specific guest, turn on global configuration 'stdout_level' to '3' or check the global log file.</p></li>
@@ -1665,7 +1675,7 @@ chyves coreos set os=coreossecure
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>September 10 2016</li>
+    <li class='tc'>September 11 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

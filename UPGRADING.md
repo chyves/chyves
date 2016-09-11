@@ -1,5 +1,11 @@
 This document tracks changes that are made in order to ensure dataset and guests contain the latest structure and syntax. This document is a matter of reference as the process of upgrading has been automated with `chyves dataset <pool> upgrade` and `chyves <guest> upgrade`. While we try to mitigate the need for such a document through planning, this can not always be the case. This can be especially true with new features.
 
+20160911
+- chyves guest version incremented to 0301
+  - Minor version increment for `audio_play` and `audio_rec` properties.
+- dataset version incremented to 0006
+  - Added `audio_play` and `audio_rec` to defaults with a null value.
+
 20160910
 - chyves version v0.1.9-dev
 - chyves guest version incremented to 0300
