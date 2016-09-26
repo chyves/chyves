@@ -1,3 +1,20 @@
+#### Version 0.2.1-dev (2016 September 25)
+
+- FIX: Improved handling for guests started with `rc.conf`. [9cf54d9](https://github.com/chyves/chyves/commit/9cf54d9353317589199f2369a685a98b96669c31)
+
+- ENH: Reworked `__generate_grub_bhyve_command()` for efficiency. [541a0dd](https://github.com/chyves/chyves/commit/541a0dd73be340f1b34279e257167bd8857c7ecf)
+
+- Consolidated `grub-bhyve` support for OpenBSD to reference installation media name for version number. [1827aae](https://github.com/chyves/chyves/commit/1827aaed39e16b1d09f08108a6b274e1f2bcbe8c)
+  - This assumes OpenBSD continues to use same naming scheme for their ISOs and that the kernel continues to be located on the installation media at '`/X.Y/amd64/bsd.rd`' where 'X' is the single digit major version number and 'Y' is the single digit minor number.
+  - After installation all guests use the same handling method to start the guest with `grub-bhyve`.
+
+- Added [VyOS](http://vyos.net) support for `grub-bhyve`. [85bf9bc](https://github.com/chyves/chyves/commit/85bf9bced9240920a6d4e780a70064c870d4228b)
+
+- Added sound support utilizing code from [Google Summer of Code 2016 project by Alex Teaca](https://wiki.freebsd.org/SummerOfCode2016/HDAudioEmulationForBhyve). [e4f9b45](https://github.com/chyves/chyves/commit/e4f9b4582ed18d59218702857cef59c6847e5bef)
+  - Two additional commits to fixed typo. [57d00cb](https://github.com/chyves/chyves/commit/57d00cb899d0f964e81691eb6188d628a2983eb0) and [270fe77](https://github.com/chyves/chyves/commit/270fe7782bdcffd1b80659a22ca7716d99c678ed)
+  - This requires that the `bhyve` binary has been patched. Currently there is no check that can be ran on the host to verify audio support. This is a new `bhyve` feature and will have some sharp edges.
+  - Please report results (success and failures) to [Alex Teaca](https://docs.freebsd.org/cgi/getmsg.cgi?fetch=30255+0+archive/2016/freebsd-virtualization/20160911.freebsd-virtualization). He has called for testing.
+
 #### Version 0.1.9-dev (2016 September 10)
 
 Minor features added.
