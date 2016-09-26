@@ -1,5 +1,11 @@
 This document tracks changes that are made in order to ensure dataset and guests contain the latest structure and syntax. This document is a matter of reference as the process of upgrading has been automated with `chyves dataset <pool> upgrade` and `chyves <guest> upgrade`. While we try to mitigate the need for such a document through planning, this can not always be the case. This can be especially true with new features.
 
+20160925
+- chyves version 0.2.1-dev
+- chyves guest version incremented to 0400
+  - Major version increment for changed `os` property 'openbsd' which replaces 'openbsd60', 'openbsd59', 'openbsd58', and 'openbsd57'.
+  - Also incremented so v0.2.0 and earlier versions do not try to start guests, specifically ones that have the '`os`' property set to 'vyos'.
+
 20160911
 - chyves guest version incremented to 0301
   - Minor version increment for `audio_play` and `audio_rec` properties.

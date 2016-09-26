@@ -453,6 +453,11 @@ __generate_grub_bhyve_command() {
 		elif [ $_GP_os = "coreossecure" ]; then
 			printf 'linux (cd0)/coreos/vmlinuz \ninitrd (cd0)/coreos/cpio.gz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "vyos" ]; then
+			printf 'linux (cd0)/live/vmlinuz console=ttyS0 console=tty0 quiet initrd=(cd0)/live/initrd.img boot=live nopersistent noautologin nonetworking nouser hostname=vyos \n' > ${_GUEST_mountpoint}/grub.cfg
+			printf 'initrd (cd0)/live/initrd.img \n' >> ${_GUEST_mountpoint}/grub.cfg
+			printf 'boot\n' >> ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "custom" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		else
@@ -484,7 +489,7 @@ __generate_grub_bhyve_command() {
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "custom" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		else
+		else    # Default & VyOS
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		fi
 	fi
