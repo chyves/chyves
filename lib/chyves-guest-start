@@ -421,23 +421,11 @@ __generate_grub_bhyve_command() {
 	# Boot from optical media when present.
 	if [ -n "$_media" ]; then
 		__log 2 "Booting grub-bhyve guest from optical media."
-		if [ $_GP_os = "openbsd" ]; then
-			local _openbsd_media_version="$( echo $( basename $_media ) | grep -o -E '[0-9]{2}' | awk 'BEGIN { FS="" } ; { print $1"."$2 }' )"
-			printf "kopenbsd -h com0 (cd0)/$_openbsd_media_version/amd64/bsd.rd\nboot\n" > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "netbsd" ]; then
-			printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "debian" ] || [ $_GP_os = "d8lvm" ]; then
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r cd0 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "centos6" ] || [ $_GP_os = "centos7" ]; then
-			printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "arch" ]; then
+		if [ $_GP_os = "arch" ]; then
 			printf 'linux (cd0)/arch/boot/x86_64/vmlinuz archisobasedir=arch archisolabel=ARCH_'$(date +%Y%m)' ro\ninitrd (cd0)/arch/boot/x86_64/archiso.img\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "gentoo" ]; then
-			printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
+		elif [ $_GP_os = "centos6" ] || [ $_GP_os = "centos7" ]; then
+			printf 'linux (cd0)/isolinux/vmlinuz\ninitrd (cd0)/isolinux/initrd.img\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "coreos" ]; then
 			printf 'linux (cd0)/coreos/vmlinuz coreos.autologin \ninitrd (cd0)/coreos/cpio.gz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
@@ -445,12 +433,24 @@ __generate_grub_bhyve_command() {
 		elif [ $_GP_os = "coreossecure" ]; then
 			printf 'linux (cd0)/coreos/vmlinuz \ninitrd (cd0)/coreos/cpio.gz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "custom" ]; then
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "debian" ] || [ $_GP_os = "d8lvm" ]; then
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r cd0 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "gentoo" ]; then
+			printf 'linux (cd0)/isolinux/gentoo root=/dev/ram0 init=/linuxrc  dokeymap looptype=squashfs loop=/image.squashfs  cdroot \ninitrd (cd0)/isolinux/gentoo.igz\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "openbsd" ]; then
+			local _openbsd_media_version="$( echo $( basename $_media ) | grep -o -E '[0-9]{2}' | awk 'BEGIN { FS="" } ; { print $1"."$2 }' )"
+			printf "kopenbsd -h com0 (cd0)/$_openbsd_media_version/amd64/bsd.rd\nboot\n" > ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "netbsd" ]; then
+			printf 'knetbsd -h -r cd0a (cd0)/netbsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "vyos" ]; then
 			printf 'linux (cd0)/live/vmlinuz console=ttyS0 console=tty0 quiet initrd=(cd0)/live/initrd.img boot=live nopersistent noautologin nonetworking nouser hostname=vyos \n' > ${_GUEST_mountpoint}/grub.cfg
 			printf 'initrd (cd0)/live/initrd.img \n' >> ${_GUEST_mountpoint}/grub.cfg
 			printf 'boot\n' >> ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "custom" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		else
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r cd0 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
@@ -459,14 +459,6 @@ __generate_grub_bhyve_command() {
 	# Boot from hard drive.
 	else
 		__log 2 "Booting grub-bhyve guest from hard drive."
-		elif [ $_GP_os = "netbsd" ]; then
-			printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "debian" ]; then
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "d8lvm" ]; then
-			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -d /grub -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		elif [ $_GP_os = "centos6" ]; then
 		if [ $_GP_os = "centos6" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -d /grub -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "centos7" ]; then
@@ -479,10 +471,15 @@ __generate_grub_bhyve_command() {
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "custom" ]; then
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		elif [ $_GP_os = "d8lvm" ]; then
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -d /grub -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		elif [ $_GP_os = "openbsd" ]; then
 			printf 'kopenbsd -h com0 -r sd0a (hd0,openbsd1)/bsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
-		else    # Default & VyOS
+		elif [ $_GP_os = "netbsd" ]; then
+			printf 'knetbsd -h -r wd0a (hd0,msdos1)/netbsd\nboot\n' > ${_GUEST_mountpoint}/grub.cfg
+			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r host -d ${_GUEST_mountpoint} -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
+		else    # Arch, 'default', Debian [Non-LVM], Gentoo, & VyOS
 			_LOADER_cmd="grub-bhyve $_GUEST_wire_memory -m ${_GUEST_mountpoint}/device.map -r hd0,msdos1 -c /dev/${_GP_serial}A -M $_GP_ram chy-$_guest"
 		fi
 	fi
