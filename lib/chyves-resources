@@ -178,6 +178,14 @@ __guest_upgrade_chyves_guest_version() {
 
 		# Changed for new grub-bhyve guests 'vyos' and 'openbsd'.
 		if [ "$_GP_chyves_guest_version" -eq "0301" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0400."
+
+			# Use 'openbsd' as value for property 'os' instead of 'openbsd57|openbsd58|openbsd59|openbsd60'.
+			if [ "$_GP_os" = "openbsd57" ] || [ "$_GP_os" = "openbsd58" ] || [ "$_GP_os" = "openbsd59" ] || [ "$_GP_os" = "openbsd60" ]; then
+				__write_property_value_to_config_file "guest" "os" "openbsd"
+			fi
+
+			__chyves_guest_version_gvreload_and_set "0400"
 		fi
 
 		# Template

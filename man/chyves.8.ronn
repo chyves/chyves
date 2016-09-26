@@ -528,9 +528,11 @@ Usage:
 
   Used to determine the properties to use for the `grub.cfg` and `device.map` files when the `loader` property is set to `grub-bhyve`.
 
-  Supported values are openbsd60, openbsd59, openbsd58, openbsd57, netbsd, debian, d8lvm, centos6, centos7, arch, gentoo, coreos, coreossecure, default, or custom. Any other values are invalid. `default` is the generic catch-all value.
+  Supported values are 'arch', 'centos6', 'centos7', 'coreos', 'coreossecure', 'custom', 'debian', 'd8lvm', 'default', 'gentoo', 'netbsd', 'openbsd', or 'vyos'.  Any other values are invalid and the settings for '`default`' are used as a generic catch-all.
 
   When 'coreos' is used, the flag 'coreos.autologin' is used to bypass authentication for the console. When 'coreossecure' is used, the console requires a username and password.
+
+  When 'openbsd' is used, the media must maintain the project's installation media name format of 'installXX.iso' or 'cdXX.iso', where 'XX' is the numeric release.
 
   Using `custom` relies on the user to manually create the `grub.cfg` and `device.map` files in the guest directory `/chyves/<pool>/guests/<guest>`.
 
