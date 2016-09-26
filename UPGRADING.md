@@ -7,6 +7,7 @@ This document tracks changes that are made in order to ensure dataset and guests
   - Also incremented so v0.2.0 and earlier versions do not try to start guests, specifically ones that have the '`os`' property set to 'vyos'.
 
 20160911
+- Feature branch - Included under version 0.2.1-dev
 - chyves guest version incremented to 0301
   - Minor version increment for `audio_play` and `audio_rec` properties.
 - dataset version incremented to 0006
