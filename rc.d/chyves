@@ -23,16 +23,28 @@ stop_cmd="__chyves_stop"
 
 __chyves_start()
 {
+
+	# Handling when missing file system or no guests.
+	grep "" /chyves/*/guests/*/.config/.cfg > /dev/null 2>&1
+	if [ "$?" != 0 ]; then
+		echo "chyves not installed, or there are no guests, or the file system is not (completely) mounted."
+		return 1
+	fi
+
 	echo "Starting chyves guests..."
 	sleep 8 # Sleeping for network to come up.
-	local _previous_stdout_level="$( /usr/local/sbin/chyves list global | grep stdout_level | awk '{ print $2 }' )"
-	/usr/local/sbin/chyves global set stdout_level=0
 	local _guestlist="$( grep -H -E '^rcboot=' /chyves/*/guests/*/.config/.cfg | awk 'BEGIN { FS = "=" } ; $2 > "0" { print $1" "$2 }' | sort -Vrk2 | cut -d'/' -f5 | tr '\n' ',' | sed 's/,$//g' )"
-	echo "Starting chyves guests ($_guestlist)..."
-	/usr/local/sbin/chyves $_guestlist start
-	echo "Guests starting, resuming host boot."
-	sleep 3
-	/usr/local/sbin/chyves global set stdout_level="$_previous_stdout_level"
+	if [ -z "$_guestlist" ]; then
+		echo "No chyves guests to start. Resuming to boot host."
+	else
+		local _previous_stdout_level="$( /usr/local/sbin/chyves list global | grep stdout_level | awk '{ print $2 }' )"
+		/usr/local/sbin/chyves global set stdout_level=1
+		echo "Starting chyves guests ($_guestlist)..."
+		/usr/local/sbin/chyves $_guestlist start
+		echo "Guests starting, resuming host boot."
+		sleep 3
+		/usr/local/sbin/chyves global set stdout_level="$_previous_stdout_level"
+	fi
 }
 
 __chyves_stop()
