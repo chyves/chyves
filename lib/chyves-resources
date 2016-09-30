@@ -112,7 +112,7 @@ __guest_upgrade_chyves_guest_version() {
 		__chyves_guest_version_gvreload_and_set() {
 			local _version="$1"
 			__write_property_value_to_config_file "guest" "chyves_guest_version" "$_version"
-			__load_guest_parameter_single "chyves_guest_version"
+			__load_guest_parameters "$_GUEST_name"
 		}
 
 		# Change for addition of 'bhyve_net_type', only checks for value of 'e1000', a missing value causes no harm.
