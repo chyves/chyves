@@ -287,7 +287,7 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 
 <p>There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. <strong>All files</strong> in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under <code>&lt;pool>/chyves/guests/&lt;guest>/img</code>, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command <code>chyves info</code> reports the raw image files and size. To create a sparse raw image run:</p>
 
-<p><code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/img/&lt;image-name></code>.</p>
+<p><code>truncate -s 16G /chyves/&lt;pool>/guests/&lt;guest>/img/&lt;image-name></code></p>
 
 <h2 id="LOGS">LOGS</h2>
 

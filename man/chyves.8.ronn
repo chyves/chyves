@@ -178,7 +178,7 @@ By default, chyves uses ZFS volumes as guest storage backing. Each volume is nam
 
 There is limited support for raw file backed guest storage. This is a manual process and there are not any chyves commands that create, modify, or delete these raw image files. **All files** in the 'img/' folder and child folders are attached to the guest on start. To have independent snapshots for each raw image, create a child datasets under `<pool>/chyves/guests/<guest>/img`, this has an advantage over ZFS volumes as there is no refreservation cost associated with the snapshots. The command `chyves info` reports the raw image files and size. To create a sparse raw image run:
 
-`truncate -s 16G /chyves/<pool>/guests/<guest>/img/<image-name>`.
+`truncate -s 16G /chyves/<pool>/guests/<guest>/img/<image-name>`
 
 ## LOGS
 All logs entries are stored on the primary pool under `/chyves/<primary-pool>/chyves/logs` with the dataset's compression turned on. The file are separated on a monthly basis using a `YYYYMM.log` file name. The log entries use the ISO 8601 date format for monitoring tools. There is a separate log file on a per guest basis, however at this time not all guest events are recorded to this file, however these events _are_ recorded in the global logs regardless.
