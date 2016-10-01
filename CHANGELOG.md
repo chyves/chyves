@@ -1,3 +1,23 @@
+#### Version 0.2.2-dev (2016 October 1)
+
+- Less restriction when checking for '-S' in `bargs` while setting wired memory variable. [8107ad9](https://github.com/chyves/chyves/commit/8107ad9abbd479ba523ff4dd50cbe2c052de47fc)
+
+- The `chyves unset` command allows unsetting `eject_iso_on_n_reboot`, `pcidev_{n}`, and `virtio_block_options_disk{n}` but the error message indicated that only `pcidev_{n}` was allow when attempting an unsupport property.  [af512ee](https://github.com/chyves/chyves/commit/af512eebbfd0f3a4eb7b4e9733d75598695ce8ed)
+
+- Many minor fixes in the man page.
+  - Clarified a value of '0' means off for `eject_iso_on_n_reboot`. [fe746fd](https://github.com/chyves/chyves/commit/fe746fd0efce81788e4f15a1e4532987623565b8)
+  - Typo in `eject_iso_on_n_reboot` guest property. [5187ccf](https://github.com/chyves/chyves/commit/5187ccfc15b8f1d1006ef8cf8fb0d29951bf9e43)
+  - Document that `check_for_updates` can be set to 'off'.  [c52ec05](https://github.com/chyves/chyves/commit/c52ec05a17fad0025aaeaa3d42094a9abf6b2788)
+  - Typo in `bridge{n}_tap_members` example. [5894336](https://github.com/chyves/chyves/commit/589433607d8be13d5d1305336792a22c44516b96)
+  - Removed ending period on command example.  [89d9f5b](https://github.com/chyves/chyves/commit/89d9f5b3fe6e5dabcab8d284d1b23365219a107d)
+  - Removed reference to `chyves dataset <pool> promote` until written/committed. [f676648](https://github.com/chyves/chyves/commit/f6766488aa3a8045459392d7a40ff400168e30ee)
+
+- FIX: Corrected function name to delete ISO resource when an incorrect hash value is given. Previously was referencing old function and syntax. [9ec89db](https://github.com/chyves/chyves/commit/9ec89db774aa7ae906f132141574cc4aac77cd2c)
+
+- FIX: Typo in variable for dataset verification in `__resource_delete()`. [238b478](https://github.com/chyves/chyves/commit/238b478ed9af84faa16f7b9a6571c230e972e529)
+
+- Guest properties are reloaded at each `chyves_guest_version` increment during a `chyves <guest> upgrade`. This has no impact for past changes, however if there is a future property change which relies on the value of a property and that value is changed more than once, then it is possible to have a dirty state. This is intended to mitigate that possibility. [8ed90ca](https://github.com/chyves/chyves/commit/8ed90cad3073e953f8e972bc5ec024396f7fe063)
+
 #### Version 0.2.1-dev (2016 September 25)
 
 - FIX: Improved handling for guests started with `rc.conf`. [9cf54d9](https://github.com/chyves/chyves/commit/9cf54d9353317589199f2369a685a98b96669c31)

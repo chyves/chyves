@@ -215,9 +215,9 @@
 #
 
 # Stage 1 global variables (Not dependent on functions or primary pool)
-_VERSION=0.2.1                         # Example: v1.6.25 - X.YYYY.ZZZ
-_VERSION_LONG="v0.2.1-dev 2016/09/25"  # Example: v1.6.25 2021/12/31
-_VERSION_INT="00002001"                # Example: 10006025 XYYYYZZZ
+_VERSION=0.2.2                         # Example: v1.6.25 - X.YYYY.ZZZ
+_VERSION_LONG="v0.2.2-dev 2016/10/01"  # Example: v1.6.25 2021/12/31
+_VERSION_INT="00002002"                # Example: 10006025 XYYYYZZZ
 _VERSION_DATASET="0006"
 _VERSION_CHYVES_GUEST="0400"
 _VERSION_BRANCH=dev
