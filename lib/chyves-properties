@@ -129,7 +129,7 @@ __load_guest_parameters() {
 		__load_guest_parameter_single "$_var"
 	done
 
-	_GUEST_wire_memory="$( [ -n "$( echo "$_GP_bargs" | grep '\-S' )" ] && echo "-S" )"
+	_GUEST_wire_memory="$( [ -n "$( echo "$_GP_bargs" | grep 'S' )" ] && echo "-S" )"
 }
 
 # For use by commands which do not support multi-guest to load parameters
