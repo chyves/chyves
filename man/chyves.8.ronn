@@ -291,7 +291,7 @@ Properties:
 
   `chyves network bridge{n} join tap{n}`
 
-* `check_for_updates`={daily|weekly|monthly|always}
+* `check_for_updates`={off|daily|weekly|monthly|always}
 
   **User managed and settable.**
 
