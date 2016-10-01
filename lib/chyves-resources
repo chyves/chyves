@@ -311,7 +311,7 @@ __resource_import() {
 				__log 2 "Supplied hash:            $_user_supplied_hash"
 				__log 2 "Reason for hash mismatch: $_hash_type"
 				__log 1 "It is recommended to delete '$_file_name', download it again, and supply a supported hash checksum."
-				__resource_functions iso delete "$_folder_name"
+				__resource_delete iso "$_folder_name"
 			fi
 
 		# Downloads remote firmware
