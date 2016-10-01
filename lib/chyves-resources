@@ -211,7 +211,7 @@ __resource_delete() {
 		local _resource_type_name="ISO"
 	fi
 
-	__verify_valid_dataset "$_resource_type_name/$_resource"
+	__verify_valid_dataset "$_resource_type_name/$_resource_name"
 
 	read -p "[WARNING] Do you want to delete ${_resource_type_name}: '$_resource_name' [y/N]? " _delete_or_no </dev/tty
 	case "$_delete_or_no" in
