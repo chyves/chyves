@@ -281,9 +281,9 @@ Properties:
 
   Examples values:
 
-  `bridge0_tap_members=t0`
+  `bridge0_tap_members=tap0`
 
-  `bridge70_tap_members=t20,t30`
+  `bridge70_tap_members=tap20,tap30`
 
   A tap can be moved to another bridge by first removing the tap from the original bridge and adding to the desired bridge. Use the following command syntax to do this:
 
