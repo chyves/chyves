@@ -582,7 +582,7 @@ offlinePL/chyves_offline/.config/pool.cfg                   # File
 <p>Used to describe guest. Use double quotes when description contains spaces.</p></li>
 <li><p><code>eject_iso_on_n_reboot</code>={n}</p>
 
-<p>This property determines if and when to eject the optical media when installing an OS. By default this is set to '1' because most *nix systems install on the first boot. Live CD should be turned to '0' and Windows systems should be set to '2' or greater.</p>
+<p>This property determines if and when to eject the optical media when installing an OS. By default this is set to '1' because most *nix systems install on the first boot. A guest running off a live CD should be turned to '0' for off. Windows systems should be set to '2' or greater during initial installation.</p>
 
 <p>There is a global property which shares the same name and has the same functionality. The global property is used if not set on the guest.</p></li>
 <li><p><code>loader</code>={bhyveload|uefi|grub-bhyve}</p>
