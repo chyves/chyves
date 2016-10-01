@@ -211,7 +211,7 @@
 
 <p>As mentioned in the <a href="#DEPENDENCIES" title="DEPENDENCIES" data-bare-link="true">DEPENDENCIES</a> section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool. There are many features that rely on ZFS, such as cloning. The ISO, UEFI firmware, and guest resources and properties are stored within ZFS datasets.</p>
 
-<p>Single and multiple ZFS pools are supported, there is no loss in functionality for either. <code>chyves</code> datasets get mounted to '/chyves/<var>pool</var>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs. The primary pool can be changed with <code>chyves dataset &lt;new-prim-pool> promote</code> which moves the resources and global configuration to <code>&lt;new-prim-pool></code> from the current primary pool.</p>
+<p>Single and multiple ZFS pools are supported, there is no loss in functionality for either. <code>chyves</code> datasets get mounted to '/chyves/<var>pool</var>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs.</p>
 
 <p>See <a href="#DATASET-SUB-COMMANDS" title="DATASET SUB-COMMANDS" data-bare-link="true">DATASET SUB-COMMANDS</a> section below for managing the <code>chyves</code> datasets.</p>
 
@@ -1677,7 +1677,7 @@ chyves coreos set os=coreossecure
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>September 25 2016</li>
+    <li class='tc'>October 01 2016</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "September 25 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "October 01 2016" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.2\.1
@@ -264,7 +264,7 @@ PCI Pass\-through support is also provided through another sub\-set of hardware 
 As mentioned in the \fIDEPENDENCIES\fR section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool\. There are many features that rely on ZFS, such as cloning\. The ISO, UEFI firmware, and guest resources and properties are stored within ZFS datasets\.
 .
 .P
-Single and multiple ZFS pools are supported, there is no loss in functionality for either\. \fBchyves\fR datasets get mounted to \'/chyves/\fIpool\fR\'\. The \'/chyves\' directory itself is stored on \'/\' and does not belong to any of the chyves datasets\. The first pool is assigned the primary pool role but this can be changed afterwards\. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs\. The primary pool can be changed with \fBchyves dataset <new\-prim\-pool> promote\fR which moves the resources and global configuration to \fB<new\-prim\-pool>\fR from the current primary pool\.
+Single and multiple ZFS pools are supported, there is no loss in functionality for either\. \fBchyves\fR datasets get mounted to \'/chyves/\fIpool\fR\'\. The \'/chyves\' directory itself is stored on \'/\' and does not belong to any of the chyves datasets\. The first pool is assigned the primary pool role but this can be changed afterwards\. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs\.
 .
 .P
 See \fIDATASET SUB\-COMMANDS\fR section below for managing the \fBchyves\fR datasets\.

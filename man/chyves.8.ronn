@@ -106,7 +106,7 @@ PCI Pass-through support is also provided through another sub-set of hardware vi
 ## ZFS
 As mentioned in the [DEPENDENCIES][] section above, there is a hard dependency on ZFS and as such requires at least one ZFS pool. There are many features that rely on ZFS, such as cloning. The ISO, UEFI firmware, and guest resources and properties are stored within ZFS datasets.
 
-Single and multiple ZFS pools are supported, there is no loss in functionality for either. `chyves` datasets get mounted to '/chyves/<pool>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs. The primary pool can be changed with `chyves dataset <new-prim-pool> promote` which moves the resources and global configuration to `<new-prim-pool>` from the current primary pool.
+Single and multiple ZFS pools are supported, there is no loss in functionality for either. `chyves` datasets get mounted to '/chyves/<pool>'. The '/chyves' directory itself is stored on '/' and does not belong to any of the chyves datasets. The first pool is assigned the primary pool role but this can be changed afterwards. The primary pool is the only pool containing the UEFI Firmware resources, ISO resources, the global properties, and the comprehensive logs.
 
 See [DATASET SUB-COMMANDS][] section below for managing the `chyves` datasets.
 
