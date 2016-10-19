@@ -1588,7 +1588,7 @@ chyves bguest set pcidev_0=ahci-hd,/chyves/dozer/guests/bguest/01.img
 <pre><code>chyves '`exactCL1`' delete keepnet
 </code></pre>
 
-<p>Install and run a Debian guest <em>(note LVM installs require "os" be set to "d8lvm")</em> <strong>Seems to work with installation disks version 8.0 through 8.2, however something was changed in 8.3 that breaks the installation disk from working.</strong>:</p>
+<p>Install and run a Debian guest _(note LVM installs require "os" be set to "d8lvm"):</p>
 
 <pre><code>chyves debianvm create 8G
 chyves debianvm set loader=grub-bhyve os=debian

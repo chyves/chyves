@@ -1476,7 +1476,7 @@ Delete clone '`exactCL1`' from system but keep network associations:
 
     chyves '`exactCL1`' delete keepnet
 
-Install and run a Debian guest _(note LVM installs require "os" be set to "d8lvm")_ **Seems to work with installation disks version 8.0 through 8.2, however something was changed in 8.3 that breaks the installation disk from working.**:
+Install and run a Debian guest _(note LVM installs require "os" be set to "d8lvm"):
 
     chyves debianvm create 8G
     chyves debianvm set loader=grub-bhyve os=debian
