@@ -1332,7 +1332,7 @@ or
 
 Install the FreeBSD guest `bguest`:
 
-    chyves bguest install FreeBSD-10.2-RELEASE-amd64.iso
+    chyves bguest start FreeBSD-10.2-RELEASE-amd64.iso
 
 Console into the installation:
 
