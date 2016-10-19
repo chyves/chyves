@@ -1,3 +1,15 @@
+#### Version 0.2.3-dev (2016 October 19)
+
+- DOC: FIX: Typo in example for Arch guest.  [f4a3c32](https://github.com/chyves/chyves/commit/f4a3c32090a1c9a7e04b79a52f1d8c24f1fd32d1)
+
+- DOC: FIX: Remove disclaimer when installing Debian 8.3+ from docs as this is no longer valid.  [a71973c](https://github.com/chyves/chyves/commit/a71973cc5e6be17e098f0343709acb453acdabec)
+
+- DOC: Added clarity in example when deleting clones. [0d018fc](https://github.com/chyves/chyves/commit/0d018fca378da6016ae3a06e3d0289bad0517901)
+
+- DOC: FIX: Reference to old sub-command (`chyves bguest install`). [1679a38](https://github.com/chyves/chyves/commit/1679a382ae009ecd8a592eb9d3fc605e3f630384)
+
+- FIX: Reference to old variable broke `os=custom`. [c0c6486](https://github.com/chyves/chyves/commit/c0c6486394a9e3fc4da141fa0ffe6b509229f8a9)
+
 #### Version 0.2.2-dev (2016 October 1)
 
 - Less restriction when checking for '-S' in `bargs` while setting wired memory variable. [8107ad9](https://github.com/chyves/chyves/commit/8107ad9abbd479ba523ff4dd50cbe2c052de47fc)
