@@ -409,9 +409,9 @@ __generate_grub_bhyve_command() {
 	# Handling for device.map file creation.
 	if [ $_GP_os = "custom" ]; then    # Do not create file, user supplied.
 		__log 2 "'os' property set as 'custom', user must supply 'device.map' and 'grub.cfg'."
-		__log 2 "Checking if 'device.map' and 'grub.cfg' files exists at: $_path"
-		[ ! -f "$_path/device.map" ] && __fault_detected_exit "'$_path/device.map' file does not exist, this file is required to property boot."
-		[ ! -f "$_path/grub.cfg" ] && __fault_detected_exit "'$_path/grub.cfg' file does not exist, this file is required to property boot."
+		__log 2 "Checking if 'device.map' and 'grub.cfg' files exists at: $_GUEST_mountpoint"
+		[ ! -f "$_GUEST_mountpoint/device.map" ] && __fault_detected_exit "'$_GUEST_mountpoint/device.map' file does not exist, this file is required to property boot."
+		[ ! -f "$_GUEST_mountpoint/grub.cfg" ] && __log 1 "'$_GUEST_mountpoint/grub.cfg' file does not exist."
 	elif [ -z "$_FIRST_disk" ]; then   # Handling when no hard disk is present (img or ZFS volume)
 		__generate_generic_device_map "$_GUEST_mountpoint" "-" "$_media"
 	else                               # Catch-all
