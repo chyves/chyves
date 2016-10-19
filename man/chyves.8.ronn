@@ -1487,7 +1487,7 @@ Install and run a Arch Linux guest :
 
     chyves archguest create
     chyves archguest set loader=grub-bhyve os=arch
-    chyves archguest start archguest archlinux-2015.10.01-dual.iso
+    chyves archguest start archlinux-2015.10.01-dual.iso
     chyves archguest console
 
 Install and run a CentOS or RHEL guest, _(note version 6 would use os=centos6)_:
