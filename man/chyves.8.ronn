@@ -1468,11 +1468,11 @@ Delete '`bguest2`' from system:
 
     chyves '`bguest2`' delete
 
-Delete '`bguest`' and dependent clones from system:
+Delete cloned '`bguest`' and dependent clones from system:
 
     chyves '`bguest`' delete force
 
-Delete '`exactCL1`' from system but keep network associations:
+Delete clone '`exactCL1`' from system but keep network associations:
 
     chyves '`exactCL1`' delete keepnet
 
