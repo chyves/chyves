@@ -244,6 +244,7 @@ __create() {
 	# Eg.: chyves create guest1,guest2,guest3 8G ssd-pool
 	for _guest in `echo "$_guest_list" | tr ',' ' '`
 	do
+		__get_next_vnc_port
 		__get_next_tap
 		__get_next_serial
 		__generate_new_uuid_guest_use
@@ -284,6 +285,15 @@ __create() {
 		__write_property_value_to_config_file "guest" "revert_to_snapshot_method"  "$_GDP_revert_to_snapshot_method"
 		__write_property_value_to_config_file "guest" "serial"                     "$_NEXT_serial"
 		__write_property_value_to_config_file "guest" "template"                   "$_GDP_template"
+		__write_property_value_to_config_file "guest" "uefi_console_output"        "$_GDP_uefi_console_output"
+		__write_property_value_to_config_file "guest" "uefi_firmware"              "$_GDP_uefi_firmware"
+		__write_property_value_to_config_file "guest" "uefi_vnc_client"            "$_GDP_uefi_vnc_client"
+		__write_property_value_to_config_file "guest" "uefi_vnc_client_custom_cmd" "$_GDP_uefi_vnc_client_custom_cmd"
+		__write_property_value_to_config_file "guest" "uefi_vnc_ip"                "$_GDP_uefi_vnc_ip"
+		__write_property_value_to_config_file "guest" "uefi_vnc_port"              "$_NEXT_vnc_port"
+		__write_property_value_to_config_file "guest" "uefi_vnc_mouse_type"        "$_GDP_uefi_vnc_mouse_type"
+		__write_property_value_to_config_file "guest" "uefi_vnc_pause_until_client_connect" "$_GDP_uefi_vnc_pause_until_client_connect"
+		__write_property_value_to_config_file "guest" "uefi_vnc_res"               "$_GDP_uefi_vnc_res"
 		__write_property_value_to_config_file "guest" "uuid"                       "$_UUID_GUEST_USE"
 
 		# NETWORK_DESIGN_MODE handling
