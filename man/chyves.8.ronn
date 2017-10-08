@@ -768,6 +768,7 @@ Defaults and initial values:
 * `uefi_console_output`=serial
 * `uefi_firmware`="-"
 * `uefi_vnc_client`=print
+* `uefi_vnc_client_custom_cmd`=""
 * `uefi_vnc_ip`=0.0.0.0
 * `uefi_vnc_mouse_type`=ps2
 * `uefi_vnc_pause_until_client_connect`=no

@@ -91,6 +91,7 @@ __dataset_install() {
 		__write_property_value_to_config_file "defaults" "uefi_console_output"                  "serial"
 		__write_property_value_to_config_file "defaults" "uefi_firmware"                        "-"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_client"                      "print"
+		__write_property_value_to_config_file "defaults" "uefi_vnc_client_custom_cmd"           ""
 		__write_property_value_to_config_file "defaults" "uefi_vnc_ip"                          "0.0.0.0"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_mouse_type"                  "ps2"
 		__write_property_value_to_config_file "defaults" "uefi_vnc_pause_until_client_connect"  "no"
@@ -203,6 +204,14 @@ __dataset_upgrade() {
 		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "audio_play" ""
 		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "audio_rec" ""
 		__write_property_value_to_config_file "manual" "dataset_version" "0006" "/chyves/$_pool/.config/pool.cfg"
+		__dataset_upgrade_lset_version
+	fi
+
+	# Updated to include 'uefi_vnc_client_custom_cmd' as a default guest property.
+	if [ "$_DATASET_pool_version_int" = "0006" ]; then
+		__log 1 "Upgrading dataset to version 0007"
+		[ "$_PRIMARY_POOL" = "$_pool" ] && __write_property_value_to_config_file "defaults" "uefi_vnc_client_custom_cmd" ""
+		__write_property_value_to_config_file "manual" "dataset_version" "0007" "/chyves/$_pool/.config/pool.cfg"
 		__dataset_upgrade_lset_version
 	fi
 
