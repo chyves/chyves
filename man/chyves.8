@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CHYVES" "8" "October 19 2016" "chyves" "FreeBSD System Manager's Manual"
+.TH "CHYVES" "8" "October 2017" "chyves" "FreeBSD System Manager's Manual"
 .
 .SH "NAME"
 \fBchyves\fR \- bhyve(8) front end manager \-\- version 0\.2\.3\-dev
@@ -1124,7 +1124,7 @@ When set to "serial", a UEFI guest will use the standard serial interface\. Gues
 UEFI firmware bootrom file used to boot UEFI guests\. These are available in Peter Grehan\'s public FreeBSD file directory or sysutils/uefi\-edk2\-bhyve\. The value must be the exact name as displayed in \'chyves list firmware\'\.
 .
 .IP "\(bu" 4
-\fBuefi_vnc_client\fR={print|freerdp|custom}
+\fBuefi_vnc_client\fR={custom|freerdp|print|vncviewer}
 .
 .IP
 This stores the preferred VNC client used to start a session with the guest properties pre\-populated\.

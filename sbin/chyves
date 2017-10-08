@@ -68,6 +68,7 @@
 # __console_vnc_custom()                      # Run custom VNC client command
 # __console_vnc_print()                       # Print VNC client setttings
 # __console_vnc_freerdp()                     # Run VNC client with FreeRDP
+# __console_vnc_vncviewer()                   # Run VNC client with vncviewer
 # __get_guest_console_pid()                   # Get PID of console
 # __verify_console_not_in_use()               # Check console is in use by PID
 #

@@ -665,7 +665,7 @@ Usage:
 
   UEFI firmware bootrom file used to boot UEFI guests. These are available in Peter Grehan's public FreeBSD file directory or sysutils/uefi-edk2-bhyve. The value must be the exact name as displayed in 'chyves list firmware'.
 
-* `uefi_vnc_client`={print|freerdp|custom}
+* `uefi_vnc_client`={custom|freerdp|print|vncviewer}
 
   This stores the preferred VNC client used to start a session with the guest properties pre-populated.
 
