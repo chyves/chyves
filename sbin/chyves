@@ -68,6 +68,7 @@
 # __console_vnc_custom()                      # Run custom VNC client command
 # __console_vnc_print()                       # Print VNC client setttings
 # __console_vnc_freerdp()                     # Run VNC client with FreeRDP
+# __console_vnc_vncviewer()                   # Run VNC client with vncviewer
 # __get_guest_console_pid()                   # Get PID of console
 # __verify_console_not_in_use()               # Check console is in use by PID
 #
@@ -218,8 +219,8 @@
 _VERSION=0.2.3                         # Example: v1.6.25 - X.YYYY.ZZZ
 _VERSION_LONG="v0.2.3-dev 2016/10/19"  # Example: v1.6.25 2021/12/31
 _VERSION_INT="00002003"                # Example: 10006025 XYYYYZZZ
-_VERSION_DATASET="0006"
-_VERSION_CHYVES_GUEST="0400"
+_VERSION_DATASET="0007"
+_VERSION_CHYVES_GUEST="0500"
 _VERSION_BRANCH=dev
 _GLOBAL_CONFIG_FILE="$( ls /chyves/*/.config/global.cfg 2>/dev/null )"
 _OS=$( sysctl -n kern.ostype )

@@ -747,7 +747,7 @@ subclass   = Fibre Channel
 <li><p><code>uefi_firmware</code>=<var>firmware-resource-name</var></p>
 
 <p>UEFI firmware bootrom file used to boot UEFI guests. These are available in Peter Grehan's public FreeBSD file directory or sysutils/uefi-edk2-bhyve. The value must be the exact name as displayed in 'chyves list firmware'.</p></li>
-<li><p><code>uefi_vnc_client</code>={print|freerdp|custom}</p>
+<li><p><code>uefi_vnc_client</code>={custom|freerdp|print|vncviewer}</p>
 
 <p>This stores the preferred VNC client used to start a session with the guest properties pre-populated.</p></li>
 <li><p><code>uefi_vnc_client_custom_cmd</code></p>
@@ -843,6 +843,7 @@ subclass   = Fibre Channel
 <li><code>uefi_console_output</code>=serial</li>
 <li><code>uefi_firmware</code>="-"</li>
 <li><code>uefi_vnc_client</code>=print</li>
+<li><code>uefi_vnc_client_custom_cmd</code>=""</li>
 <li><code>uefi_vnc_ip</code>=0.0.0.0</li>
 <li><code>uefi_vnc_mouse_type</code>=ps2</li>
 <li><code>uefi_vnc_pause_until_client_connect</code>=no</li>
@@ -1677,7 +1678,7 @@ chyves coreos set os=coreossecure
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>chyves</li>
-    <li class='tc'>October 19 2016</li>
+    <li class='tc'>October 2017</li>
     <li class='tr'>chyves(8)</li>
   </ol>
 

@@ -188,6 +188,24 @@ __guest_upgrade_chyves_guest_version() {
 			__chyves_guest_version_gvreload_and_set "0400"
 		fi
 
+		# Add uefi_* guest properties if not already present.
+		if [ "$_GP_chyves_guest_version" -eq "0400" ]; then
+			__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 0500."
+			__load_guest_default_parameters
+			__load_guest_parameters "$_GUEST_name"
+			__get_next_vnc_port
+			__write_property_value_to_config_file "guest" "uefi_console_output" "${_GP_uefi_console_output-$_GDP_uefi_console_output}"
+			__write_property_value_to_config_file "guest" "uefi_firmware" "${_GP_uefi_firmware-$_GDP_uefi_firmware}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_client" "${_GP_uefi_vnc_client-$_GDP_uefi_vnc_client}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_client_custom_cmd" "${_GP_uefi_vnc_client_custom_cmd-$_GDP_uefi_vnc_client_custom_cmd}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_ip" "${_GP_uefi_vnc_ip-$_GDP_uefi_vnc_ip}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_port" "${_GP_uefi_vnc_port-$_NEXT_vnc_port}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_mouse_type" "${_GP_uefi_vnc_mouse_type-$_GDP_uefi_vnc_mouse_type}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_pause_until_client_connect" "${_GP_uefi_vnc_pause_until_client_connect-$_GDP_uefi_vnc_pause_until_client_connect}"
+			__write_property_value_to_config_file "guest" "uefi_vnc_res" "${_GP_uefi_vnc_res-$_GDP_uefi_vnc_res}"
+			__chyves_guest_version_gvreload_and_set "0500"
+		fi
+
 		# Template
 		#if [ "$_GP_chyves_guest_version" -lt "9900" ]; then
 		#	__log 1 "$_GUEST_name is on an old chyves_guest_version $_GP_chyves_guest_version, upgrading to 9900."

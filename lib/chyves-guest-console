@@ -140,11 +140,11 @@ __console_tmux() {
 
 # Run custom VNC client command
 __console_vnc_custom() {
-	__verify_binary_available "$( basename "$( echo "$_GP_uefi_vnc_client_custom" | awk 'print $1' )" )"
+	__verify_binary_available "$( basename "$( echo "$_GP_uefi_vnc_client_custom_cmd" | awk '{ print $1 }' )" )"
 
 	[ "$_GP_uefi_vnc_ip" = "0.0.0.0" ] && _GP_uefi_vnc_ip="localhost"
 
-	$_GP_uefi_vnc_client_custom &
+	$_GP_uefi_vnc_client_custom_cmd &
 }
 
 # Print VNC client setttings
@@ -162,6 +162,15 @@ __console_vnc_freerdp() {
 	[ "$_GP_uefi_vnc_ip" = "0.0.0.0" ] && _GP_uefi_vnc_ip="localhost"
 
 	xfreerdp /v:$_GP_uefi_vnc_ip /port:$_GP_uefi_vnc_port /size:$_GP_uefi_vnc_res &
+}
+
+# Run VNC client with vncviewer
+__console_vnc_vncviewer() {
+	__verify_binary_available vncviewer
+
+	[ "$_GP_uefi_vnc_ip" = "0.0.0.0" ] && _GP_uefi_vnc_ip="localhost"
+
+	vncviewer -geometry $_GP_uefi_vnc_res $_GP_uefi_vnc_ip::$_GP_uefi_vnc_port &
 }
 
 # Get PID of console

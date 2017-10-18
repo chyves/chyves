@@ -557,8 +557,8 @@ __verify_user_input_for_properties() {
 
 # uefi_vnc_client
 		elif [ "$_property" = "uefi_vnc_client" ]; then
-			if [ -z "$( echo "$_value" | grep -E '^custom$|^freerdp$|^off$|^print$' )" ]; then
-				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_client' is 'custom', 'freerdp', 'off', or 'print'."
+			if [ -z "$( echo "$_value" | grep -E '^custom$|^freerdp$|^off$|^print$|^vncviewer$' )" ]; then
+				__fault_detected_warning_break 1 "Correct values for 'uefi_vnc_client' is 'custom', 'freerdp', 'off', 'print', 'vncviewer'."
 			fi
 
 # uefi_vnc_ip
