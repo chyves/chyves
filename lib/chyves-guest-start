@@ -770,7 +770,7 @@ __start() {
 
 # Verify I/O MMU (iommu) for guests using PCI passthrough
 __verify_iommu_capable() {
-	local _acpidump=$( acpidump -t | grep DMAR )
+	local _acpidump=$( acpidump -t | grep 'DMAR\|IVRS' )
 
 	# CPU missing DMAR are not VT-d capable.
 	if [ -z "$_acpidump" ]; then
